@@ -1,0 +1,332 @@
+﻿@model Members.Controllers.SmartCatchProfileController.StatsViewModel
+
+@{
+    ViewData["Title"] = "Fishing Statistics";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>📊 Fishing Statistics</h2>
+                    <p class="text-muted mb-0">Your Fish-Smart fishing analytics and insights</p>
+                </div>
+                <a asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Profile
+                </a>
+            </div>
+
+            <!-- Summary Stats Cards -->
+            <div class="row mb-5">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card stats-card border-primary h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-icon text-primary mb-3">
+                                <i class="bi bi-journal-check" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h3 class="text-primary mb-1">@Model.TotalSessions</h3>
+                            <p class="text-muted mb-0">Total Sessions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card stats-card border-success h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-icon text-success mb-3">
+                                <i class="bi bi-fish" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h3 class="text-success mb-1">@Model.TotalCatches</h3>
+                            <p class="text-muted mb-0">Total Catches</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card stats-card border-info h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-icon text-info mb-3">
+                                <i class="bi bi-collection" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h3 class="text-info mb-1">@Model.UniqueSpecies</h3>
+                            <p class="text-muted mb-0">Unique Species</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card stats-card border-warning h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-icon text-warning mb-3">
+                                <i class="bi bi-share" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h3 class="text-warning mb-1">@Model.SharedCatches</h3>
+                            <p class="text-muted mb-0">Shared Catches</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <!-- Top Species Chart -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-trophy"></i> Top Species Caught</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.TopSpecies.Any())
+                            {
+                                <div class="top-species-chart">
+                                    @{
+                                        int maxCount = Model.TopSpecies.Any() ? Model.TopSpecies.Max(s => s.Count) : 0;
+                                    }
+                                    @foreach (var species in Model.TopSpecies)
+                                    {
+                                        var percentage = maxCount > 0 ? (double)species.Count / maxCount * 100 : 0;
+                                        <div class="species-bar mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-bold">@species.Species</span>
+                                                <span class="badge bg-success">@species.Count</span>
+                                            </div>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-success"
+                                                     style="width: @percentage%"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-fish text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No catches recorded yet!</p>
+                                    <a asp-controller="FishingSession" asp-action="Create" class="btn btn-success btn-sm">
+                                        Start Fishing
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Activity -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-calendar3"></i> Monthly Activity (Last 12 Months)</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.MonthlyActivity.Any())
+                            {
+                                <div class="monthly-activity">
+                                    @{
+                                        int maxSessions = Model.MonthlyActivity.Any() ? Model.MonthlyActivity.Max(m => m.Sessions) : 0;
+                                    }
+                                    @foreach (var month in Model.MonthlyActivity)
+                                    {
+                                        var sessionPercentage = maxSessions > 0 ? (double)month.Sessions / maxSessions * 100 : 0;
+                                        var monthName = DateTime.ParseExact(month.Month, "yyyy-MM", null).ToString("MMM yyyy");
+
+                                        <div class="month-bar mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small fw-bold">@monthName</span>
+                                                <div>
+                                                    <span class="badge bg-primary me-1">@month.Sessions sessions</span>
+                                                    <span class="badge bg-success">@month.Catches catches</span>
+                                                </div>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-info"
+                                                     style="width: @sessionPercentage%"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-calendar3 text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No fishing activity in the last 12 months</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Sessions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Sessions</h5>
+                            <a asp-controller="FishingSession" asp-action="Index" class="btn btn-sm btn-light">
+                                View All Sessions
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentSessions.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Location</th>
+                                                <th>Water Type</th>
+                                                <th>Catches</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var session in Model.RecentSessions)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div>
+                                                            <strong>@session.SessionDate.ToString("MMM dd, yyyy")</strong>
+                                                            <br>
+                                                            <small class="text-muted">@session.SessionDate.ToString("h:mm tt")</small>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(session.LocationName))
+                                                        {
+                                                            @session.LocationName
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">No location specified</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-@(session.WaterType == "Salt" ? "primary" : "success")">
+                                                            @session.WaterType
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">@session.Catches.Count catches</span>
+                                                    </td>
+                                                    <td>
+                                                        <a asp-controller="FishingSession" asp-action="Details"
+                                                           asp-route-id="@session.Id" class="btn btn-sm btn-primary">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No fishing sessions recorded yet!</p>
+                                    <a asp-controller="FishingSession" asp-action="Create" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Start Your First Session
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Cards -->
+            <div class="row mt-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="bi bi-journal-plus text-primary mb-3" style="font-size: 2rem;"></i>
+                            <h6 class="card-title">Start New Session</h6>
+                            <p class="card-text small">Begin tracking a new fishing adventure</p>
+                            <a asp-controller="FishingSession" asp-action="Create" class="btn btn-primary btn-sm">
+                                Start Session
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <i class="bi bi-collection text-info mb-3" style="font-size: 2rem;"></i>
+                            <h6 class="card-title">Browse Fish Species</h6>
+                            <p class="card-text small">Explore the fish species database</p>
+                            <a asp-controller="FishSpecies" asp-action="Index" class="btn btn-info btn-sm">
+                                Browse Species
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="bi bi-gear text-success mb-3" style="font-size: 2rem;"></i>
+                            <h6 class="card-title">Profile Settings</h6>
+                            <p class="card-text small">Update your Fish-Smart preferences</p>
+                            <a asp-action="Edit" class="btn btn-success btn-sm">
+                                Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .stats-card {
+        transition: transform 0.2s ease-in-out;
+        border-width: 2px;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+    .stats-icon {
+        opacity: 0.8;
+    }
+
+    .progress {
+        border-radius: 10px;
+        background-color: #f8f9fa;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 0.8s ease-in-out;
+    }
+
+    .species-bar, .month-bar {
+        position: relative;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        border: 1px solid #e3e6f0;
+    }
+
+        .card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+</style>

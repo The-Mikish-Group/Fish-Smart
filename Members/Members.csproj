@@ -1,0 +1,167 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-Members-c16f0045-8487-43aa-a4f5-70bcca044e60</UserSecretsId>
+    <Platforms>AnyCPU;x64</Platforms>
+    <SatelliteAssembliesInclude />
+    <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <NoWarn>1701;1702;CA1862</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebugType>embedded</DebugType>
+    <NoWarn>1701;1702;CA1862</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <NoWarn>1701;1702;CA1862</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>embedded</DebugType>
+    <NoWarn>1701;1702;CA1862</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Areas\Admin\Pages\Accounting\**" />
+    <Compile Remove="Data\Migrations\**" />
+    <Compile Remove="Pdf\**" />
+    <Compile Remove="ProtectedFiles\**" />
+    <Compile Remove="Views\Admin\**" />
+    <Compile Remove="wwwroot\Galleries\2025 July 4\**" />
+    <Compile Remove="wwwroot\Galleries\2025 Memorial Day\**" />
+    <Compile Remove="wwwroot\Galleries\Chapel\**" />
+    <Compile Remove="wwwroot\Galleries\Oaks-Village\**" />
+    <Compile Remove="wwwroot\Galleries\Sunsets\**" />
+    <Compile Remove="wwwroot\Galleries\Traveling\**" />
+    <Compile Remove="wwwroot\js\ej2\**" />
+    <Content Remove="Areas\Admin\Pages\Accounting\**" />
+    <Content Remove="Data\Migrations\**" />
+    <Content Remove="Pdf\**" />
+    <Content Remove="ProtectedFiles\**" />
+    <Content Remove="Views\Admin\**" />
+    <Content Remove="wwwroot\Galleries\2025 July 4\**" />
+    <Content Remove="wwwroot\Galleries\2025 Memorial Day\**" />
+    <Content Remove="wwwroot\Galleries\Chapel\**" />
+    <Content Remove="wwwroot\Galleries\Oaks-Village\**" />
+    <Content Remove="wwwroot\Galleries\Sunsets\**" />
+    <Content Remove="wwwroot\Galleries\Traveling\**" />
+    <Content Remove="wwwroot\js\ej2\**" />
+    <EmbeddedResource Remove="Areas\Admin\Pages\Accounting\**" />
+    <EmbeddedResource Remove="Data\Migrations\**" />
+    <EmbeddedResource Remove="Pdf\**" />
+    <EmbeddedResource Remove="ProtectedFiles\**" />
+    <EmbeddedResource Remove="Views\Admin\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\2025 July 4\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\2025 Memorial Day\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\Chapel\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\Oaks-Village\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\Sunsets\**" />
+    <EmbeddedResource Remove="wwwroot\Galleries\Traveling\**" />
+    <EmbeddedResource Remove="wwwroot\js\ej2\**" />
+    <None Remove="Areas\Admin\Pages\Accounting\**" />
+    <None Remove="Data\Migrations\**" />
+    <None Remove="Pdf\**" />
+    <None Remove="ProtectedFiles\**" />
+    <None Remove="Views\Admin\**" />
+    <None Remove="wwwroot\Galleries\2025 July 4\**" />
+    <None Remove="wwwroot\Galleries\2025 Memorial Day\**" />
+    <None Remove="wwwroot\Galleries\Chapel\**" />
+    <None Remove="wwwroot\Galleries\Oaks-Village\**" />
+    <None Remove="wwwroot\Galleries\Sunsets\**" />
+    <None Remove="wwwroot\Galleries\Traveling\**" />
+    <None Remove="wwwroot\js\ej2\**" />
+  </ItemGroup>
+  <ItemGroup>       
+    <Compile Remove="Areas\Admin\Pages\AccountsReceivable\AccountsReceivable.cshtml.cs" />       
+    <Compile Remove="Areas\Identity\Pages\MembersGrid.cshtml.cs" />       
+    <Compile Remove="Areas\Identity\Pages\MigrateFullName.cshtml.cs" />       
+    <Compile Remove="Areas\Identity\Pages\Users - Copy %282%29.cshtml.cs" />       
+    <Compile Remove="Areas\Identity\Pages\Users - Copy.cshtml.cs" />       
+    <Compile Remove="Areas\Identity\Pages\UsersGrid.cshtml.cs" />       
+    <Compile Remove="Controllers\AdminController.cs" />       
+    <Compile Remove="Controllers\PdfCategoryControllerBackup.cs" />       
+    <Compile Remove="Controllers\PdfGenerationControllerBackup.cs" />       
+    <Compile Remove="Controllers\PdfGenerationControllerx.cs" />       
+    <Compile Remove="Controllers\SharedController.cs" />       
+    <Compile Remove="Controllers\xMembersController.cs" />       
+    <Compile Remove="Controllers\xPdfCategoryController.cs" />       
+    <Compile Remove="Models\CreateGalleryViewModel.cs" />       
+    <Compile Remove="Models\GalleryViewModel.cs" />       
+    <Compile Remove="Models\GalleryViewModels.cs" />       
+    <Compile Remove="Models\ImageViewModel.cs" />       
+    <Compile Remove="Models\ImportFile.cs" />       
+    <Compile Remove="Models\RenameImageViewModel.cs" />       
+    <Compile Remove="Models\UploadImageViewModel.cs" />       
+    <Compile Remove="Models\UserWithProfileViewItem.cs" />       
+    <Compile Remove="Services\UserService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Areas\Admin\Pages\AccountsReceivable\AccountsReceivable.cshtml" />
+    <Content Remove="Areas\Identity\Pages\body.cshtml" />
+    <Content Remove="Areas\Identity\Pages\MembersGrid.cshtml" />
+    <Content Remove="Areas\Identity\Pages\MigrateFullName.cshtml" />
+    <Content Remove="Areas\Identity\Pages\scripts.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Users - Copy %282%29.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Users - Copy.cshtml" />
+    <Content Remove="Areas\Identity\Pages\UsersGrid.cshtml" />
+    <Content Remove="Views\Home\Directory.cshtml" />
+    <Content Remove="Views\Home\Documents.cshtml" />
+    <Content Remove="Views\Home\Financials.cshtml" />
+    <Content Remove="Views\Home\Minutes.cshtml" />
+    <Content Remove="Views\Home\Notices.cshtml" />
+    <Content Remove="Views\Home\Privacy.cshtml" />
+    <Content Remove="Views\Info\About.cshtml" />
+    <Content Remove="Views\Info\Facilities.cshtml" />
+    <Content Remove="Views\Info\MoreLinks.cshtml" />
+    <Content Remove="Views\PdfCategory\CategoriesMenu.cshtml" />
+    <Content Remove="Views\PdfGeneration\MemberDirectoryPdf.cshtml" />
+    <Content Remove="Views\Shared\Galleries.cshtml" />
+    <Content Remove="Views\Shared\Gallery.cshtml" />
+    <Content Remove="Views\Shared\Index.cshtml" />
+    <Content Remove="Views\Shared\_LoginPartial.cshtml" />
+    <Content Remove="wwwroot\Images\LinkImages\LogoOaksVillage.png" />
+    <Content Remove="wwwroot\Images\LinkImages\Oaks-Trees.png" />
+    <Content Remove="wwwroot\Images\LinkImages\OaksTrees-old.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Areas\Identity\Pages\EditUser.cshtml.cs_save" />
+    <None Remove="Areas\Identity\Pages\EditUser.cshtml_Save" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\PublishProfiles\avonparknaz-001-site7 - FTP.pubxml.user" />
+    <None Include="Properties\PublishProfiles\avonparknaz-001-site7 - Web Deploy.pubxml.user" />
+    <None Include="Properties\PublishProfiles\avonparknaz-001-subsite12 - FTP.pubxml.user" />
+    <None Include="Properties\PublishProfiles\avonparknaz-001-subsite12 - Web Deploy.pubxml.user" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml.user" />
+    <None Include="Properties\serviceDependencies.local.json.user" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="jQuery-Validation-Unobtrusive.NuGet" Version="5.2.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.8" />
+    <PackageReference Include="Syncfusion.Licensing" Version="30.2.5" />
+    <PackageReference Include="Syncfusion.Pdf.Imaging.NET" Version="30.2.5" />
+    <PackageReference Include="Syncfusion.Pdf.NET" Version="30.2.5" />
+    <PackageReference Include="System.Security.Permissions" Version="9.0.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Pages\Reporting\" />
+    <Folder Include="wwwroot\Galleries\" />
+    <Folder Include="wwwroot\Images\Fish\" />
+    <Folder Include="wwwroot\Images\PageImages\" />
+  </ItemGroup>
+</Project>

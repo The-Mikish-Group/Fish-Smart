@@ -1,0 +1,209 @@
+@model Members.Models.Catch
+
+@{
+    ViewData["Title"] = "Edit Catch";
+    var session = (Members.Models.FishingSession)ViewBag.Session;
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-warning">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit Catch
+                    </h1>
+                    <p class="text-muted mb-0">
+                        From session: <strong>@session?.LocationName</strong> 
+                        (@session?.SessionDate.ToString("MMM dd, yyyy"))
+                    </p>
+                </div>
+                <div>
+                    @if (!string.IsNullOrEmpty(returnUrl))
+                    {
+                        <a href="@returnUrl" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            Back
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            Back to Session
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Current Photo (if exists) -->
+            @if (!string.IsNullOrEmpty(Model.PhotoUrl))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-image"></i>
+                            Current Photo
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="@Model.PhotoUrl" alt="@Model.Species?.CommonName" 
+                             class="img-fluid rounded shadow" style="max-height: 200px;" />
+                        
+                        <div class="mt-2">
+                            <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-camera"></i>
+                                Change Photo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Edit Form -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-fish"></i>
+                        Catch Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="SessionId" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                        <!-- Fish Species -->
+                        <div class="mb-3">
+                            <label asp-for="FishSpeciesId" class="form-label">
+                                <i class="bi bi-fish"></i> Fish Species <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="FishSpeciesId" class="form-select">
+                                <option value="">Select a fish species...</option>
+                                @if (ViewBag.FishSpecies != null)
+                                {
+                                    @foreach (var species in (List<Members.Models.FishSpecies>)ViewBag.FishSpecies)
+                                    {
+                                        <option value="@species.Id">@species.CommonName</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="FishSpeciesId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Size and Weight -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Size" class="form-label">
+                                    <i class="bi bi-ruler"></i> Size (inches) <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Size" type="number" step="any" class="form-control" 
+                                       placeholder="e.g., 12.5" />
+                                <span asp-validation-for="Size" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Weight" class="form-label">
+                                    <i class="bi bi-speedometer2"></i> Weight (lbs) <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input asp-for="Weight" type="number" step="any" class="form-control" 
+                                       placeholder="e.g., 2.3" />
+                                <span asp-validation-for="Weight" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Catch Time -->
+                        <div class="mb-3">
+                            <label asp-for="CatchTime" class="form-label">
+                                <i class="bi bi-clock"></i> Catch Time <span class="text-muted">(Optional)</span>
+                            </label>
+                            <input asp-for="CatchTime" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="CatchTime" class="text-danger"></span>
+                            <div class="form-text">When was this fish caught during the session?</div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            @if (!string.IsNullOrEmpty(returnUrl))
+                            {
+                                <a href="@returnUrl" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    Cancel
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    Cancel
+                                </a>
+                            }
+                            
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Photo Upload (if no photo) -->
+            @if (string.IsNullOrEmpty(Model.PhotoUrl))
+            {
+                <div class="card mt-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-camera"></i>
+                            Add Photo
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-3">This catch doesn't have a photo yet.</p>
+                        <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                           class="btn btn-success">
+                            <i class="bi bi-camera"></i>
+                            Add Photo
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Danger Zone -->
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Danger Zone
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-danger mb-1">Delete this catch</h6>
+                            <p class="text-muted small mb-0">
+                                Once you delete a catch, there is no going back. This will remove it from all albums and sessions.
+                            </p>
+                        </div>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" asp-route-returnUrl="@returnUrl" class="btn btn-danger">
+                            <i class="bi bi-trash"></i>
+                            Delete Catch
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

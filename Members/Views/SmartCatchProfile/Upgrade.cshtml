@@ -1,0 +1,196 @@
+@model Members.Models.SmartCatchProfile
+
+@{
+    ViewData["Title"] = "Upgrade to Premium";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Premium Upgrade Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-primary">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    Upgrade to Fish-Smart Premium
+                    <i class="bi bi-star-fill text-warning"></i>
+                </h1>
+                <p class="lead text-muted">Unlock the full power of Fish-Smart with advanced features!</p>
+            </div>
+
+            <!-- Current Plan Card -->
+            <div class="card border-secondary mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle"></i>
+                        Current Plan: <span class="badge bg-secondary">@Model.SubscriptionType</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">Hello <strong>@Model.DisplayName</strong>! You're currently using Fish-Smart Free.</p>
+                </div>
+            </div>
+
+            <!-- Premium Features Comparison -->
+            <div class="row mb-4">
+                <!-- Free Features -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-secondary">
+                        <div class="card-header bg-light text-center">
+                            <h4 class="mb-0">Fish-Smart Free</h4>
+                            <span class="badge bg-secondary">Current Plan</span>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Basic fishing session tracking
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Catch logging with fish species
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Basic statistics dashboard
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Limited poses and backgrounds
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Fish-Smart watermark on images
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center bg-light">
+                            <h3 class="text-muted mb-0">FREE</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Features -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-warning">
+                        <div class="card-header bg-warning text-dark text-center">
+                            <h4 class="mb-0">
+                                <i class="bi bi-star-fill"></i>
+                                Fish-Smart Premium
+                            </h4>
+                            <span class="badge bg-dark">Upgrade Now!</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-primary fw-bold mb-3">Everything in Free, plus:</p>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Voice Activation</strong> - Log catches with voice commands
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>AI Environmental Data</strong> - Auto weather, tides, moon phase
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Premium Poses & Backgrounds</strong> - Unlimited options
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Species Name Overlays</strong> - Add fish names to images
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Size Display Overlays</strong> - Show catch sizes on images
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Advanced Equipment Tracking</strong> - Rod, reel, bait details
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Fishing Buddy System</strong> - Share sessions with friends
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning"></i>
+                                    <strong>Priority Support</strong> - Get help faster
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center bg-warning">
+                            <h3 class="text-dark mb-0">$9.99 <small>per month</small></h3>
+                            <small class="text-muted">Cancel anytime</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Button -->
+            <div class="text-center mb-4">
+                <form asp-action="UpgradeConfirm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="button" class="btn btn-warning btn-lg px-5 me-3" onclick="confirmUpgrade()">
+                        <i class="bi bi-star-fill"></i>
+                        Upgrade to Premium - $9.99/month
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="confirmUpgrade()" style="display: none;" id="confirmButton">
+                        <i class="bi bi-check-circle"></i>
+                        Yes, Upgrade Now!
+                    </button>
+                    <button type="submit" style="display: none;" id="hiddenSubmit"></button>
+                </form>
+                <a asp-action="Index" class="btn btn-secondary mt-4">
+                    <i class="bi bi-arrow-left"></i>
+                    Maybe Later
+                </a>
+            </div>
+
+            <!-- Features Preview -->
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        Premium Features Preview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="bi bi-mic-fill display-4 text-primary"></i>
+                            <h6 class="mt-2">Voice Logging</h6>
+                            <small class="text-muted">Just say "Caught a 12 inch bass" and Fish-Smart logs it automatically!</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="bi bi-cloud-sun-fill display-4 text-warning"></i>
+                            <h6 class="mt-2">Smart Environmental Data</h6>
+                            <small class="text-muted">Automatic weather, tide, and moon phase data for every session.</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="bi bi-image-fill display-4 text-success"></i>
+                            <h6 class="mt-2">Advanced Image Composition</h6>
+                            <small class="text-muted">Professional-looking catch photos with species names and size overlays.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check"></i>
+                    This is a demo upgrade. No actual payment will be processed.
+                    Premium features will be activated for testing purposes.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmUpgrade() {
+            if (confirm('Are you ready to upgrade to Fish-Smart Premium?\n\nThis demo will activate premium features for testing purposes.\nNo actual payment will be processed.')) {
+                document.getElementById('hiddenSubmit').click();
+            }
+        }
+    </script>
+}

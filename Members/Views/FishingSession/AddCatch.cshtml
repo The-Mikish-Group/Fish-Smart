@@ -1,0 +1,252 @@
+﻿@model Members.Models.Catch
+
+@{
+    ViewData["Title"] = "Log a Catch";
+    var session = (Members.Models.FishingSession)ViewBag.Session;
+    var fishSpecies = (List<Members.Models.FishSpecies>)ViewBag.FishSpecies;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Session Info Header -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="bi bi-journal-check"></i> Active Session: @session.LocationName
+                            </h5>
+                            <small>@session.SessionDate.ToString("MMMM dd, yyyy 'at' h:mm tt")</small>
+                        </div>
+                        <span class="badge bg-light text-dark">
+                            @session.WaterType Water
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Catch Form -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Log New Catch</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddCatch" method="post">
+                        <input type="hidden" asp-for="SessionId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Fish Species Selection -->
+                        <div class="mb-3">
+                            <label asp-for="FishSpeciesId" class="form-label">
+                                <i class="bi bi-collection"></i> Fish Species *
+                            </label>
+                            <select asp-for="FishSpeciesId" class="form-select" required>
+                                <option value="">Select the fish species you caught...</option>
+                                @foreach (var fish in fishSpecies)
+                                {
+                                    <option value="@fish.Id" 
+                                            data-min-size="@fish.MinSize" 
+                                            data-max-size="@fish.MaxSize"
+                                            data-regulations="@fish.RegulationNotes">
+                                        @fish.CommonName
+                                        @if (!string.IsNullOrEmpty(fish.ScientificName))
+                                        {
+                                            <text> (@fish.ScientificName)</text>
+                                        }
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="FishSpeciesId" class="text-danger"></span>
+                            
+                            <!-- Fish Info Display -->
+                            <div id="fishInfo" class="mt-2 d-none">
+                                <div class="alert alert-info mb-0">
+                                    <div id="sizeRange" class="mb-1"></div>
+                                    <div id="regulations" class="small"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Catch Details -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Size" class="form-label">
+                                    <i class="bi bi-rulers"></i> Length (inches) *
+                                </label>
+                                <input asp-for="Size" type="number" step="any" min="0" max="999" 
+                                       class="form-control" placeholder="e.g., 12.5" required />
+                                <span asp-validation-for="Size" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Weight" class="form-label">
+                                    <i class="bi bi-speedometer2"></i> Weight (pounds, optional)
+                                </label>
+                                <input asp-for="Weight" type="number" step="any" min="0" max="999" 
+                                       class="form-control" placeholder="e.g., 2.5" />
+                                <span asp-validation-for="Weight" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Catch Time -->
+                        <div class="mb-4">
+                            <label asp-for="CatchTime" class="form-label">
+                                <i class="bi bi-clock"></i> Catch Time (optional)
+                            </label>
+                            <input asp-for="CatchTime" type="datetime-local" class="form-control" />
+                            <div class="form-text">Leave blank to use current time</div>
+                            <span asp-validation-for="CatchTime" class="text-danger"></span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <div>
+                                <a asp-action="Details" asp-route-id="@session.Id" class="btn btn-secondary">
+                                    <i class="bi bi-eye"></i> View Session
+                                </a>
+                                <a asp-action="EndSession" asp-route-id="@session.Id" class="btn btn-warning">
+                                    <i class="bi bi-stop-circle"></i> End Session
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Log Catch
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Catch Logging Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-md-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Measure carefully:</strong> Use consistent measurement points
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Follow regulations:</strong> Check size and bag limits
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Quick logging:</strong> Log each catch immediately
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Photo composition:</strong> Coming soon in Fish-Smart!
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                @TempData["Success"]
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fishSelect = document.getElementById('FishSpeciesId');
+            const fishInfo = document.getElementById('fishInfo');
+            const sizeRange = document.getElementById('sizeRange');
+            const regulations = document.getElementById('regulations');
+            const sizeInput = document.getElementById('Size');
+            
+            // Auto-set catch time to current time
+            const catchTimeInput = document.getElementById('CatchTime');
+            if (catchTimeInput && !catchTimeInput.value) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                catchTimeInput.value = now.toISOString().slice(0, 16);
+            }
+            
+            // Show fish information when species is selected
+            fishSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                
+                if (selectedOption.value) {
+                    const minSize = selectedOption.dataset.minSize;
+                    const maxSize = selectedOption.dataset.maxSize;
+                    const regs = selectedOption.dataset.regulations;
+                    
+                    let sizeText = '';
+                    if (minSize && maxSize) {
+                        sizeText = `Typical size range: ${minSize}" - ${maxSize}"`;
+                    } else if (minSize) {
+                        sizeText = `Minimum legal size: ${minSize}"`;
+                    } else if (maxSize) {
+                        sizeText = `Maximum typical size: ${maxSize}"`;
+                    }
+                    
+                    sizeRange.textContent = sizeText;
+                    regulations.textContent = regs || 'Check local regulations for specific rules.';
+                    
+                    fishInfo.classList.remove('d-none');
+                } else {
+                    fishInfo.classList.add('d-none');
+                }
+            });
+            
+            // Validate size against regulations
+            sizeInput.addEventListener('blur', function() {
+                const selectedOption = fishSelect.options[fishSelect.selectedIndex];
+                if (selectedOption.value) {
+                    const minSize = parseFloat(selectedOption.dataset.minSize);
+                    const enteredSize = parseFloat(this.value);
+                    
+                    if (minSize && enteredSize < minSize) {
+                        if (confirm(`This fish appears to be under the minimum legal size (${minSize}"). Are you planning to release it?`)) {
+                            // User confirmed they're releasing it
+                        } else {
+                            this.focus();
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <style>
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        /* Keyframe animation for toast */
+        @@keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+}

@@ -1,0 +1,244 @@
+@model Members.Controllers.BuddyProfileViewModel
+
+@{
+    ViewData["Title"] = $"{Model.Profile.DisplayName} - Buddy Profile";
+}
+
+<div class="container my-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="text-primary">
+                <i class="bi bi-person-circle"></i>
+                @Model.Profile.DisplayName
+            </h1>
+            <p class="text-muted mb-0">
+                Fishing Buddy Profile
+            </p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Buddies
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Profile Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h5>@Model.Profile.DisplayName</h5>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>Water Type:</strong></div>
+                        <div class="col-7">
+                            <span class="badge bg-info">@Model.Profile.PreferredWaterType</span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Profile.DefaultRegion))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-5"><strong>Region:</strong></div>
+                            <div class="col-7">@Model.Profile.DefaultRegion</div>
+                        </div>
+                    }
+
+                    <div class="row mb-2">
+                        <div class="col-5"><strong>Member Since:</strong></div>
+                        <div class="col-7">@Model.Profile.CreatedAt.ToString("MMM yyyy")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-5"><strong>Subscription:</strong></div>
+                        <div class="col-7">
+                            @if (Model.Profile.SubscriptionType == "Premium")
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-star-fill"></i> Premium
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Free</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i>
+                        Fishing Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <h4 class="text-success mb-1">@Model.TotalCatches</h4>
+                            <small class="text-muted">Total Catches</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary mb-1">@Model.RecentSessions.Count</h4>
+                            <small class="text-muted">Recent Sessions</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <h4 class="text-warning mb-1">@Model.PublicAlbums.Count</h4>
+                            <small class="text-muted">Public Albums</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-info mb-1">
+                                @(Model.RecentSessions.Count > 0 ? Math.Round(Model.RecentSessions.Average(s => s.Catches.Count), 1) : 0)
+                            </h4>
+                            <small class="text-muted">Avg per Session</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <!-- Recent Sessions -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journal-plus"></i>
+                        Recent Fishing Sessions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentSessions.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var session in Model.RecentSessions.Take(5))
+                            {
+                                <div class="list-group-item px-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                @session.LocationName
+                                                <span class="badge bg-@(session.WaterType == "Salt" ? "primary" : "success") ms-2">
+                                                    @session.WaterType
+                                                </span>
+                                            </h6>
+                                            <p class="mb-1 text-muted small">
+                                                @session.SessionDate.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                            </p>
+                                            @if (!string.IsNullOrEmpty(session.Notes) && session.Notes.Length > 0)
+                                            {
+                                                <p class="mb-1 small">
+                                                    @(session.Notes.Length > 100 ? session.Notes.Substring(0, 100) + "..." : session.Notes)
+                                                </p>
+                                            }
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-secondary">
+                                                @session.Catches.Count catch@(session.Catches.Count != 1 ? "es" : "")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        @if (Model.RecentSessions.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    And @(Model.RecentSessions.Count - 5) more sessions...
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-journal-x text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2">No recent fishing sessions</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Public Albums -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-collection"></i>
+                        Public Albums
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.PublicAlbums.Any())
+                    {
+                        <div class="row">
+                            @foreach (var album in Model.PublicAlbums)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100" style="font-size: 0.875rem;">
+                                        @if (!string.IsNullOrEmpty(album.CoverImageUrl))
+                                        {
+                                            <a asp-controller="ImageViewer" asp-action="BuddyAlbumCover" asp-route-id="@album.Id" 
+                                               asp-route-returnUrl="@Url.Action("ViewBuddyProfile", "FishingBuddies", new { buddyUserId = Model.Profile.UserId })" class="d-block">
+                                                <img src="@album.CoverImageUrl" class="card-img-top" alt="@album.Name"
+                                                     style="height: 120px; object-fit: cover; cursor: pointer;"
+                                                     title="Click to view full size">
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                                 style="height: 120px;">
+                                                <i class="bi bi-images text-muted" style="font-size: 2rem;"></i>
+                                            </div>
+                                        }
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1" style="font-size: 0.8rem; line-height: 1.2;">
+                                                @album.Name
+                                            </h6>
+                                            <p class="card-text text-muted mb-1" style="font-size: 0.7rem;">
+                                                @album.CreatedAt.ToString("MMM dd")
+                                            </p>
+                                            <p class="card-text text-muted mb-1" style="font-size: 0.7rem;">
+                                                @album.AlbumCatches.Count catch@(album.AlbumCatches.Count != 1 ? "es" : "")
+                                            </p>
+                                            <span class="badge bg-success" style="font-size: 0.65rem;">Public</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-collection text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2">No public albums shared</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

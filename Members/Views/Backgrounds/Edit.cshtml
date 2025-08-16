@@ -1,0 +1,184 @@
+@model Members.Models.Background
+
+@{
+    ViewData["Title"] = "Edit Background";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil"></i>
+                        Edit Background: @Model.Name
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ImageUrl" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Current Image Preview -->
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <div class="mb-4">
+                                <label class="form-label">Current Background:</label>
+                                <div class="border rounded p-2 text-center bg-light">
+                                    <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid" style="max-height: 200px;">
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="bi bi-tag"></i>
+                                    Background Name *
+                                </label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Category" class="form-label">
+                                    <i class="bi bi-collection"></i>
+                                    Category
+                                </label>
+                                <select asp-for="Category" class="form-select">
+                                    <option value="">Select Category</option>
+                                    <option value="Seawall">Seawall</option>
+                                    <option value="Beach">Beach</option>
+                                    <option value="Pier">Pier</option>
+                                    <option value="Boat">Boat</option>
+                                    <option value="Lake">Lake</option>
+                                    <option value="River">River</option>
+                                    <option value="Studio">Studio</option>
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="WaterType" class="form-label">
+                                    <i class="bi bi-droplet"></i>
+                                    Water Type
+                                </label>
+                                <select asp-for="WaterType" class="form-select">
+                                    <option value="">Select Water Type</option>
+                                    <option value="Fresh">Freshwater</option>
+                                    <option value="Salt">Saltwater</option>
+                                    <option value="Both">Both Types</option>
+                                </select>
+                                <span asp-validation-for="WaterType" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-star"></i>
+                                    Access Level
+                                </label>
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsPremium" class="form-check-input" type="checkbox" id="isPremiumSwitch">
+                                    <label class="form-check-label" for="isPremiumSwitch">
+                                        <span id="premiumLabel">@(Model.IsPremium ? "Premium Background" : "Free Background")</span>
+                                    </label>
+                                </div>
+                                <small class="text-muted">Premium backgrounds require a paid subscription</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-file-text"></i>
+                                Description
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Image Upload (Optional for Edit) -->
+                        <div class="mb-4">
+                            <label for="imageFile" class="form-label">
+                                <i class="bi bi-cloud-upload"></i>
+                                Replace Background Image (Optional)
+                            </label>
+                            <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                Leave empty to keep the current image. Upload a new image to replace it.
+                            </div>
+                        </div>
+
+                        <!-- New Image Preview -->
+                        <div id="imagePreview" class="mb-3" style="display: none;">
+                            <label class="form-label">New Image Preview:</label>
+                            <div class="border rounded p-2 text-center">
+                                <img id="previewImg" src="" alt="Preview" class="img-fluid" style="max-height: 200px;">
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                Back to List
+                            </a>
+                            <div>
+                                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info me-2">
+                                    <i class="bi bi-eye"></i>
+                                    View Details
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i>
+                                    Update Background
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Premium toggle functionality
+        document.getElementById('isPremiumSwitch').addEventListener('change', function() {
+            const label = document.getElementById('premiumLabel');
+            if (this.checked) {
+                label.textContent = 'Premium Background';
+                label.className = 'form-check-label text-warning fw-bold';
+            } else {
+                label.textContent = 'Free Background';
+                label.className = 'form-check-label';
+            }
+        });
+
+        // Set initial label state
+        const premiumSwitch = document.getElementById('isPremiumSwitch');
+        const premiumLabel = document.getElementById('premiumLabel');
+        if (premiumSwitch.checked) {
+            premiumLabel.className = 'form-check-label text-warning fw-bold';
+        }
+
+        // Image preview functionality
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+        });
+    </script>
+}

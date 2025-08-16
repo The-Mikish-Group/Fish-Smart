@@ -1,0 +1,230 @@
+﻿@page
+@model Members.Areas.Identity.Pages.AddUserModel
+
+@{
+    ViewData["Title"] = "Add New Member";    
+}
+
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+
+<div class="my-4">
+     <div class="row justify-content-center m-0 p-0">
+        <div class="col-lg-8 col-md-10 p-1">
+            <div class="card rounded p-2 shadow">
+                <form method="post">
+                    <h1 class="text-black mb-4 text-center">
+                        <i class="bi bi-person-fill"></i> Add a New Member
+                    </h1>
+                    <div asp-validation-summary="ModelOnly" class="text-danger text-center" role="alert"></div>
+                    
+                    <!-- Email -->
+                    <div class="form-floating mb-2">
+                        <input asp-for="Input.Email" class="text-black form-control shadow" placeholder="Email" />
+                        <label asp-for="Input.Email" class="text-black fw-bold">Email</label>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- Email Confirmed -->
+                    <div class="form-check mb-2">
+                        <input asp-for="Input.EmailConfirmed" class="form-check-input custom-checkbox-green" id="emailConfirmedCheckbox" />
+                        <label asp-for="Input.EmailConfirmed" class="text-black form-check-label" for="emailConfirmedCheckbox">Email Confirmed</label>
+                    </div>
+
+                    <!-- Cell Phone -->
+                    <div class="form-floating mb-2">
+                        <input asp-for="Input.PhoneNumber" class="text-black form-control shadow" id="phoneNumber" placeholder="Cell Phone" />
+                        <label asp-for="Input.PhoneNumber" class="text-black form-check-label">Cell Phone</label>
+                        <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <!-- Cell Phone Confirmed -->
+                    <div class="form-check mb-2">
+                        <input asp-for="Input.PhoneNumberConfirmed" class="form-check-input custom-checkbox-green shadow" id="phoneNumberConfirmedCheckbox" />
+                        <label asp-for="Input.PhoneNumberConfirmed" class="text-black form-check-label" for="phoneNumberConfirmedCheckbox">Cell Phone Confirmed</label>
+                    </div>
+
+                    <!-- Home Phone -->
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.HomePhoneNumber" class="text-black form-control shadow" id="homephoneNumber" placeholder="Home Phone" />
+                        <label asp-for="Input.HomePhoneNumber" class="text-black fw-bold">Home Phone (Opt.)</label>
+                        <span asp-validation-for="Input.HomePhoneNumber" class="text-danger"></span>
+                    </div>                    
+
+                    <!-- Name Row -->
+                    <div class="row gx-1">
+
+                        <!-- First Name -->
+                        <div class="col-5 form-floating mb-2">
+                            <input asp-for="Input.FirstName" class="text-black form-control shadow" placeholder="First Name" />
+                            <label asp-for="Input.FirstName" class="text-black fw-bold">First Name</label>
+                            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                        </div>
+
+                        <!-- Middle Name -->
+                        <div class="col-2 form-floating mb-2">
+                            <input asp-for="Input.MiddleName" class="text-black form-control shadow" placeholder="M" />
+                            <!-- <label asp-for="Input.MiddleName" class="fw-bold">*</label> -->
+                            <span asp-validation-for="Input.MiddleName" class="text-danger"></span>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="col-5 form-floating mb-2">
+                            <input asp-for="Input.LastName" class="text-black form-control shadow" placeholder="Last Name" />
+                            <label asp-for="Input.LastName" class="text-black fw-bold">Last Name</label>
+                            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Dates Birthday and Anniversary -->
+                    <div class="row gx-1">
+
+                        <!-- Birthday -->
+                        <div class="col-6 form-floating mb-2">
+                            <input asp-for="Input.Birthday" class="text-black form-control shadow" type="date" placeholder=" " />
+                            <label asp-for="Input.Birthday" class="text-black fw-bold">Birthday (Opt.)</label>
+                            <span asp-validation-for="Input.Birthday" class="text-danger"></span>
+                        </div>
+
+                        <!-- Anniversary -->
+                        <div class="col-6 form-floating mb-2">
+                            <input asp-for="Input.Anniversary" class="text-black form-control shadow" type="date" placeholder=" " />
+                            <label asp-for="Input.Anniversary" class="text-black fw-bold">Anniversary (Opt.)</label>
+                            <span asp-validation-for="Input.Anniversary" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <hr />
+
+                    <!-- Address Line 1 -->
+                    <div class="col-12 form-floating mb-2">
+                        <input asp-for="Input.AddressLine1" class="text-black form-control shadow" placeholder="Address Line 1" />
+                        <label asp-for="Input.AddressLine1" class="text-black fw-bold">Address Line 1</label>
+                        <span asp-validation-for="Input.AddressLine1" class="text-danger"></span>
+                    </div>
+
+                    <!-- Address Line 2 -->
+                    <div class="col-12 form-floating mb-2">
+                        <input asp-for="Input.AddressLine2" class="text-black form-control shadow" placeholder="Address Line 2 (Opt.)" />
+                        <label asp-for="Input.AddressLine2" class="text-black fw-bold">Address Line 2 (Opt.)</label>
+                        <span asp-validation-for="Input.AddressLine2" class="text-danger"></span>
+                    </div>
+
+                    <!-- City State ZipCode Row -->
+                    <div class="row gx-1">
+
+                        <!-- City -->
+                        <div class="col-5 form-floating mb-2">
+                            <input asp-for="Input.City" class="text-black form-control shadow" placeholder="City" />
+                            <label asp-for="Input.City" class="text-black fw-bold">City</label>
+                            <span asp-validation-for="Input.City" class="text-danger"></span>
+                        </div>
+
+                        <!-- State -->
+                        <div class="col-3 form-floating mb-2">
+                            <input asp-for="Input.State" class="text-black form-control shadow" placeholder="State" />
+                            <label asp-for="Input.State" class="text-black fw-bold">State</label>
+                            <span asp-validation-for="Input.State" class="text-danger"></span>
+                        </div>
+
+                        <!-- ZipCode -->
+                        <div class="col-4 form-floating mb-2">
+                            <input asp-for="Input.ZipCode" class="text-black form-control shadow" placeholder="Zip Code" />
+                            <label asp-for="Input.ZipCode" class="text-black fw-bold">Zip</label>
+                            <span asp-validation-for="Input.ZipCode" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <hr />
+
+                    <!-- Email Sent notice -->
+                    <div class="text-danger mb-4 text-center">
+                        <p>The user will be sent an email with a link to *Create* their password.</p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="row justify-content-center">
+
+                        <!-- Cancel Button -->
+                        <div class="col-6 text-center">
+                            <button type="button" onclick="window.location.href='/Identity/Users'" class="btn btn-sm btn-back rounded-2 text-start shadow">
+                                <i class="bi bi-box-arrow-left"></i> Cancel
+                            </button>
+                        </div>
+
+                        <!-- Save -->
+                        <div class="col-6 text-center">
+                            <button type="submit" class="btn btn-sm btn-success rounded-2 text-end shadow">
+                                <i class="bi bi-save"></i> Save
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {                
+            const firstNameInput = document.querySelector('input[name="Input.FirstName"]');
+            const middleNameInput = document.querySelector('input[name="Input.MiddleName"]');
+            const lastNameInput = document.querySelector('input[name="Input.LastName"]');
+
+            const phoneNumberInput = document.getElementById('phoneNumber');
+            const homephoneNumberInput = document.getElementById('homephoneNumber');
+
+            function formatPhoneNumber(input) {
+                const cleaned = ('' + input.value).replace(/\D/g, '');
+                let formatted = '';
+                if (cleaned.length > 0) {
+                    formatted = '(' + cleaned.substring(0, 3);
+                    if (cleaned.length > 3) {
+                        formatted += ') ' + cleaned.substring(3, 6);
+                    }
+                    if (cleaned.length > 6) {
+                        formatted += '-' + cleaned.substring(6, 10);
+                    }
+                }
+                input.value = formatted;
+            }
+
+            if (phoneNumberInput) {
+                phoneNumberInput.addEventListener('input', function () {
+                    formatPhoneNumber(this);
+                });
+            }
+
+            if (homephoneNumberInput) {
+                homephoneNumberInput.addEventListener('input', function () {
+                    formatPhoneNumber(this);
+                });
+            }
+
+            function capitalizeInput(inputElement) {
+                inputElement.addEventListener('input', function () {
+                    let inputValue = this.value;
+                    let words = inputValue.split(' ');
+                    let capitalizedWords = words.map(word => {
+                        if (word.length > 0) {
+                            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                        }
+                        return word;
+                    });
+                    this.value = capitalizedWords.join(' ');
+                });
+            }
+
+            capitalizeInput(firstNameInput);
+            capitalizeInput(middleNameInput);
+            capitalizeInput(lastNameInput);
+        });
+    </script>
+}

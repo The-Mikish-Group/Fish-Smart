@@ -1,0 +1,393 @@
+﻿@model Members.Models.SmartCatchProfile
+
+@{
+    ViewData["Title"] = "Fish-Smart Profile";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+
+            <!-- Profile Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>🎣 Fish-Smart Profile</h2>
+                    <p class="text-white mb-0">Welcome back, @Model.DisplayName!</p>
+                </div>
+                <div>
+                    <a asp-action="Edit" class="btn btn-sm btn-primary my-2 me-2">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                    @if (Model.SubscriptionType != "Premium")
+                    {
+                        <a asp-action="Upgrade" class="btn btn-sm btn-warning mx-0">
+                            <i class="bi bi-star"></i> Upgrade to Premium
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Profile Overview Cards -->
+            <div class="row mb-4">
+
+                <!-- Profile Info Card -->
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-person-circle"></i> Profile Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Display Name:</strong></div>
+                                <div class="col-7">@Model.DisplayName</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Subscription:</strong></div>
+                                <div class="col-7">
+                                    @if (Model.SubscriptionType == "Premium")
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-star-fill"></i> Premium
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Free</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Water Type:</strong></div>
+                                <div class="col-7">
+                                    <span class="badge bg-info">@Model.PreferredWaterType</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.DefaultRegion))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Region:</strong></div>
+                                    <div class="col-7">@Model.DefaultRegion</div>
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-5"><strong>Member Since:</strong></div>
+                                <div class="col-7">@Model.CreatedAt.ToString("MMM yyyy")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Card -->
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-gear"></i> Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Watermark Enabled</span>
+                                @if (Model.WatermarkEnabled)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Yes
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> No
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>
+                                    Voice Activation
+                                    @if (Model.SubscriptionType != "Premium")
+                                    {
+                                        <i class="bi bi-star text-warning" title="Premium Feature"></i>
+                                    }
+                                </span>
+                                @if (Model.VoiceActivationEnabled && Model.SubscriptionType == "Premium")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Enabled
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Disabled
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    Auto Location
+                                    @if (Model.SubscriptionType != "Premium")
+                                    {
+                                        <i class="bi bi-star text-warning" title="Premium Feature"></i>
+                                    }
+                                </span>
+                                @if (Model.AutoLocationEnabled && Model.SubscriptionType == "Premium")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Enabled
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Disabled
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Card -->
+                <div class="col-lg-4 col-md-12 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-info">
+                            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Quick Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h4 class="text-primary mb-1">@Model.FishingSessions.Count</h4>
+                                        <small>Sessions</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h4 class="text-success mb-1">@Model.UserAvatars.Count</h4>
+                                        <small>Avatars</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-warning mb-1">@Model.CatchAlbums.Count</h4>
+                                    <small>Albums</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <a asp-action="Stats" class="btn btn-sm btn-info">
+                                    <i class="bi bi-bar-chart"></i> View Detailed Stats
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Section -->
+            <div class="row">
+
+                <!-- Recent Sessions -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-journal-plus"></i> Recent Sessions</h5>
+                            <a asp-controller="FishingSession" asp-action="Index" class="btn btn-sm btn-primary">
+                                View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.FishingSessions.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var session in Model.FishingSessions.Take(3))
+                                    {
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        @session.LocationName
+                                                        <span class="badge bg-@(session.WaterType == "Salt" ? "primary" : "success") ms-2">
+                                                            @session.WaterType
+                                                        </span>
+                                                    </h6>
+                                                    <p class="mb-1 text-white small">
+                                                        @session.SessionDate.ToString("MMM dd, yyyy")
+                                                    </p>
+                                                </div>
+                                                <small class="text-white">
+                                                    @session.SessionDate.ToString("h:mm tt")
+                                                </small>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (Model.FishingSessions.Count > 3)
+                                {
+                                    <div class="text-center mt-3">
+                                        <small class="text-white">
+                                            And @(Model.FishingSessions.Count - 3) more sessions...
+                                        </small>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-journal-x text-white" style="font-size: 2rem;"></i>
+                                    <p class="text-white mt-2">No fishing sessions yet!</p>
+                                    <a asp-controller="FishingSession" asp-action="Create" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Start Your First Session
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Albums -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-collection"></i> My Albums</h5>
+                            <a asp-controller="CatchAlbum" asp-action="Create" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus-circle"></i> New Album
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.CatchAlbums.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var album in Model.CatchAlbums.Take(6))
+                                    {
+                                        <div class="col-4 mb-2">
+                                            <div class="card border h-100" style="font-size: 0.875rem;">
+                                                @if (!string.IsNullOrEmpty(album.CoverImageUrl))
+                                                {
+                                                    <a asp-controller="CatchAlbum" asp-action="Details" asp-route-id="@album.Id" class="d-block">
+                                                        <img src="@album.CoverImageUrl" class="card-img-top rounded-top" alt="@album.Name"
+                                                             style="width: 100%; height: auto; min-height: 60px; object-fit: cover; object-position: center top; cursor: pointer;"
+                                                             title="Click to view album details">
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <a asp-controller="CatchAlbum" asp-action="Details" asp-route-id="@album.Id" class="d-block">
+                                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center rounded-top"
+                                                             style="min-height: 60px; aspect-ratio: 4/3;">
+                                                            <i class="bi bi-images text-muted" style="font-size: 1.5rem;"></i>
+                                                        </div>
+                                                    </a>
+                                                }
+                                                <div class="card-body p-2">
+                                                    <h6 class="card-title mb-1 text-dark" style="font-size: 0.8rem; line-height: 1.2;">@album.Name</h6>
+                                                    <p class="card-text text-muted mb-1" style="font-size: 0.7rem;">
+                                                        @album.CreatedAt.ToString("MMM dd")
+                                                    </p>
+                                                    <p class="card-text text-muted mb-1" style="font-size: 0.7rem;">
+                                                        @album.AlbumCatches.Count catch@(album.AlbumCatches.Count != 1 ? "es" : "")
+                                                    </p>
+                                                    @if (album.IsPublic)
+                                                    {
+                                                        <span class="badge bg-success" style="font-size: 0.65rem;">Public</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary" style="font-size: 0.65rem;">Private</span>
+                                                    }
+                                                </div>
+                                                <div class="card-footer p-1 bg-transparent">
+                                                    <div class="d-flex gap-1">
+                                                        <a asp-controller="CatchAlbum" asp-action="Details" asp-route-id="@album.Id" 
+                                                           class="btn btn-success btn-sm flex-fill" style="font-size: 0.7rem; padding: 0.25rem;">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        <a asp-controller="CatchAlbum" asp-action="Edit" asp-route-id="@album.Id" 
+                                                           class="btn btn-warning btn-sm flex-fill" style="font-size: 0.7rem; padding: 0.25rem;">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-collection text-white" style="font-size: 2rem;"></i>
+                                    <p class="text-white mt-2">No albums created yet!</p>
+                                    <a asp-controller="CatchAlbum" asp-action="Create" class="btn btn-success btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Create Your First Album
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Get Started with Fish-Smart</h5>
+                            <p class="card-text text-white">Ready to start your ethical fishing journey?</p>
+                            <div class="btn-group" role="group">
+                                <a asp-controller="FishingSession" asp-action="Create" class="btn btn-primary">
+                                    <i class="bi bi-journal-plus"></i> Start Fishing Session
+                                </a>
+                                <a asp-controller="FishSpecies" asp-action="Index" class="btn btn-info">
+                                    <i class="bi bi-collection"></i> Browse Fish Species
+                                </a>
+                                <a asp-action="Edit" class="btn btn-secondary">
+                                    <i class="bi bi-gear"></i> Profile Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                @TempData["Success"]
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out;
+        border: 1px solid #e3e6f0;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+
+    .border-end {
+        border-right: 1px solid #dee2e6 !important;
+    }
+
+    .toast {
+        animation: slideIn 0.3s ease-out;
+    }
+
+   
+</style>

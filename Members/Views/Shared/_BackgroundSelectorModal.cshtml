@@ -1,0 +1,406 @@
+@model List<Members.Models.Background>
+
+<!-- Background Selector Modal -->
+<div class="modal fade" id="backgroundSelectorModal" tabindex="-1" aria-labelledby="backgroundSelectorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="backgroundSelectorModalLabel">
+                    <i class="bi bi-palette"></i>
+                    Choose Background
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Filter Controls -->
+                <div class="bg-light p-3 border-bottom">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="categoryFilter" class="form-label">Category</label>
+                            <select class="form-select" id="categoryFilter" onchange="filterBackgrounds()">
+                                <option value="">All Categories</option>
+                                <option value="Seawall">Seawall</option>
+                                <option value="Beach">Beach</option>
+                                <option value="Pier">Pier</option>
+                                <option value="Boat">Boat</option>
+                                <option value="Lake">Lake</option>
+                                <option value="River">River</option>
+                                <option value="Studio">Studio</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="waterTypeFilter" class="form-label">Water Type</label>
+                            <select class="form-select" id="waterTypeFilter" onchange="filterBackgrounds()">
+                                <option value="">All Types</option>
+                                <option value="Fresh">Freshwater</option>
+                                <option value="Salt">Saltwater</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="premiumFilter" class="form-label">Access Level</label>
+                            <select class="form-select" id="premiumFilter" onchange="filterBackgrounds()">
+                                <option value="">All Backgrounds</option>
+                                <option value="free">Free Only</option>
+                                <option value="premium">Premium Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                <i class="bi bi-funnel"></i>
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Background Grid -->
+                <div class="p-3" style="max-height: 60vh; overflow-y: auto;">
+                    <div id="backgroundGrid" class="row g-3">
+                        @foreach (var background in Model ?? new List<Members.Models.Background>())
+                        {
+                            <div class="col-lg-3 col-md-4 col-sm-6 background-item" 
+                                 data-category="@background.Category" 
+                                 data-watertype="@background.WaterType" 
+                                 data-premium="@background.IsPremium.ToString().ToLower()">
+                                <div class="card h-100 background-card" 
+                                     onclick="selectBackground(@background.Id, '@background.Name', '@background.ImageUrl')"
+                                     style="cursor: pointer;">
+                                    
+                                    <!-- Background Image -->
+                                    <div class="position-relative">
+                                        @if (!string.IsNullOrEmpty(background.ImageUrl))
+                                        {
+                                            <img src="@background.ImageUrl" 
+                                                 class="card-img-top" 
+                                                 alt="@background.Name"
+                                                 style="height: 150px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="card-img-top bg-warning d-flex flex-column align-items-center justify-content-center text-dark" style="height: 150px;">
+                                                <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                                                <small class="mt-1">No Image</small>
+                                            </div>
+                                        }
+                                        
+                                        <!-- Premium Badge -->
+                                        @if (background.IsPremium)
+                                        {
+                                            <span class="position-absolute top-0 end-0 badge bg-warning text-dark m-2">
+                                                <i class="bi bi-star-fill"></i>
+                                                Premium
+                                            </span>
+                                        }
+                                        
+                                        <!-- Selection Indicator -->
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-success bg-opacity-75 text-white selection-overlay" style="display: none !important;">
+                                            <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Background Info -->
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1">@background.Name</h6>
+                                        <small class="text-muted">
+                                            @if (!string.IsNullOrEmpty(background.Category))
+                                            {
+                                                <span class="badge bg-secondary me-1">@background.Category</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(background.WaterType))
+                                            {
+                                                <span class="badge bg-info">@background.WaterType</span>
+                                            }
+                                        </small>
+                                        @if (!string.IsNullOrEmpty(background.Description))
+                                        {
+                                            <p class="card-text small mt-1 mb-0">@background.Description</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- No Results Message -->
+                    <div id="noResultsMessage" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">No backgrounds found</h5>
+                        <p class="text-muted">Try adjusting your filters or upgrading to premium for more options.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <!-- Selected Background Info -->
+                    <div id="selectedBackgroundInfo" style="display: none;">
+                        <small class="text-muted">
+                            Selected: <span id="selectedBackgroundName" class="fw-bold"></span>
+                        </small>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="applyBackgroundBtn" class="btn btn-primary" onclick="applySelectedBackground()" disabled>
+                            <i class="bi bi-check"></i>
+                            Apply Background
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.background-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.background-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.background-card.selected {
+    border: 3px solid var(--bs-success);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+.selection-overlay {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.background-card.selected .selection-overlay {
+    opacity: 1 !important;
+    display: flex !important;
+}
+
+.modal-xl {
+    max-width: 1200px;
+}
+
+@@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+}
+</style>
+
+<script>
+let selectedBackgroundId = null;
+let selectedBackgroundName = '';
+let selectedBackgroundUrl = '';
+
+function filterBackgrounds() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const waterTypeFilter = document.getElementById('waterTypeFilter').value;
+    const premiumFilter = document.getElementById('premiumFilter').value;
+    
+    const backgroundItems = document.querySelectorAll('.background-item');
+    let visibleCount = 0;
+    
+    backgroundItems.forEach(item => {
+        const category = item.dataset.category || '';
+        const waterType = item.dataset.watertype || '';
+        const isPremium = item.dataset.premium === 'true';
+        
+        let show = true;
+        
+        // Category filter
+        if (categoryFilter && category !== categoryFilter) {
+            show = false;
+        }
+        
+        // Water type filter
+        if (waterTypeFilter && waterType !== waterTypeFilter && waterType !== 'Both') {
+            show = false;
+        }
+        
+        // Premium filter
+        if (premiumFilter === 'free' && isPremium) {
+            show = false;
+        } else if (premiumFilter === 'premium' && !isPremium) {
+            show = false;
+        }
+        
+        item.style.display = show ? 'block' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Show/hide no results message
+    document.getElementById('noResultsMessage').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function clearFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('waterTypeFilter').value = '';
+    document.getElementById('premiumFilter').value = '';
+    filterBackgrounds();
+}
+
+function selectBackground(backgroundId, backgroundName, backgroundUrl) {
+    // Remove previous selection
+    document.querySelectorAll('.background-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selection to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Update selected background info
+    selectedBackgroundId = backgroundId;
+    selectedBackgroundName = backgroundName;
+    selectedBackgroundUrl = backgroundUrl;
+    
+    // Update UI
+    document.getElementById('selectedBackgroundName').textContent = backgroundName;
+    document.getElementById('selectedBackgroundInfo').style.display = 'block';
+    document.getElementById('applyBackgroundBtn').disabled = false;
+}
+
+function applySelectedBackground() {
+    if (!selectedBackgroundId) {
+        alert('Please select a background first.');
+        return;
+    }
+    
+    // Show quality warning using Bootstrap modal
+    showBackgroundWarningModal(() => {
+        processBackgroundReplacement();
+    });
+}
+
+function processBackgroundReplacement() {
+    
+    // Show processing indicator
+    const applyBtn = document.getElementById('applyBackgroundBtn');
+    const originalText = applyBtn.innerHTML;
+    applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    applyBtn.disabled = true;
+    
+    // Call the background replacement function
+    replaceImageBackground(selectedBackgroundId, selectedBackgroundUrl)
+        .then(result => {
+            if (result.success) {
+                // Close modal and refresh image
+                const modal = bootstrap.Modal.getInstance(document.getElementById('backgroundSelectorModal'));
+                modal.hide();
+                
+                // Show success message
+                showNotification('Background replaced successfully!', 'success');
+                
+                // Reload the image (this will be implemented in the main ImageViewer page)
+                if (typeof onBackgroundReplaced === 'function') {
+                    onBackgroundReplaced(result.newImageUrl);
+                }
+            } else {
+                showNotification('Error: ' + result.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Background replacement error:', error);
+            showNotification('An error occurred while processing the image.', 'error');
+        })
+        .finally(() => {
+            // Reset button
+            applyBtn.innerHTML = originalText;
+            applyBtn.disabled = false;
+        });
+}
+
+async function showBackgroundWarningModal(onConfirm) {
+    // Check if AI model is available
+    let isAIAvailable = false;
+    try {
+        const response = await fetch('/ImageViewer/CheckAIModelStatus');
+        const result = await response.json();
+        isAIAvailable = result.isAvailable;
+    } catch (error) {
+        console.error('Error checking AI model status:', error);
+    }
+
+    // Use the global modal system if available, otherwise create our own
+    if (typeof window.showConfirmModal === 'function') {
+        const message = `
+            <div class="mb-3">
+                <h6 class="text-${isAIAvailable ? 'success' : 'warning'}">
+                    <i class="bi bi-${isAIAvailable ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>
+                    Background Replacement ${isAIAvailable ? 'Ready' : 'Quality'}
+                </h6>
+                ${isAIAvailable ? 
+                    '<div class="alert alert-success mb-3"><strong>✅ AI Model Active:</strong> Using U2-Net for professional-quality background removal with precise edge detection.</div>' :
+                    '<div class="alert alert-warning mb-3"><strong>⚠️ Basic Mode:</strong> Using color detection. Go to <strong>Fish-Smart Admin → AI Models</strong> to download U2-Net for better results.</div>'
+                }
+                <div class="alert alert-info mb-3">
+                    <strong>Process:</strong> Your original image will be backed up automatically, and you can undo changes if needed.
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="bi bi-shield-check text-success" style="font-size: 2rem;"></i>
+                        <br><small>Auto Backup</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-arrow-counterclockwise text-primary" style="font-size: 2rem;"></i>
+                        <br><small>Undo Available</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-arrow-clockwise text-info" style="font-size: 2rem;"></i>
+                        <br><small>Auto Refresh</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        window.showConfirmModal(message, onConfirm, {
+            title: `Background Replacement${isAIAvailable ? ' (AI Enhanced)' : ' (Basic Mode)'}`,
+            confirmText: 'Continue',
+            dangerous: false
+        });
+    } else {
+        // Fallback to basic confirm if global modal not available
+        if (confirm('⚠️ Background Replacement\n\nContinue with background replacement?')) {
+            onConfirm();
+        }
+    }
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Initialize filters on modal show
+document.getElementById('backgroundSelectorModal').addEventListener('shown.bs.modal', function () {
+    clearFilters();
+    selectedBackgroundId = null;
+    selectedBackgroundName = '';
+    selectedBackgroundUrl = '';
+    document.getElementById('selectedBackgroundInfo').style.display = 'none';
+    document.getElementById('applyBackgroundBtn').disabled = true;
+    
+    // Remove any previous selections
+    document.querySelectorAll('.background-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+});
+</script>

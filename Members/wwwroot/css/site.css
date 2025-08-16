@@ -1,0 +1,191 @@
+/* #region General Site CSS Stuff */
+
+/* Necessary to ensure footer stays at bottom */
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Make the main content area grow to fill available space */
+#MainContainer {
+    flex: 1 0 auto;
+}
+
+/* Ensure the footer stays at bottom */
+#footer {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 0px;
+    position: inherit;
+}
+
+header {
+    position: relative;
+    top: 0;
+    width: 100%;
+}
+
+html > body header {
+    width: 100%;
+}
+
+.navbar-overhang {
+    position: absolute;
+    top: 14px;
+    transform: translateY(-10%);
+}
+   
+.siteNameBig, .siteNameSmall > a {
+    padding-left: 120px;
+}
+
+/* Svg Container (put Svg files inside a #container for scaling */
+svg, #container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Svg Nav Bar Small Logo */
+.logo {
+    height: 72px;
+}
+
+/* SVG Nav Bar 'Name' Logo */
+.nbLogo {
+    height: 24px;
+}
+
+/* cloudlg */
+.cloudlg {
+    height:140px;
+}
+
+/* cloudbannersm */
+.cloudbannersm {
+    height: 30px;
+}
+
+/* cloudiconsm */
+.cloudiconsm {
+    height: 14px;
+}
+
+/* cloudsm */
+.cloudsm {
+    height: 30px;
+}
+
+/* Svg Footer Logo */
+.footer-logo {
+    height: 20px;
+}
+
+.footer-spacing {
+    margin-bottom: 50px;
+}
+
+.fw-bold { 
+    font-weight: 500;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Keyframe animation for spinner */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.text-muted {
+    color: white;
+}
+
+/* No Radius Right or Left */
+.no-right-radius {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.no-left-radius {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* List Word Break */
+@media (max-width: 767.98px) {
+    .list-group-item span.flex-grow-1 {
+        word-break: break-word;
+    }
+}
+
+/* make everything a borderbox */
+* {
+    box-sizing: border-box;
+}
+
+/* General input and select focus styles */
+page-item:focus,
+page-link:focus,
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus, /* Targets standard Bootstrap form controls */
+.custom-select:focus /* Targets Bootstrap custom select elements */ {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: initial !important; /* Resets the border color to its default state, removing any blue tint */
+    background-color: initial !important;
+}
+
+/* Adjust form styling within nav-item to prevent misalignment */
+.navbar-nav .nav-item form.form-inline {
+    margin: 0; /* Remove any default margin */
+    padding: 0; /* Remove any default padding */
+    display: block; /* Forms are block by default, but confirm */
+    /* You might need vertical-align depending on specific issue */
+    vertical-align: middle;
+}
+
+    /* Further adjustments to the button within the form if needed */
+    .navbar-nav .nav-item form.form-inline .btn.nav-link {
+        /* Ensure no extra margin/padding on the button itself that deviates from regular nav-links */
+        padding-top: .3rem; /* Match Bootstrap's default nav-link padding */
+        padding-bottom: .9rem; /* Match Bootstrap's default nav-link padding */
+        /* Check horizontal padding too if needed */
+    }
+
+#pdf-viewer-container {
+    width: 100%; /* Use 100% width */
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Set Image pointer and border transition */
+img {
+    cursor: pointer;
+    transition: border 0.3s ease-in-out;
+}
+
+/* #endregion General Site CSS Stuff */
+
+
+

@@ -1,0 +1,242 @@
+@model Members.Models.FishingSession
+
+@{
+    ViewData["Title"] = "End Fishing Session";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-success">
+                    <i class="bi bi-stop-circle"></i>
+                    End Fishing Session
+                </h1>
+                <p class="text-muted">Review your session summary before finishing</p>
+            </div>
+
+            <!-- Session Summary Card -->
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i>
+                        Session Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Basic Session Info -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Date & Time:</strong><br>
+                            @Model.SessionDate.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Duration:</strong><br>
+                            @{
+                                var duration = DateTime.Now - Model.SessionDate;
+                                var hours = (int)duration.TotalHours;
+                                var minutes = duration.Minutes;
+                            }
+                            @if (hours > 0)
+                            {
+                                <text>@hours hour@(hours != 1 ? "s" : "") @minutes minute@(minutes != 1 ? "s" : "")</text>
+                            }
+                            else
+                            {
+                                <text>@minutes minute@(minutes != 1 ? "s" : "")</text>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Water Type:</strong><br>
+                            @switch (Model.WaterType)
+                            {
+                                case "Fresh":
+                                    <span class="badge bg-info">Freshwater</span>
+                                    break;
+                                case "Salt":
+                                    <span class="badge bg-primary">Saltwater</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.WaterType</span>
+                                    break;
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            @if (!string.IsNullOrEmpty(Model.LocationName))
+                            {
+                                <strong>Location:</strong><br>
+                                <i class="bi bi-geo-alt text-danger"></i> @Model.LocationName
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catches Summary -->
+            @if (ViewBag.Catches != null)
+            {
+                var catches = (List<Members.Models.Catch>)ViewBag.Catches;
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-collection"></i>
+                            Your Catches (@catches.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (catches.Any())
+                        {
+                            <!-- Stats Row -->
+                            <div class="row text-center mb-4">
+                                <div class="col-md-4">
+                                    <div class="bg-success text-white rounded p-3">
+                                        <h3 class="mb-0">@catches.Count</h3>
+                                        <small>Total Fish</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-primary text-white rounded p-3">
+                                        <h3 class="mb-0">@catches.Select(c => c.Species?.CommonName).Distinct().Count()</h3>
+                                        <small>Species</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-warning text-dark rounded p-3">
+                                        <h3 class="mb-0">
+                                            @if (catches.Any(c => c.Size > 0))
+                                            {
+                                                @catches.Where(c => c.Size > 0).Max(c => c.Size).ToString("F1")<text>"</text>
+                                            }
+                                            else
+                                            {
+                                                <text>N/A</text>
+                                            }
+                                        </h3>
+                                        <small>Largest</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Catches List -->
+                            <h6 class="mb-3">Catches Detail:</h6>
+                            <div class="row">
+                                @foreach (var fishCatch in catches.OrderByDescending(c => c.CatchTime ?? c.CreatedAt))
+                                {
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="card h-100 border-info">
+                                            <div class="card-body">
+                                                <h6 class="card-title">@fishCatch.Species?.CommonName</h6>
+                                                <p class="card-text mb-1">
+                                                    <strong>Size:</strong> @fishCatch.Size.ToString("F1")"
+                                                    @if (fishCatch.Weight.HasValue)
+                                                    {
+                                                        <br><strong>Weight:</strong> @fishCatch.Weight.Value.ToString("F1") <text>lbs</text>
+                                                    }
+                                                </p>
+                                                @if (fishCatch.CatchTime.HasValue)
+                                                {
+                                                    <small class="text-muted">
+                                                        @fishCatch.CatchTime.Value.ToString("h:mm tt")
+                                                    </small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="bi bi-fish display-1 text-muted"></i>
+                                <h4 class="text-muted mt-3">No catches recorded</h4>
+                                <p class="text-muted">Better luck next time!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Session Notes -->
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-chat-square-text"></i>
+                            Session Notes
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Notes</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <div class="d-flex justify-content-center gap-3">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Session
+                    </a>
+                    
+                    <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i>
+                        Add Another Catch
+                    </a>
+
+                    <form asp-action="EndSessionConfirmed" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            Complete Session
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips for Next Time -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb"></i>
+                        Great Session! Here's What You Can Do Next:
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-graph-up text-success me-2"></i>
+                                    <strong>View Statistics:</strong> Check your progress over time
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-share text-primary me-2"></i>
+                                    <strong>Share Catches:</strong> Show off your best photos
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-journal-plus text-warning me-2"></i>
+                                    <strong>Plan Next Trip:</strong> Use this data to plan your next session
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-info me-2"></i>
+                                    <strong>Upgrade Premium:</strong> Get AI weather data and more features
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

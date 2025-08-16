@@ -1,0 +1,67 @@
+﻿@page
+@model ResendEmailConfirmationModel
+@{
+    ViewData["Title"] = "Send email confirmation";   
+}
+
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+
+<!-- Banner Logo -->
+
+
+<div class="my-4">
+    <div class="row justify-content-center m-0 p-0">
+        <div class="col-md-8 col-lg-6 p-1">
+            <div class="card m-0 rounded p-2 shadow">
+                
+                <!-- Title -->
+                <h1 class="text-black mb-4 text-center">
+                    <i class="bi bi-envelope-check-fill"></i> @ViewData["Title"]
+                </h1>
+
+                <!-- Subtitle -->
+                <h4 class="text-black mb-2 text-center">Enter email address:</h4>
+
+                <!-- Resend Email Confirmation Form -->
+                <form method="post">
+
+                    <!-- Alert -->
+                    <div asp-validation-summary="All" class="text-danger text-center" role="alert"></div>
+
+                    <!-- Email field -->
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.Email" class="text-black form-control shadow" aria-required="true" placeholder="name@example.com" />
+                        <label asp-for="Input.Email" class="text-black form-label">Email</label>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="row justify-content-center">
+
+                        <!-- Cancel -->
+                        <div class="col-6 text-center">
+                            <a href="~/" class="btn btn-sm btn-back rounded-2 me-2 shadow" title="Discard Changes and Return Home">
+                                <i class="bi bi-box-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+
+                        <!-- Send -->
+                        <div class="col-6 text-center">
+                            <button type="submit" class="btn btn-sm btn-success rounded-2 shadow">
+                                <i class="bi bi-arrow-clockwise"></i> Send
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

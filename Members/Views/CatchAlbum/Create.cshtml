@@ -1,0 +1,132 @@
+@model Members.Models.CatchAlbum
+
+@{
+    ViewData["Title"] = "Create Catch Album";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-success">
+                        <i class="bi bi-collection-fill"></i>
+                        Create New Catch Album
+                    </h1>
+                    <p class="text-muted mb-0">Organize your best catches into a custom album</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Albums
+                    </a>
+                </div>
+            </div>
+
+            <!-- Create Form -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i>
+                        Album Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <input type="hidden" asp-for="UserId" />
+
+                        <!-- Album Name -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">
+                                <i class="bi bi-tag-fill"></i> Album Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" class="form-control" 
+                                   placeholder="e.g., Summer Bass Fishing, Trophy Catches, Lake Trip 2024" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">Give your album a memorable name (up to 100 characters)</div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-chat-square-text"></i> Description <span class="text-muted">(Optional)</span>
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Tell the story behind this album - where you went, what techniques worked, memorable moments..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Share details about this collection (up to 500 characters)</div>
+                        </div>
+
+                        <!-- Privacy Setting -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input asp-for="IsPublic" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsPublic" class="form-check-label">
+                                    <i class="bi bi-globe"></i> Make this album public
+                                </label>
+                                <div class="form-text">Public albums can be viewed by other Fish-Smart users (currently disabled)</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                Create Album
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        Album Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-star text-warning me-2"></i>
+                                    <strong>Organize by theme:</strong> Location, species, or trip
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-calendar text-primary me-2"></i>
+                                    <strong>Seasonal albums:</strong> Spring bass, summer catfish, etc.
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-trophy text-success me-2"></i>
+                                    <strong>Trophy collections:</strong> Your biggest catches
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-geo-alt text-danger me-2"></i>
+                                    <strong>Location-based:</strong> Group by your favorite spots
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

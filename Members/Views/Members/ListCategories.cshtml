@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Members.Models.PDFCategory>
+
+@{
+    ViewData["Title"] = "PDF Categories"; // This will be set in the controller, but good practice to have a default
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Use your main layout
+}
+
+<div class="text-black mb-2 mt-4 text-center">
+    <h1><i class="bi bi-file-earmark-pdf-fill me-0"></i> @ViewData["Title"]</h1>
+</div>
+
+<div class="my-4 m-0 p-0">
+    <div class="row justify-content-center m-1 p-0">
+        <div class="col-md-6 col-lg-4 m-0 p-0">
+
+        <div class="card rounded border shadow p-0">
+            
+            @if (Model != null && Model.Any())
+            {
+                <ul class="list-group list-group-flush">
+                @foreach (var category in Model)
+                {
+                        <li class="list-group-item bg-transparent nav-link" style="cursor: pointer; border: none;">
+                        <a asp-controller="Members" asp-action="ListFiles" asp-route-categoryId="@category.CategoryID" class="nav-link d-block">
+                                <i class="bi bi-list-ul me-0"></i> @category.CategoryName
+                        </a>
+                    </li>
+                }
+                </ul>
+            }
+            else
+            {
+                <p class="text-black mt-0 pt-3 text-center">No categories with files found.</p>
+            }
+            
+        </div>
+    </div>
+    </div>
+</div>
+
+@section Styles {
+        <style>
+            /* Styles to remove the borders from the list items */
+            .card-body .list-group-item {
+                border-bottom: none !important;
+            }
+             .card-body .list-group-item:first-child {
+                 border-top: none !important;
+             }
+             .card-body .list-group-item:last-child {
+                  border-bottom: none !important;
+             }
+
+        </style>
+}
+
+@section Scripts {
+<!-- Add any necessary scripts here, e.g., for styling or minor interactions -->
+}

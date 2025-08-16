@@ -1,0 +1,217 @@
+@model Members.Models.FishSpecies
+
+@{
+    ViewData["Title"] = "Add New Fish Species";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Fish Species
+                    </h1>
+                    <p class="text-muted mb-0">Add a new fish species to the Fish-Smart database</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Fish Species
+                    </a>
+                </div>
+            </div>
+
+            <!-- Create Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-fish"></i>
+                        Species Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input asp-for="CommonName" class="form-control" placeholder="Common Name" required />
+                                    <label asp-for="CommonName">Common Name</label>
+                                    <span asp-validation-for="CommonName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="WaterType" class="form-select" required>
+                                        <option value="">Select water type...</option>
+                                        <option value="Fresh">Freshwater</option>
+                                        <option value="Salt">Saltwater</option>
+                                        <option value="Both">Both Fresh & Salt</option>
+                                    </select>
+                                    <label asp-for="WaterType">Water Type</label>
+                                    <span asp-validation-for="WaterType" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input asp-for="ScientificName" class="form-control" placeholder="Scientific Name" />
+                                    <label asp-for="ScientificName">Scientific Name (Optional)</label>
+                                    <span asp-validation-for="ScientificName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input asp-for="Region" class="form-control" placeholder="Region" />
+                                    <label asp-for="Region">Region (Optional)</label>
+                                    <span asp-validation-for="Region" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Size Information -->
+                        <h6 class="text-muted mb-2">
+                            <i class="bi bi-rulers"></i>
+                            Size Information
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="MinSize" type="number" step="0.01" class="form-control" placeholder="Minimum Size" />
+                                    <label asp-for="MinSize">Minimum Size (inches)</label>
+                                    <span asp-validation-for="MinSize" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="MaxSize" type="number" step="0.01" class="form-control" placeholder="Maximum Size" />
+                                    <label asp-for="MaxSize">Maximum Size (inches)</label>
+                                    <span asp-validation-for="MaxSize" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Season Information -->
+                        <h6 class="text-muted mb-2">
+                            <i class="bi bi-calendar-range"></i>
+                            Season Information
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select asp-for="SeasonStart" class="form-select">
+                                        <option value="">Select start month...</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                    <label asp-for="SeasonStart">Season Start (Optional)</label>
+                                    <span asp-validation-for="SeasonStart" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select asp-for="SeasonEnd" class="form-select">
+                                        <option value="">Select end month...</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                    <label asp-for="SeasonEnd">Season End (Optional)</label>
+                                    <span asp-validation-for="SeasonEnd" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image URL -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input asp-for="StockImageUrl" type="url" class="form-control" placeholder="Image URL" />
+                                <label asp-for="StockImageUrl">Stock Image URL (Optional)</label>
+                                <span asp-validation-for="StockImageUrl" class="text-danger"></span>
+                                <div class="form-text">URL to a stock image of this fish species</div>
+                            </div>
+                        </div>
+
+                        <!-- Regulation Notes -->
+                        <div class="mb-3">
+                            <label asp-for="RegulationNotes" class="form-label">Regulation Notes (Optional)</label>
+                            <textarea asp-for="RegulationNotes" class="form-control" rows="3" placeholder="Enter any size limits, bag limits, or other regulations for this species..."></textarea>
+                            <span asp-validation-for="RegulationNotes" class="text-danger"></span>
+                            <div class="form-text">Include information about size limits, bag limits, seasons, etc.</div>
+                        </div>
+
+                        <!-- Is Active -->
+                        <div class="form-check mb-4">
+                            <input asp-for="IsActive" type="checkbox" class="form-check-input" checked />
+                            <label class="form-check-label" asp-for="IsActive">
+                                <strong>Active Species</strong>
+                            </label>
+                            <div class="form-text">Uncheck to hide this species from user selections</div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                Add Fish Species
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card border-info mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Tips for Adding Fish Species
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0 small">
+                        <li><strong>Common Name:</strong> Use the most widely recognized name for the species</li>
+                        <li><strong>Water Type:</strong> Choose "Both" if the species can live in fresh and saltwater</li>
+                        <li><strong>Region:</strong> Specify geographic region where this species is commonly found</li>
+                        <li><strong>Size Limits:</strong> Use inches for consistency across the platform</li>
+                        <li><strong>Regulations:</strong> Include current local regulations - users should always verify current laws</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

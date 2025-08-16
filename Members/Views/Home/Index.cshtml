@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<meta http-equiv="refresh" content="0;url='/info/'" />
+
+@{
+    ViewData["Title"] = "Home Page";
+    string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH")!;
+}
+
+<!-- View -->
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+
+<!-- Banner Logo -->
+<partial name="_PartialBannerLogo" />
+
+@if (SignInManager.IsSignedIn(User) && (User.IsInRole("Member") || User.IsInRole("Admin") || User.IsInRole("Manager")))
+{
+    // User is signed in and has the necessary roles
+}
+else
+{
+    <div class="d-flex justify-content-center align-items-center container" style="min-height: 50vh;">
+        <div class="card rounded p-4 shadow" style="max-width: 400px;">
+            <div class="card-body rounded-2 text-center">
+                <p class="card-text pb-2">This is the secure site of @siteName.</p>
+                <a class="nav-link text-gray fs-3" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            </div>
+        </div>
+    </div>
+}

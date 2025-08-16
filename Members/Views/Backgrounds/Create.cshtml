@@ -1,0 +1,192 @@
+@model Members.Models.Background
+
+@{
+    ViewData["Title"] = "Add New Background";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Background
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="bi bi-tag"></i>
+                                    Background Name *
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="e.g., Ocean Pier" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Category" class="form-label">
+                                    <i class="bi bi-collection"></i>
+                                    Category
+                                </label>
+                                <select asp-for="Category" class="form-select">
+                                    <option value="">Select Category</option>
+                                    <option value="Seawall">Seawall</option>
+                                    <option value="Beach">Beach</option>
+                                    <option value="Pier">Pier</option>
+                                    <option value="Boat">Boat</option>
+                                    <option value="Lake">Lake</option>
+                                    <option value="River">River</option>
+                                    <option value="Studio">Studio</option>
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="WaterType" class="form-label">
+                                    <i class="bi bi-droplet"></i>
+                                    Water Type
+                                </label>
+                                <select asp-for="WaterType" class="form-select">
+                                    <option value="">Select Water Type</option>
+                                    <option value="Fresh">Freshwater</option>
+                                    <option value="Salt">Saltwater</option>
+                                    <option value="Both">Both Types</option>
+                                </select>
+                                <span asp-validation-for="WaterType" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-star"></i>
+                                    Access Level
+                                </label>
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsPremium" class="form-check-input" type="checkbox" id="isPremiumSwitch">
+                                    <label class="form-check-label" for="isPremiumSwitch">
+                                        <span id="premiumLabel">Free Background</span>
+                                    </label>
+                                </div>
+                                <small class="text-muted">Premium backgrounds require a paid subscription</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-file-text"></i>
+                                Description
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe this background (optional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-4">
+                            <label for="imageFile" class="form-label">
+                                <i class="bi bi-cloud-upload"></i>
+                                Background Image *
+                            </label>
+                            <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" required>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                Upload a high-quality image (JPEG, PNG). Recommended size: 1920x1080 or higher.
+                            </div>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreview" class="mb-3" style="display: none;">
+                            <label class="form-label">Preview:</label>
+                            <div class="border rounded p-2 text-center">
+                                <img id="previewImg" src="" alt="Preview" class="img-fluid" style="max-height: 200px;">
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                Back to List
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                Create Background
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-question-circle"></i>
+                        Background Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Image Quality:</h6>
+                            <ul class="small">
+                                <li>High resolution (1920x1080 minimum)</li>
+                                <li>Good lighting and contrast</li>
+                                <li>Clear, uncluttered composition</li>
+                                <li>Realistic fishing environments</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Categories:</h6>
+                            <ul class="small">
+                                <li><strong>Seawall:</strong> Rocky shores, concrete walls</li>
+                                <li><strong>Beach:</strong> Sandy beaches, shorelines</li>
+                                <li><strong>Pier:</strong> Wooden/concrete piers, docks</li>
+                                <li><strong>Boat:</strong> Fishing boat decks, interiors</li>
+                                <li><strong>Lake/River:</strong> Freshwater environments</li>
+                                <li><strong>Studio:</strong> Neutral gradient backgrounds</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Premium toggle functionality
+        document.getElementById('isPremiumSwitch').addEventListener('change', function() {
+            const label = document.getElementById('premiumLabel');
+            if (this.checked) {
+                label.textContent = 'Premium Background';
+                label.className = 'form-check-label text-warning fw-bold';
+            } else {
+                label.textContent = 'Free Background';
+                label.className = 'form-check-label';
+            }
+        });
+
+        // Image preview functionality
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+        });
+    </script>
+}

@@ -1,0 +1,343 @@
+using Members.Data;
+using Members.Models;
+using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+
+namespace Members.Services
+{
+    public class ImageCompositionService : IImageCompositionService
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<ImageCompositionService> _logger;
+        private readonly ISegmentationService _segmentationService;
+        private readonly string _imagesPath;
+
+        public ImageCompositionService(
+            ApplicationDbContext context,
+            ILogger<ImageCompositionService> logger,
+            ISegmentationService segmentationService,
+            IWebHostEnvironment environment)
+        {
+            _context = context;
+            _logger = logger;
+            _segmentationService = segmentationService;
+            _imagesPath = Path.Combine(environment.WebRootPath, "Images");
+        }
+
+        public async Task<(bool Success, string Message, string? ProcessedImagePath)> ReplaceBackgroundAsync(
+            string originalImagePath, string backgroundImagePath, string outputPath)
+        {
+            try
+            {
+                // Validate inputs
+                if (!System.IO.File.Exists(originalImagePath) || !System.IO.File.Exists(backgroundImagePath))
+                {
+                    return (false, "Source images not found", null);
+                }
+
+                // Generate mask for the subject
+                var maskBytes = await GenerateSubjectMaskAsync(originalImagePath);
+                if (maskBytes == null)
+                {
+                    return (false, "Failed to generate subject mask", null);
+                }
+
+                // Perform background replacement
+                using var originalImage = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(originalImagePath);
+                using var backgroundImage = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(backgroundImagePath);
+                using var maskImage = await SixLabors.ImageSharp.Image.LoadAsync<L8>(new MemoryStream(maskBytes));
+
+                // Resize background to match original image
+                backgroundImage.Mutate(x => x.Resize(originalImage.Width, originalImage.Height));
+
+                // Create output image
+                using var outputImage = new Image<Rgba32>(originalImage.Width, originalImage.Height);
+
+                // Advanced blending with feathering and lighting preservation
+                await BlendImagesWithAdvancedMasking(originalImage, backgroundImage, maskImage, outputImage);
+
+                // Apply subtle edge enhancement
+                outputImage.Mutate(x => x.GaussianBlur(0.3f));
+
+                // Save the result
+                await outputImage.SaveAsJpegAsync(outputPath);
+
+                var relativePath = Path.GetRelativePath(_imagesPath, outputPath).Replace('\\', '/');
+                return (true, "Background replaced successfully", $"/Images/{relativePath}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error replacing background for image {OriginalPath}", originalImagePath);
+                return (false, $"Error processing image: {ex.Message}", null);
+            }
+        }
+
+        public async Task<byte[]?> GenerateSubjectMaskAsync(string imagePath)
+        {
+            return await _segmentationService.GenerateSegmentationMaskAsync(imagePath);
+        }
+
+        public async Task<(bool Success, string Message, string? ProcessedImagePath)> ComposeImageAsync(
+            string subjectImagePath, string backgroundImagePath, string outputPath, CompositionOptions? options = null)
+        {
+            options ??= new CompositionOptions();
+
+            try
+            {
+                using var subjectImage = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(subjectImagePath);
+                using var backgroundImage = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(backgroundImagePath);
+
+                // Resize background to match subject
+                backgroundImage.Mutate(x => x.Resize(subjectImage.Width, subjectImage.Height));
+
+                // Apply background blur if specified
+                if (options.BackgroundBlur > 0)
+                {
+                    backgroundImage.Mutate(x => x.GaussianBlur(options.BackgroundBlur));
+                }
+
+                // Apply lighting adjustments
+                if (options.LightingAdjustment != 0)
+                {
+                    backgroundImage.Mutate(x => x.Brightness(options.LightingAdjustment));
+                }
+
+                // Create composite image by copying background
+                using var compositeImage = backgroundImage.Clone();
+                
+                // Simple overlay - copy subject pixels over background
+                // This is a basic implementation - can be enhanced with proper alpha blending
+                for (int y = 0; y < Math.Min(subjectImage.Height, compositeImage.Height); y++)
+                {
+                    for (int x = 0; x < Math.Min(subjectImage.Width, compositeImage.Width); x++)
+                    {
+                        var subjectPixel = subjectImage[x, y];
+                        if (subjectPixel.A > 0) // If subject pixel is not transparent
+                        {
+                            compositeImage[x, y] = subjectPixel;
+                        }
+                    }
+                }
+
+                // Add watermark if specified
+                if (!string.IsNullOrEmpty(options.WatermarkText))
+                {
+                    AddWatermark(compositeImage, options.WatermarkText);
+                }
+
+                // Save result
+                await compositeImage.SaveAsJpegAsync(outputPath);
+
+                var relativePath = Path.GetRelativePath(_imagesPath, outputPath).Replace('\\', '/');
+                return (true, "Image composed successfully", $"/Images/{relativePath}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error composing image");
+                return (false, $"Error composing image: {ex.Message}", null);
+            }
+        }
+
+        public async Task<List<Background>> GetAvailableBackgroundsAsync(
+            string? category = null, bool isPremiumUser = false, string? waterType = null)
+        {
+            var query = _context.Backgrounds.AsQueryable();
+
+            // Filter by category
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(b => b.Category == category);
+            }
+
+            // Filter by water type
+            if (!string.IsNullOrEmpty(waterType))
+            {
+                query = query.Where(b => b.WaterType == waterType || b.WaterType == "Both");
+            }
+
+            // Filter by premium status
+            if (!isPremiumUser)
+            {
+                query = query.Where(b => !b.IsPremium);
+            }
+
+            return await query.OrderBy(b => b.Category).ThenBy(b => b.Name).ToListAsync();
+        }
+
+        public async Task<ImageValidationResult> ValidateImageForProcessingAsync(string imagePath)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    return new ImageValidationResult
+                    {
+                        IsValid = false,
+                        Message = "Image file not found"
+                    };
+                }
+
+                using var image = await SixLabors.ImageSharp.Image.LoadAsync(imagePath);
+                var recommendations = new List<string>();
+                var isValid = true;
+
+                // Check image dimensions
+                if (image.Width < 400 || image.Height < 400)
+                {
+                    recommendations.Add("Image resolution should be at least 400x400 pixels for better results");
+                }
+
+                // Check aspect ratio
+                var aspectRatio = (float)image.Width / image.Height;
+                if (aspectRatio < 0.5f || aspectRatio > 2.0f)
+                {
+                    recommendations.Add("Images with extreme aspect ratios may not process well");
+                }
+
+                // Check file size
+                var fileInfo = new FileInfo(imagePath);
+                if (fileInfo.Length > 10 * 1024 * 1024) // 10MB
+                {
+                    recommendations.Add("Large images may take longer to process");
+                }
+
+                // Simple subject detection (placeholder)
+                var hasDetectedSubject = await DetectSubjectInImageAsync(imagePath);
+                var confidence = hasDetectedSubject ? 0.8f : 0.3f;
+
+                if (!hasDetectedSubject)
+                {
+                    recommendations.Add("No clear subject detected - background replacement may not work well");
+                }
+
+                return new ImageValidationResult
+                {
+                    IsValid = isValid,
+                    Message = isValid ? "Image is suitable for processing" : "Image may have issues",
+                    Recommendations = recommendations,
+                    HasDetectedSubject = hasDetectedSubject,
+                    ConfidenceScore = confidence
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating image {ImagePath}", imagePath);
+                return new ImageValidationResult
+                {
+                    IsValid = false,
+                    Message = $"Error validating image: {ex.Message}"
+                };
+            }
+        }
+
+        private async Task BlendImagesWithAdvancedMasking(
+            Image<Rgba32> originalImage, 
+            Image<Rgba32> backgroundImage, 
+            Image<L8> maskImage, 
+            Image<Rgba32> outputImage)
+        {
+            // Create feathered mask for smoother edges
+            using var featheredMask = maskImage.Clone();
+            featheredMask.Mutate(x => x.GaussianBlur(2.0f));
+
+            await Task.Run(() =>
+            {
+                Parallel.For(0, originalImage.Height, y =>
+                {
+                    for (int x = 0; x < originalImage.Width; x++)
+                    {
+                        var maskPixel = featheredMask[x, y];
+                        var alpha = maskPixel.PackedValue / 255f;
+
+                        // Apply feathering curve for more natural edges
+                        alpha = SmoothStep(alpha);
+
+                        var originalPixel = originalImage[x, y];
+                        var backgroundPixel = backgroundImage[x, y];
+
+                        // Advanced blending with edge preservation
+                        var blendedPixel = BlendPixelsAdvanced(originalPixel, backgroundPixel, alpha);
+                        outputImage[x, y] = blendedPixel;
+                    }
+                });
+            });
+        }
+
+        private float SmoothStep(float t)
+        {
+            // Smooth step function for natural edge transitions
+            return t * t * (3.0f - 2.0f * t);
+        }
+
+        private Rgba32 BlendPixelsAdvanced(Rgba32 foreground, Rgba32 background, float alpha)
+        {
+            // Advanced alpha blending with gamma correction
+            var invAlpha = 1.0f - alpha;
+            
+            // Apply gamma correction for more natural color blending
+            var r = Math.Pow(Math.Pow(foreground.R / 255.0, 2.2) * alpha + Math.Pow(background.R / 255.0, 2.2) * invAlpha, 1.0 / 2.2);
+            var g = Math.Pow(Math.Pow(foreground.G / 255.0, 2.2) * alpha + Math.Pow(background.G / 255.0, 2.2) * invAlpha, 1.0 / 2.2);
+            var b = Math.Pow(Math.Pow(foreground.B / 255.0, 2.2) * alpha + Math.Pow(background.B / 255.0, 2.2) * invAlpha, 1.0 / 2.2);
+
+            return new Rgba32(
+                (byte)(Math.Clamp(r * 255.0, 0, 255)),
+                (byte)(Math.Clamp(g * 255.0, 0, 255)),
+                (byte)(Math.Clamp(b * 255.0, 0, 255)),
+                255
+            );
+        }
+
+        private Rgba32 GetDominantBackgroundColor(Image<Rgba32> image)
+        {
+            // Sample edge pixels to determine background color
+            var edgePixels = new List<Rgba32>();
+            
+            // Sample top and bottom edges
+            for (int x = 0; x < image.Width; x += 10)
+            {
+                edgePixels.Add(image[x, 0]);
+                edgePixels.Add(image[x, image.Height - 1]);
+            }
+            
+            // Sample left and right edges
+            for (int y = 0; y < image.Height; y += 10)
+            {
+                edgePixels.Add(image[0, y]);
+                edgePixels.Add(image[image.Width - 1, y]);
+            }
+
+            // Calculate average color
+            long r = 0, g = 0, b = 0;
+            foreach (var pixel in edgePixels)
+            {
+                r += pixel.R;
+                g += pixel.G;
+                b += pixel.B;
+            }
+
+            return new Rgba32(
+                (byte)(r / edgePixels.Count),
+                (byte)(g / edgePixels.Count),
+                (byte)(b / edgePixels.Count),
+                255
+            );
+        }
+
+        private void AddWatermark(Image<Rgba32> image, string watermarkText)
+        {
+            // Simple text watermark implementation
+            // TODO: Implement proper text rendering with ImageSharp.Drawing
+            // For now, this is a placeholder
+        }
+
+        private async Task<bool> DetectSubjectInImageAsync(string imagePath)
+        {
+            // Placeholder for subject detection
+            // TODO: Implement with ONNX model
+            await Task.Delay(100); // Simulate processing time
+            return true; // For now, assume all images have subjects
+        }
+    }
+}

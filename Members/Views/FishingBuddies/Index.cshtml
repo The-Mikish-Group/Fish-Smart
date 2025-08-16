@@ -1,0 +1,263 @@
+@model Members.Controllers.FishingBuddiesViewModel
+
+@{
+    ViewData["Title"] = "My Fishing Buddies";
+}
+
+<div class="container my-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="text-primary">
+                <i class="bi bi-people-fill"></i>
+                My Fishing Buddies
+            </h1>
+            <p class="text-muted mb-0">
+                Connect with fellow anglers and share your fishing adventures
+            </p>
+        </div>
+        <div>
+            <a asp-action="Search" class="btn btn-success">
+                <i class="bi bi-person-plus"></i>
+                Find Buddies
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.AcceptedBuddies.Count</h3>
+                    <small>Fishing Buddies</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center bg-warning text-dark">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.PendingIncoming.Count</h3>
+                    <small>Requests</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mt-2 mt-md-0">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.PendingOutgoing.Count</h3>
+                    <small>Sent</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mt-2 mt-md-0">
+            <div class="card text-center bg-secondary text-white">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.BlockedUsers.Count</h3>
+                    <small>Blocked</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Incoming Requests -->
+    @if (Model.PendingIncoming.Any())
+    {
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-check"></i>
+                    Buddy Requests (@Model.PendingIncoming.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                @foreach (var request in Model.PendingIncoming)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>@request.OwnerUser?.Email</strong>
+                            <br>
+                            <small class="text-muted">Sent @request.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <div>
+                            <form asp-action="AcceptRequest" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm me-2">
+                                    <i class="bi bi-check-circle"></i> Accept
+                                </button>
+                            </form>
+                            <form asp-action="DeclineRequest" method="post" class="d-inline" 
+                                  onsubmit="return confirm('Decline this buddy request?')">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-x-circle"></i> Decline
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- My Fishing Buddies -->
+    @if (Model.AcceptedBuddies.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill"></i>
+                    My Fishing Buddies (@Model.AcceptedBuddies.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var buddy in Model.AcceptedBuddies)
+                    {
+                        var otherUser = buddy.OwnerUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+                            ? buddy.BuddyUser : buddy.OwnerUser;
+                        
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="bi bi-person-circle text-primary"></i>
+                                        @otherUser?.Email
+                                    </h6>
+                                    <small class="text-muted">
+                                        Buddies since @buddy.CreatedAt.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="ViewBuddyProfile" asp-route-buddyUserId="@otherUser?.Id" 
+                                           class="btn btn-primary btn-sm flex-fill">
+                                            <i class="bi bi-eye"></i> View Profile
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary btn-sm dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <form asp-action="RemoveBuddy" method="post" class="dropdown-item p-0"
+                                                          onsubmit="return confirm('Remove this fishing buddy?')">
+                                                        <input type="hidden" name="id" value="@buddy.Id" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-link text-danger text-decoration-none w-100 text-start">
+                                                            <i class="bi bi-person-dash"></i> Remove Buddy
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form asp-action="BlockUser" method="post" class="dropdown-item p-0"
+                                                          onsubmit="return confirm('Block this user?')">
+                                                        <input type="hidden" name="id" value="@buddy.Id" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-link text-warning text-decoration-none w-100 text-start">
+                                                            <i class="bi bi-slash-circle"></i> Block User
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Pending Outgoing Requests -->
+    @if (Model.PendingOutgoing.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock"></i>
+                    Pending Requests (@Model.PendingOutgoing.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                @foreach (var request in Model.PendingOutgoing)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>@request.BuddyUser?.Email</strong>
+                            <br>
+                            <small class="text-muted">Sent @request.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-info">Pending</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Blocked Users -->
+    @if (Model.BlockedUsers.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-slash-circle"></i>
+                    Blocked Users (@Model.BlockedUsers.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                @foreach (var blocked in Model.BlockedUsers)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <strong>@blocked.BuddyUser?.Email</strong>
+                            <br>
+                            <small class="text-muted">Blocked @blocked.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <div>
+                            <form asp-action="UnblockUser" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@blocked.Id" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle"></i> Unblock
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!Model.AcceptedBuddies.Any() && !Model.PendingIncoming.Any() && !Model.PendingOutgoing.Any())
+    {
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-people display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">No Fishing Buddies Yet</h4>
+                <p class="text-muted mb-4">
+                    Connect with other anglers to share your fishing adventures and discover new spots together!
+                </p>
+                
+                <a asp-action="Search" class="btn btn-success btn-lg">
+                    <i class="bi bi-person-plus"></i>
+                    Find Your First Buddy
+                </a>
+                
+                <div class="mt-4">
+                    <small class="text-muted">
+                        With fishing buddies you can share albums, compare catches, and plan trips together.
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+</div>

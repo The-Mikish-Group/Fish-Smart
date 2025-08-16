@@ -1,0 +1,165 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is "Fish-Smart" - an ASP.NET Core .NET 9 MVC web application with Identity for the Oaks-Village.com HOA (Homeowners Association). The application features a comprehensive Accounts Receivable system with reporting capabilities, user management, document management, and image galleries.
+
+## Build and Development Commands
+
+### Building the Application
+```bash
+# Build the solution
+dotnet build Fish-Smart.sln
+
+# Build specific configuration
+dotnet build Fish-Smart.sln --configuration Release
+```
+
+### Running the Application
+```bash
+# Run in development mode
+cd Members
+dotnet run
+
+# Run with specific configuration
+dotnet run --configuration Release
+```
+
+### Database Operations
+```bash
+# Add new migration
+cd Members
+dotnet ef migrations add [MigrationName]
+
+# Update database
+dotnet ef database update
+
+# Drop database (development only)
+dotnet ef database drop
+```
+
+### Testing
+There are no specific test commands configured in this repository. Tests should be added as needed.
+
+## Architecture Overview
+
+### Project Structure
+- **Single Project**: `Members/` - Contains the entire web application
+- **Areas**: Three main functional areas:
+  - `Admin/` - Administrative functions (accounts receivable, user management, reporting)
+  - `Identity/` - User authentication and account management
+  - `Information/` - Public information pages
+  - `Member/` - Member-specific functionality
+
+### Key Technologies and Dependencies
+- **.NET 9** with ASP.NET Core MVC
+- **Entity Framework Core** with SQL Server
+- **ASP.NET Core Identity** for authentication/authorization
+- **Syncfusion PDF** libraries for PDF generation
+- **SixLabors.ImageSharp** for image processing
+- **Bootstrap** and custom CSS for styling
+
+### Database Architecture
+The application uses Entity Framework with the following key entities:
+- **Identity tables** (AspNetUsers, AspNetRoles, etc.)
+- **UserProfile** - Extended user information
+- **Invoices/Payments/UserCredits** - Accounts receivable system
+- **BillableAssets** - Properties/assets that can be billed
+- **PDFCategories/CategoryFiles** - Document management
+- **AdminTasks/TaskInstances** - Task management system
+- **ColorVars** - Dynamic color theming
+
+### Authentication & Authorization
+- Role-based system with three roles: Admin, Member, Manager
+- Admin accounts auto-created from environment variables
+- Email confirmation required for new accounts
+
+## Environment Configuration
+
+The application relies heavily on environment variables for sensitive configuration:
+
+### Required Environment Variables
+- `DB_SERVER_SMARTCATCH` - Database server
+- `DB_USER_SMARTCATCH` - Database username  
+- `DB_PASSWORD_SMARTCATCH` - Database password
+- `DB_NAME_SMARTCATCH` - Database name
+- `ADMIN_EMAIL_SMARTCATCH` - Default admin email
+- `ADMIN_PASSWORD_SMARTCATCH` - Default admin password
+- `SYNCFUSION_KEY` - Syncfusion license key
+- `DEFAULT_CITY_SMARTCATCH` - Default city for admin user
+- `DEFAULT_STATE_SMARTCATCH` - Default state for admin user
+- `DEFAULT_ZIPCODE_SMARTCATCH` - Default zip code for admin user
+- `DEFAULT_NAME_SMARTCATCH` - Default organization name
+
+### Configuration Files
+- `appsettings.json` - Base configuration (uses LocalDB by default)
+- `appsettings.Development.json` - Development overrides
+- Connection strings from environment variables override appsettings.json
+
+## Key Features and Business Logic
+
+### Accounts Receivable System
+This is the core feature with sophisticated automation:
+- **Automatic credit application** - Credits automatically applied to outstanding balances
+- **Intelligent overpayment handling** - Overpayments credited and applied to other invoices
+- **Batch invoice processing** - Create and review invoice batches before finalization
+- **Late fee calculation** - Configurable percentage or minimum fee system
+- **Comprehensive audit trail** - All transactions logged in CreditApplication table
+
+### Document Management
+- PDF category-based file organization
+- Role-based access to protected files
+- PDF generation using Syncfusion libraries
+
+### Image Galleries
+- Gallery management with automatic thumbnail generation
+- Image upload and organization by gallery name
+- Responsive gallery viewing
+
+### Dynamic Color Theming
+- CSS custom properties loaded from database (ColorVars table)
+- Admin interface for color management
+- Dynamic color injection via filters
+
+## Development Guidelines
+
+### Code Patterns
+- **Page Models**: Razor Pages use code-behind PageModel classes
+- **Services**: Business logic in service classes (EmailService, TaskManagementService)
+- **Filters**: Global filters for dynamic color loading
+- **View Components**: Reusable UI components (DynamicColorsViewComponent)
+
+### Database Patterns
+- **Soft deletes** where appropriate (BillableAssets with SetNull)
+- **Audit trails** for financial transactions
+- **Unique constraints** on business keys (PlotID, Task+Year+Month)
+- **Proper foreign key relationships** with appropriate delete behaviors
+
+### Security Considerations
+- All sensitive data stored in environment variables
+- Data protection keys persisted to database
+- Antiforgery tokens with custom configuration
+- Role-based authorization throughout
+
+## File Organization
+
+### Static Assets
+- `wwwroot/css/` - Stylesheets including dynamic color CSS
+- `wwwroot/js/` - JavaScript files
+- `wwwroot/Galleries/` - Image gallery storage
+- `ProtectedFiles/` - Secured document storage
+
+### Views and Pages
+- `Views/` - MVC views organized by controller
+- `Areas/*/Pages/` - Razor Pages organized by functional area
+- Shared layouts and partials in `Views/Shared/`
+
+## Development Workflow
+
+1. **Environment Setup**: Ensure all required environment variables are set
+2. **Database**: Run migrations to set up/update database schema
+3. **Development**: Use `dotnet run` for local development
+4. **Testing**: Currently manual - automated tests should be added
+5. **Deployment**: Uses publish profiles for various hosting environments

@@ -1,0 +1,224 @@
+@model IEnumerable<Members.Models.Background>
+
+@{
+    ViewData["Title"] = "Manage Backgrounds";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-image text-primary"></i>
+                    Background Management
+                </h2>
+                <div>
+                    <a asp-action="Create" class="btn btn-success me-2">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Background
+                    </a>
+                    <form asp-action="SeedSampleData" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-primary" onclick="return confirm('This will add sample backgrounds. Continue?')">
+                            <i class="bi bi-download"></i>
+                            Seed Sample Data
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="bi bi-check-circle"></i>
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @TempData["Warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center bg-primary text-white">
+                        <div class="card-body">
+                            <h4>@Model.Count()</h4>
+                            <p class="mb-0">Total Backgrounds</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-success text-white">
+                        <div class="card-body">
+                            <h4>@Model.Count(b => !b.IsPremium)</h4>
+                            <p class="mb-0">Free Backgrounds</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-warning text-dark">
+                        <div class="card-body">
+                            <h4>@Model.Count(b => b.IsPremium)</h4>
+                            <p class="mb-0">Premium Backgrounds</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-info text-white">
+                        <div class="card-body">
+                            <h4>@Model.GroupBy(b => b.Category).Count()</h4>
+                            <p class="mb-0">Categories</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backgrounds Grid -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        Background Collection
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row g-3">
+                            @foreach (var background in Model)
+                            {
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                                    <div class="card h-100">
+                                        <!-- Background Image -->
+                                        <div class="position-relative">
+                                            @if (!string.IsNullOrEmpty(background.ImageUrl))
+                                            {
+                                                <img src="@background.ImageUrl" 
+                                                     class="card-img-top" 
+                                                     alt="@background.Name"
+                                                     style="height: 120px; object-fit: cover; cursor: pointer;"
+                                                     onclick="viewImage('@background.ImageUrl', '@background.Name')">
+                                            }
+                                            else
+                                            {
+                                                <div class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center" style="height: 120px;">
+                                                    <i class="bi bi-cloud-upload text-muted" style="font-size: 2rem;"></i>
+                                                    <small class="text-muted mt-1">No Image</small>
+                                                </div>
+                                            }
+                                            
+                                            <!-- Premium Badge -->
+                                            @if (background.IsPremium)
+                                            {
+                                                <span class="position-absolute top-0 end-0 badge bg-warning text-dark m-1">
+                                                    <i class="bi bi-star-fill"></i>
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <!-- Background Info -->
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1" title="@background.Name">
+                                                @(background.Name.Length > 15 ? background.Name.Substring(0, 15) + "..." : background.Name)
+                                            </h6>
+                                            <div class="mb-2">
+                                                @if (!string.IsNullOrEmpty(background.Category))
+                                                {
+                                                    <span class="badge bg-secondary small">@background.Category</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(background.WaterType))
+                                                {
+                                                    <span class="badge bg-info small">@background.WaterType</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(background.Description))
+                                            {
+                                                <p class="card-text small text-muted mb-2" title="@background.Description">
+                                                    @(background.Description.Length > 40 ? background.Description.Substring(0, 40) + "..." : background.Description)
+                                                </p>
+                                            }
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="card-footer p-2">
+                                            <div class="btn-group w-100" role="group">
+                                                <a asp-action="Details" asp-route-id="@background.Id" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-id="@background.Id" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@background.Id" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">No Backgrounds Found</h4>
+                            <p class="text-muted mb-4">Start by adding some background images for users to choose from.</p>
+                            <a asp-action="Create" class="btn btn-primary me-2">
+                                <i class="bi bi-plus-circle"></i>
+                                Add First Background
+                            </a>
+                            <form asp-action="SeedSampleData" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-download"></i>
+                                    Seed Sample Data
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewTitle">Background Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagePreviewImg" src="" alt="" class="img-fluid" style="max-height: 500px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewImage(imageUrl, imageName) {
+    document.getElementById('imagePreviewImg').src = imageUrl;
+    document.getElementById('imagePreviewTitle').textContent = imageName;
+    new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
+}
+</script>

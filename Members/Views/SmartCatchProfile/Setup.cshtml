@@ -1,0 +1,111 @@
+@model Members.Models.SmartCatchProfile
+
+@{
+    ViewData["Title"] = "SmartCatch Profile Setup";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Welcome Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-primary">
+                    🎣 Welcome to Fish-Smart!
+                </h1>
+                <p class="lead text-muted">Let's set up your fishing profile to get started</p>
+            </div>
+
+            <!-- Setup Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-gear"></i>
+                        Profile Setup
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Setup" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <!-- Display Name -->
+                        <div class="form-floating mb-3">
+                            <input asp-for="DisplayName" class="form-control" placeholder="Enter your angler name" required />
+                            <label asp-for="DisplayName">Angler Display Name</label>
+                            <span asp-validation-for="DisplayName" class="text-danger"></span>
+                            <div class="form-text">This name will appear on your catches and profile</div>
+                        </div>
+
+                        <!-- Preferred Water Type -->
+                        <div class="mb-3">
+                            <label asp-for="PreferredWaterType" class="form-label">Preferred Water Type</label>
+                            <select asp-for="PreferredWaterType" class="form-select">
+                                <option value="Fresh">Freshwater</option>
+                                <option value="Salt">Saltwater</option>
+                                <option value="Both" selected>Both Fresh & Salt</option>
+                            </select>
+                            <span asp-validation-for="PreferredWaterType" class="text-danger"></span>
+                            <div class="form-text">This helps us show you relevant fish species</div>
+                        </div>
+
+                        <!-- Default Region -->
+                        <div class="form-floating mb-3">
+                            <select asp-for="DefaultRegion" class="form-select">
+                                <option value="">Select your region...</option>
+                                @if (ViewBag.Regions != null)
+                                {
+                                    @foreach (var region in (IEnumerable<string>)ViewBag.Regions)
+                                    {
+                                        <option value="@region">@region</option>
+                                    }
+                                }
+                            </select>
+                            <label asp-for="DefaultRegion">Default Fishing Region</label>
+                            <span asp-validation-for="DefaultRegion" class="text-danger"></span>
+                            <div class="form-text">This helps us show you local fish species and regulations</div>
+                        </div>
+
+                        <!-- Watermark Setting -->
+                        <div class="form-check mb-4">
+                            <input asp-for="WatermarkEnabled" type="checkbox" class="form-check-input" checked />
+                            <label class="form-check-label" asp-for="WatermarkEnabled">
+                                <strong>Enable Fish-Smart watermark on images</strong>
+                            </label>
+                            <div class="form-text">Adds a discrete Fish-Smart logo to your catch photos</div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i>
+                                Complete Setup & Start Fishing!
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Features Preview -->
+            <div class="row mt-4 text-center">
+                <div class="col-4">
+                    <i class="bi bi-journal-plus display-4 text-primary"></i>
+                    <h6 class="mt-2">Track Sessions</h6>
+                    <small class="text-muted">Log your fishing trips</small>
+                </div>
+                <div class="col-4">
+                    <i class="bi bi-collection display-4 text-success"></i>
+                    <h6 class="mt-2">Catch Database</h6>
+                    <small class="text-muted">Identify fish species</small>
+                </div>
+                <div class="col-4">
+                    <i class="bi bi-image display-4 text-warning"></i>
+                    <h6 class="mt-2">Photo Composition</h6>
+                    <small class="text-muted">Create amazing catch photos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

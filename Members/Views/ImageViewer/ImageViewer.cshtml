@@ -1,0 +1,641 @@
+@model Members.Controllers.ImageViewerViewModel
+
+@{
+    ViewData["Title"] = Model.Title + " - Image Viewer";
+}
+
+@section Head {
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+}
+
+<div class="container-fluid p-0" style="margin-top: 6rem; height: calc(100vh - 6rem);">
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-light bg-dark position-static w-100" style="z-index: 1020;">
+        <div class="container-fluid">
+            <!-- Left side: Back button and title -->
+            <div class="d-flex align-items-center">
+                <a href="@Model.ReturnUrl" class="btn btn-back me-3">
+                    <i class="bi bi-arrow-left"></i>
+                    Back
+                </a>
+                <div>
+                    <h5 class="mb-0 text-light">@Model.Title</h5>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <small>@Model.Description</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Right side: Action buttons -->
+            <div class="d-flex align-items-center">
+                @if (Model.CanEdit)
+                {
+                    <!-- AI Editing Buttons -->
+                    <div class="btn-group me-3" role="group">
+                        <button type="button" class="btn btn-primary" onclick="showBackgroundSelector()" id="changeBackgroundBtn">
+                            <i class="bi bi-palette"></i>
+                            Change Background
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Undo
+                        </button>
+                        <button type="button" class="btn btn-warning" disabled title="Coming Soon">
+                            <i class="bi bi-magic"></i>
+                            AI Enhance
+                        </button>
+                        <button type="button" class="btn btn-info" disabled title="Coming Soon">
+                            <i class="bi bi-sliders"></i>
+                            Filters
+                        </button>
+                    </div>
+
+                    <!-- Image Actions -->
+                    <div class="btn-group me-3" role="group">
+                        <button type="button" class="btn btn-success" onclick="downloadImage()">
+                            <i class="bi bi-download"></i>
+                            Download
+                        </button>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                }
+
+                <!-- Info Panel Toggle -->
+                <button type="button" class="btn btn-light text-eye-view" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
+                    <i class="bi bi-info-circle"></i>
+                    Info
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Image Display Area -->
+    <div class="position-relative" style="height: calc(100vh - 12rem); background: transparent;">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <img src="@Model.ImageUrl" 
+                 alt="@Model.Title" 
+                 class="img-fluid" 
+                 style="max-height: calc(100vh - 200px); max-width: 100%; object-fit: contain; cursor: zoom-in;"
+                 onclick="toggleFullscreen(this)" />
+        </div>
+
+        <!-- Image Controls Overlay -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+            <div class="btn-group bg-dark bg-opacity-75 rounded" role="group">
+                <button type="button" class="btn btn-dark btn-sm" onclick="zoomIn()">
+                    <i class="bi bi-zoom-in"></i>
+                </button>
+                <button type="button" class="btn btn-dark btn-sm" onclick="resetZoom()">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </button>
+                <button type="button" class="btn btn-dark btn-sm" onclick="zoomOut()">
+                    <i class="bi bi-zoom-out"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel (Offcanvas) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="infoPanel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">Image Information</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="mb-4">
+                <h6 class="text-primary">
+                    <i class="bi bi-image"></i>
+                    Image Details
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        @foreach (var item in Model.Metadata)
+                        {
+                            <tr>
+                                <td class="fw-bold text-muted">@item.Key:</td>
+                                <td>@item.Value</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.CanEdit)
+            {
+                <div class="mb-4">
+                    <h6 class="text-success">
+                        <i class="bi bi-magic"></i>
+                        AI Editing Features
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showBackgroundSelector()">
+                            <i class="bi bi-palette"></i>
+                            Change Background
+                        </button>
+                        <button type="button" class="btn btn-info btn-sm" onclick="validateImageForEditing()">
+                            <i class="bi bi-check-circle"></i>
+                            Check Image Quality
+                        </button>
+                        <a href="/AIModels" class="btn btn-success btn-sm" target="_blank">
+                            <i class="bi bi-cpu"></i>
+                            Download AI Model
+                        </a>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <small>
+                            <strong>⚠️ Background Replacement:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Better Quality Available:</strong> Go to Fish-Smart Admin → AI Models to download the U2-Net model for significantly improved results</li>
+                                <li>Current fallback uses basic color detection - quality varies</li>
+                                <li>Works best with clear subject/background contrast</li>
+                                <li>Page refresh may be needed to see changes</li>
+                                <li>Use "Undo" button to restore original if needed</li>
+                            </ul>
+                        </small>
+                    </div>
+                    <div class="alert alert-success mt-2">
+                        <small>
+                            <strong>🎯 For Best Results:</strong> Download the AI model from Fish-Smart Admin → AI Models for professional-quality background removal using advanced segmentation.
+                        </small>
+                    </div>
+                </div>
+            }
+
+            <div>
+                <h6 class="text-warning">
+                    <i class="bi bi-gear"></i>
+                    Quick Actions
+                </h6>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-sm" onclick="downloadImage()">
+                        <i class="bi bi-download"></i>
+                        Download Image
+                    </button>
+                    @if (Model.CanEdit)
+                    {
+                        <button type="button" class="btn btn-primary btn-sm" disabled>
+                            <i class="bi bi-share"></i>
+                            Share (Coming Soon)
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" disabled>
+                            <i class="bi bi-crop"></i>
+                            Edit (Coming Soon)
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    @if (Model.CanEdit)
+    {
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                            Delete Image
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this image? This action cannot be undone.</p>
+                        <div class="alert alert-warning">
+                            <strong>Warning:</strong> This will permanently remove the image from your @(Model.ImageType == "AlbumCover" ? "album" : "catch record").
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-action="DeleteImage" method="post" class="d-inline">
+                            <input type="hidden" name="imageType" value="@Model.ImageType" />
+                            <input type="hidden" name="sourceId" value="@Model.SourceId" />
+                            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i>
+                                Delete Image
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Include Background Selector Modal -->
+    @await Html.PartialAsync("_BackgroundSelectorModal", new List<Members.Models.Background>())
+</div>
+
+<style>
+    body {
+        overflow: hidden;
+        background-color: black !important;
+    }
+    
+    .img-zoom {
+        transition: transform 0.3s ease;
+    }
+    
+    .fullscreen-image {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        z-index: 9999 !important;
+        background: #000 !important;
+        object-fit: contain !important;
+    }
+</style>
+
+<script>
+let currentZoom = 1;
+const zoomStep = 0.2;
+const maxZoom = 3;
+const minZoom = 0.5;
+
+function zoomIn() {
+    const img = document.querySelector('img');
+    if (currentZoom < maxZoom) {
+        currentZoom += zoomStep;
+        img.style.transform = `scale(${currentZoom})`;
+    }
+}
+
+function zoomOut() {
+    const img = document.querySelector('img');
+    if (currentZoom > minZoom) {
+        currentZoom -= zoomStep;
+        img.style.transform = `scale(${currentZoom})`;
+    }
+}
+
+function resetZoom() {
+    const img = document.querySelector('img');
+    currentZoom = 1;
+    img.style.transform = 'scale(1)';
+}
+
+function toggleFullscreen(img) {
+    if (img.classList.contains('fullscreen-image')) {
+        img.classList.remove('fullscreen-image');
+        document.body.style.overflow = 'hidden';
+    } else {
+        img.classList.add('fullscreen-image');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function downloadImage() {
+    const img = document.querySelector('img');
+    const link = document.createElement('a');
+    link.href = img.src;
+    link.download = '@Model.Title.Replace(" ", "_")' + '.jpg';
+    link.click();
+}
+
+// Close fullscreen on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const img = document.querySelector('img');
+        if (img.classList.contains('fullscreen-image')) {
+            img.classList.remove('fullscreen-image');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+});
+
+// Restore body overflow when leaving page
+window.addEventListener('beforeunload', function() {
+    document.body.style.overflow = 'auto';
+});
+
+// AI Editing Functions
+let originalImageUrl = '@Model.ImageUrl'; // Store original image URL
+
+// Check if backup exists on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkForBackup();
+});
+
+async function checkForBackup() {
+    try {
+        const response = await fetch('/ImageViewer/CheckBackupExists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageType: '@Model.ImageType',
+                sourceId: @Model.SourceId
+            })
+        });
+
+        const result = await response.json();
+        if (result.hasBackup) {
+            document.getElementById('undoBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('undoBtn').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking backup:', error);
+        // If error, hide undo button
+        document.getElementById('undoBtn').style.display = 'none';
+    }
+}
+
+async function showBackgroundSelector() {
+    try {
+        // Show loading state
+        const btn = document.getElementById('changeBackgroundBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        btn.disabled = true;
+
+        // Load backgrounds from server
+        const response = await fetch('/ImageViewer/GetBackgrounds');
+        const backgrounds = await response.json();
+
+        // Update modal with backgrounds
+        updateBackgroundModal(backgrounds);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('backgroundSelectorModal'));
+        modal.show();
+
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    } catch (error) {
+        console.error('Error loading backgrounds:', error);
+        showNotification('Error loading backgrounds. Please try again.', 'error');
+    }
+}
+
+function updateBackgroundModal(backgrounds) {
+    const grid = document.getElementById('backgroundGrid');
+    if (!grid) return;
+
+    // Clear existing content
+    grid.innerHTML = '';
+
+    // Add backgrounds
+    backgrounds.forEach(background => {
+        const backgroundHtml = `
+            <div class="col-lg-3 col-md-4 col-sm-6 background-item" 
+                 data-category="${background.category || ''}" 
+                 data-watertype="${background.waterType || ''}" 
+                 data-premium="${background.isPremium.toString().toLowerCase()}">
+                <div class="card h-100 background-card ${background.imageUrl ? '' : 'border-warning'}" 
+                     onclick="${background.imageUrl ? `selectBackground(${background.id}, '${background.name}', '${background.imageUrl}')` : 'showNoImageWarning()'}"
+                     style="cursor: ${background.imageUrl ? 'pointer' : 'not-allowed'}; ${background.imageUrl ? '' : 'opacity: 0.7;'}"
+                     title="${background.imageUrl ? '' : 'No image available - upload an image first'}">
+                    
+                    <div class="position-relative">
+                        ${background.imageUrl ? 
+                            `<img src="${background.imageUrl}" class="card-img-top" alt="${background.name}" style="height: 150px; object-fit: cover;">` :
+                            `<div class="card-img-top bg-warning d-flex flex-column align-items-center justify-content-center text-dark" style="height: 150px;">
+                                <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                                <small class="mt-1">No Image</small>
+                             </div>`
+                        }
+                        
+                        ${background.isPremium ? 
+                            `<span class="position-absolute top-0 end-0 badge bg-warning text-dark m-2">
+                                <i class="bi bi-star-fill"></i> Premium
+                             </span>` : ''
+                        }
+                        
+                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-success bg-opacity-75 text-white selection-overlay" style="display: none !important;">
+                            <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">${background.name}</h6>
+                        <small class="text-muted">
+                            ${background.category ? `<span class="badge bg-secondary me-1">${background.category}</span>` : ''}
+                            ${background.waterType ? `<span class="badge bg-info">${background.waterType}</span>` : ''}
+                        </small>
+                        ${background.description ? `<p class="card-text small mt-1 mb-0">${background.description}</p>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.insertAdjacentHTML('beforeend', backgroundHtml);
+    });
+}
+
+async function replaceImageBackground(backgroundId, backgroundUrl) {
+    try {
+        const response = await fetch('/ImageViewer/ReplaceBackground', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                imageType: '@Model.ImageType',
+                sourceId: @Model.SourceId,
+                backgroundId: backgroundId
+            })
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error replacing background:', error);
+        throw error;
+    }
+}
+
+function onBackgroundReplaced(newImageUrl) {
+    console.log('Background replaced, refreshing image...');
+    
+    // Force image refresh by adding timestamp and clearing cache
+    const img = document.querySelector('img');
+    if (img) {
+        // Clear browser cache aggressively
+        const timestamp = new Date().getTime();
+        const imageUrl = '@Model.ImageUrl';
+        
+        // Force hard refresh with cache headers
+        img.onload = function() {
+            console.log('Image reloaded successfully');
+        };
+        
+        img.onerror = function() {
+            console.error('Error reloading image, trying again...');
+            setTimeout(() => {
+                img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=true';
+            }, 1000);
+        };
+        
+        // Set new source with cache-busting
+        img.src = imageUrl + '?v=' + timestamp + '&cache=false';
+        
+        // Additional refresh attempts to ensure the image loads
+        setTimeout(() => {
+            img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=1';
+        }, 1000);
+        
+        setTimeout(() => {
+            img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=2';
+        }, 2000);
+    }
+    
+    // Show undo button
+    document.getElementById('undoBtn').style.display = 'inline-block';
+    
+    // Force a complete page refresh if cache-busting fails
+    setTimeout(() => {
+        if (typeof window.showConfirmModal === 'function') {
+            window.showConfirmModal(
+                '<div class="text-center"><i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i><br><strong>Background Applied!</strong><br><br>The page will refresh to show the updated image.</div>',
+                () => window.location.reload(),
+                {
+                    title: 'Background Replacement Complete',
+                    confirmText: 'Refresh Page',
+                    dangerous: false
+                }
+            );
+        } else {
+            if (confirm('Background applied! Click OK to refresh the page and see the result.')) {
+                window.location.reload();
+            }
+        }
+    }, 3000);
+}
+
+async function validateImageForEditing() {
+    try {
+        const response = await fetch('/ImageViewer/ValidateImage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageType: '@Model.ImageType',
+                sourceId: @Model.SourceId
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.isValid) {
+            let message = result.message;
+            if (result.hasDetectedSubject) {
+                message += `\nConfidence: ${Math.round(result.confidenceScore * 100)}%`;
+            }
+            if (result.recommendations && result.recommendations.length > 0) {
+                message += '\n\nRecommendations:\n• ' + result.recommendations.join('\n• ');
+            }
+            showNotification(message, 'success');
+        } else {
+            showNotification('Image validation failed: ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error validating image:', error);
+        showNotification('Error validating image. Please try again.', 'error');
+    }
+}
+
+function showNoImageWarning() {
+    showNotification('This background template has no image. Admin needs to upload an image first.', 'error');
+}
+
+async function undoBackgroundChange() {
+    try {
+        // Show processing indicator
+        const undoBtn = document.getElementById('undoBtn');
+        const originalText = undoBtn.innerHTML;
+        undoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Restoring...';
+        undoBtn.disabled = true;
+
+        const response = await fetch('/ImageViewer/RestoreOriginalImage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                imageType: '@Model.ImageType',
+                sourceId: @Model.SourceId
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Image restored, refreshing...');
+            
+            // Force image refresh with original
+            const img = document.querySelector('img');
+            if (img) {
+                const timestamp = new Date().getTime();
+                const imageUrl = '@Model.ImageUrl';
+                
+                img.onload = function() {
+                    console.log('Original image restored successfully');
+                };
+                
+                // Multiple refresh attempts
+                img.src = imageUrl + '?v=' + timestamp + '&restored=true';
+                
+                setTimeout(() => {
+                    img.src = imageUrl + '?v=' + new Date().getTime() + '&restored=1';
+                }, 1000);
+                
+                setTimeout(() => {
+                    img.src = imageUrl + '?v=' + new Date().getTime() + '&restored=2';
+                }, 2000);
+            }
+            
+            // Hide undo button
+            undoBtn.style.display = 'none';
+            
+            showNotification('Original image restored successfully!', 'success');
+            
+            // Force page refresh if needed
+            setTimeout(() => {
+                if (typeof window.showConfirmModal === 'function') {
+                    window.showConfirmModal(
+                        '<div class="text-center"><i class="bi bi-arrow-counterclockwise text-primary" style="font-size: 3rem;"></i><br><strong>Original Image Restored!</strong><br><br>The page will refresh to show the original image.</div>',
+                        () => window.location.reload(),
+                        {
+                            title: 'Image Restoration Complete',
+                            confirmText: 'Refresh Page',
+                            dangerous: false
+                        }
+                    );
+                } else {
+                    if (confirm('Original image restored! Click OK to refresh the page and see the result.')) {
+                        window.location.reload();
+                    }
+                }
+            }, 3000);
+        } else {
+            showNotification('Error: ' + result.message, 'error');
+            // Reset button
+            undoBtn.innerHTML = originalText;
+            undoBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error restoring image:', error);
+        showNotification('An error occurred while restoring the image.', 'error');
+        // Reset button
+        const undoBtn = document.getElementById('undoBtn');
+        undoBtn.innerHTML = originalText;
+        undoBtn.disabled = false;
+    }
+}
+</script>

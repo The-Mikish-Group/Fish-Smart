@@ -1,0 +1,93 @@
+﻿@page "{invoiceId:int}"
+@model EditInvoiceModel
+@{
+    ViewData["Title"] = "Edit Invoice";
+    Layout = "_Layout"; // Or your specific Member Area layout
+}
+
+<h2 class="text-black mt-4 text-center"><i class="bi bi-pencil-square"></i> @ViewData["Title"]</h2>
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+
+        <div class="col-md-8 col-lg-6">
+            <form method="post">
+                <div class="card rounded-2 m-1 shadow">               
+
+                    <div class="card-header">
+                        <h4 class="text-black ms-2">Invoice details:</h4>
+                    </div>
+                    
+                    <div class="card-body">
+
+                        <!-- Invoice ID -->
+                        <div class="form-group mt-0">
+                            <label for="InvoiceIdDisplay" class="text-black ms-2">Invoice ID:</label>
+                            <input type="text" id="InvoiceIdDisplay" class="form-control shadow" readonly value="@Model.InvoiceId" />
+                        </div>
+
+                        <!-- Batch ID -->
+                        <div class="form-group mt-3">
+                            <label for="BatchIdDisplay" class="text-black ms-2">Batch ID:</label>
+                            <input type="text" id="BatchIdDisplay" class="form-control shadow" readonly value="@Model.BatchId" />
+                        </div>
+
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <!-- Due Date -->
+                        <div class="form-group mt-0">
+                            <label asp-for="Input.DueDate" class="text-black ms-2"></label>
+                            <input asp-for="Input.DueDate" class="form-control shadow" />
+                            <span asp-validation-for="Input.DueDate" class="text-danger"></span>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group mt-3">
+                            <label asp-for="Input.Description" class="text-black ms-2"></label>
+                            <input asp-for="Input.Description" class="form-control shadow" />
+                            <span asp-validation-for="Input.Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Amount Due -->
+                        <div class="form-group mt-3">
+                            <label asp-for="Input.AmountDue" class="text-black ms-2"></label>
+                            <input asp-for="Input.AmountDue" class="form-control shadow" />
+                            <span asp-validation-for="Input.AmountDue" class="text-danger"></span>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="form-group">
+                            <label asp-for="Input.Status" hidden class="text-black ms-2"></label>
+                            <input asp-for="Input.Status" hidden class="form-control shadow" />
+                            <span asp-validation-for="Input.Status" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer">
+
+                        <!-- Buttons -->
+                        <div class="row justify-content-center">
+                            <div class="col-6 text-center">
+                                <a href="@Model.ReturnUrl" class="btn btn-sm btn-secondary rounded-2 mb-2 mt-3 shadow"><i class="bi bi-arrow-left"></i> Cancel</a>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="submit" class="btn btn-sm btn-success rounded-2 mb-2 mt-3 shadow"><i class="bi bi-pencil-square"></i> Save Changes</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+            
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

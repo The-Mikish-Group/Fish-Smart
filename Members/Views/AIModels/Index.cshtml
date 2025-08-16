@@ -1,0 +1,204 @@
+@model Members.Controllers.AIModelsViewModel
+@{
+    ViewData["Title"] = "AI Models Management";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">AI Models Management</h2>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    @TempData["Warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Current Model Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>AI Segmentation:</strong></div>
+                                <div class="col-sm-8">
+                                    @if (Model.IsAISegmentationAvailable)
+                                    {
+                                        <span class="badge bg-success">Available</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Not Available</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Model Downloaded:</strong></div>
+                                <div class="col-sm-8">
+                                    @if (Model.IsModelDownloaded)
+                                    {
+                                        <span class="badge bg-success">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">No</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">@Model.ModelStatus</div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.ModelInfo))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Model Info:</strong></div>
+                                    <div class="col-sm-8">
+                                        <pre class="small text-muted">@Model.ModelInfo</pre>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2 flex-wrap">
+                                @if (!Model.IsModelDownloaded)
+                                {
+                                    <form asp-action="DownloadModel" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary" onclick="showDownloadProgress()">
+                                            <i class="fas fa-download"></i> Download U2-Net Model
+                                        </button>
+                                    </form>
+                                }
+
+                                <form asp-action="InitializeModels" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success" @(Model.IsModelDownloaded ? "" : "disabled")>
+                                        <i class="fas fa-play"></i> Initialize AI Models
+                                    </button>
+                                </form>
+
+                                <a href="@Url.Action("Index", "Backgrounds")" class="btn btn-info">
+                                    <i class="fas fa-images"></i> Manage Backgrounds
+                                </a>
+                            </div>
+
+                            @if (!Model.IsModelDownloaded)
+                            {
+                                <div id="downloadProgress" class="mt-3" style="display: none;">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+                                            Downloading AI model... This may take several minutes.
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        The U2-Net model is approximately 170MB. Please be patient during download.
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Setup Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="list-group list-group-numbered">
+                                @foreach (var instruction in Model.Instructions)
+                                {
+                                    <li class="list-group-item">@instruction</li>
+                                }
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">About AI Background Removal</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">
+                                <strong>U2-Net</strong> is a state-of-the-art deep learning model for salient object detection 
+                                and background removal. It provides significantly better results than color-based methods.
+                            </p>
+                            <p class="small">
+                                <strong>Benefits:</strong>
+                            </p>
+                            <ul class="small">
+                                <li>Precise edge detection</li>
+                                <li>Handles complex backgrounds</li>
+                                <li>Works with various subjects</li>
+                                <li>Natural-looking results</li>
+                            </ul>
+                            
+                            @if (!Model.IsModelDownloaded)
+                            {
+                                <div class="alert alert-info mt-3">
+                                    <h6><i class="bi bi-download"></i> Manual Download Required:</h6>
+                                    <p class="small mb-2"><strong>Current file (4.36MB) is incomplete.</strong> Please download a proper U2-Net model:</p>
+                                    
+                                    <div class="alert alert-warning mb-2">
+                                        <strong>Option 1 (Recommended):</strong> Download from reliable source
+                                    </div>
+                                    <ol class="small">
+                                        <li>Download: <a href="https://github.com/danielgatis/rembg/releases/download/v2.0.50/u2net.onnx" target="_blank" class="btn btn-sm btn-outline-primary">U2-Net Full Model</a></li>
+                                        <li>Replace current file: <code>wwwroot\Models\u2net.onnx</code></li>
+                                        <li>Click "Initialize AI Models" below</li>
+                                    </ol>
+                                    
+                                    <div class="alert alert-success mb-2">
+                                        <strong>Option 2:</strong> Alternative source (if Option 1 fails)
+                                    </div>
+                                    <ol class="small">
+                                        <li>Go to: <a href="https://huggingface.co/briaai/RMBG-1.4/resolve/main/model.pth" target="_blank">Hugging Face RMBG Model</a></li>
+                                        <li>Download and convert to ONNX (requires technical setup)</li>
+                                    </ol>
+                                    
+                                    <small class="text-muted"><strong>Expected size:</strong> ~170MB. Current file (4.36MB) is too small to work properly.</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDownloadProgress() {
+        document.getElementById('downloadProgress').style.display = 'block';
+    }
+</script>

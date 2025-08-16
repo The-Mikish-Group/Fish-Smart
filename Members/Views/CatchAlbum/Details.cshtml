@@ -1,0 +1,284 @@
+@model Members.Models.CatchAlbum
+
+@{
+    ViewData["Title"] = Model.Name + " - Album Details";
+}
+
+<div class="container my-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="text-success">
+                <i class="bi bi-collection-fill"></i>
+                @Model.Name
+            </h1>
+            <p class="text-muted mb-0">
+                Created @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                @if (Model.IsPublic)
+                {
+                    <span class="badge bg-info ms-2">
+                        <i class="bi bi-globe"></i> Public Album
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary ms-2">
+                        <i class="bi bi-lock"></i> Private Album
+                    </span>
+                }
+            </p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left"></i>
+                Back to Albums
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                <i class="bi bi-pencil"></i>
+                Edit Album
+            </a>
+            <a asp-action="UploadPhoto" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                <i class="bi bi-camera"></i>
+                @(string.IsNullOrEmpty(Model.CoverImageUrl) ? "Add Photo" : "Change Photo")
+            </a>
+            <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i>
+                Add Catches
+            </a>
+        </div>
+    </div>
+
+    <!-- Album Description -->
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title text-muted">
+                    <i class="bi bi-chat-square-text"></i>
+                    About This Album
+                </h6>
+                <p class="card-text">@Model.Description</p>
+            </div>
+        </div>
+    }
+
+    <!-- Album Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">@Model.AlbumCatches.Count</h2>
+                    <small>Total Catches</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">@Model.AlbumCatches.Select(ac => ac.Catch?.Species?.CommonName).Distinct().Count()</h2>
+                    <small>Species</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mt-2 mt-md-0">
+            <div class="card text-center bg-warning text-dark">
+                <div class="card-body">
+                    <h2 class="mb-0">
+                        @if (Model.AlbumCatches.Any(ac => ac.Catch != null && ac.Catch.Size > 0))
+                        {
+                            @Model.AlbumCatches.Where(ac => ac.Catch != null && ac.Catch.Size > 0).Max(ac => ac.Catch!.Size).ToString("F1")<text>"</text>
+                        }
+                        else
+                        {
+                            <text>N/A</text>
+                        }
+                    </h2>
+                    <small>Largest</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mt-2 mt-md-0">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">@Model.AlbumCatches.Select(ac => ac.Catch?.Session?.LocationName).Where(l => !string.IsNullOrEmpty(l)).Distinct().Count()</h2>
+                    <small>Locations</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catches Grid -->
+    @if (Model.AlbumCatches.Any())
+    {
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    Catches in this Album (@Model.AlbumCatches.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var albumCatch in Model.AlbumCatches.OrderByDescending(ac => ac.AddedAt))
+                    {
+                        var fishCatch = albumCatch.Catch;
+                        if (fishCatch != null)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 border-success">
+                                    <!-- Catch Image -->
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                         style="height: 250px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); overflow: hidden;">
+                                        @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
+                                        {
+                                            <a asp-controller="ImageViewer" asp-action="CatchPhoto" asp-route-id="@fishCatch.Id" 
+                                               asp-route-returnUrl="@Url.Action("Details", "CatchAlbum", new { id = Model.Id })" class="d-block h-100 w-100">
+                                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.Species?.CommonName" 
+                                                     style="height: 100%; width: auto; object-fit: cover; object-position: center; cursor: pointer;" 
+                                                     title="Click to view full size" />
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center text-primary">
+                                                <i class="bi bi-camera display-4"></i>
+                                                <div class="mt-2">
+                                                    <small>No Photo</small>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="card-body">
+                                        <h6 class="card-title text-success">
+                                            @(fishCatch.Species?.CommonName ?? "Unknown Species")
+                                        </h6>
+                                        
+                                        <div class="mb-2">
+                                            <strong>Size:</strong> @fishCatch.Size.ToString("F1")"
+                                            @if (fishCatch.Weight.HasValue)
+                                            {
+                                                <br><strong>Weight:</strong> @fishCatch.Weight.Value.ToString("F1") <text>lbs</text>
+                                            }
+                                        </div>
+
+                                        @if (fishCatch.CatchTime.HasValue)
+                                        {
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock"></i>
+                                                    @fishCatch.CatchTime.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                                </small>
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(fishCatch.Session?.LocationName))
+                                        {
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt"></i>
+                                                    @fishCatch.Session.LocationName
+                                                </small>
+                                            </div>
+                                        }
+
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                Added to album: @albumCatch.AddedAt.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-footer bg-transparent">
+                                        <!-- Edit Catch Button (Full Width) -->
+                                        <div class="d-grid mb-2">
+                                            <a asp-controller="Catch" asp-action="Edit" asp-route-id="@fishCatch.Id" 
+                                               asp-route-returnUrl="@($"/CatchAlbum/Details/{Model.Id}")"
+                                               class="btn btn-sm btn-info">
+                                                <i class="bi bi-pencil-square"></i> Edit Catch Details
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- Action Buttons Row -->
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@fishCatch.SessionId" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i> Session
+                                            </a>
+                                            
+                                            <div class="d-flex gap-1">
+                                                @if (string.IsNullOrEmpty(fishCatch.PhotoUrl))
+                                                {
+                                                    <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@fishCatch.Id" 
+                                                       asp-route-returnUrl="@($"/CatchAlbum/Details/{Model.Id}")"
+                                                       class="btn btn-sm btn-success" title="Add Photo">
+                                                        <i class="bi bi-camera"></i>
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@fishCatch.Id" 
+                                                       asp-route-returnUrl="@($"/CatchAlbum/Details/{Model.Id}")"
+                                                       class="btn btn-sm btn-warning" title="Change Photo">
+                                                        <i class="bi bi-camera"></i>
+                                                    </a>
+                                                }
+                                                
+                                                <form asp-action="RemoveCatch" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Remove this catch from the album?')">
+                                                    <input type="hidden" name="albumId" value="@Model.Id" />
+                                                    <input type="hidden" name="catchId" value="@fishCatch.Id" />
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Remove from Album">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Empty Album State -->
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-images display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">This Album is Empty</h4>
+                <p class="text-muted mb-4">Start adding your catches to build this collection!</p>
+                
+                <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success btn-lg">
+                    <i class="bi bi-plus-circle"></i>
+                    Add Your First Catch
+                </a>
+                
+                <div class="mt-4">
+                    <small class="text-muted">
+                        You can add catches from any of your fishing sessions to this album
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between mt-4">
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+            <i class="bi bi-trash"></i>
+            Delete Album
+        </a>
+        
+        <div>
+            <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i>
+                Add More Catches
+            </a>
+        </div>
+    </div>
+</div>

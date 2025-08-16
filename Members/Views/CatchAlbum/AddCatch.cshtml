@@ -1,0 +1,231 @@
+@{
+    ViewData["Title"] = "Add Catches to Album";
+    var album = (Members.Models.CatchAlbum)ViewBag.Album;
+    var availableCatches = (List<Members.Models.Catch>)ViewBag.AvailableCatches;
+}
+
+<div class="container my-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="text-success">
+                <i class="bi bi-plus-circle-fill"></i>
+                Add Catches to Album
+            </h1>
+            <p class="mb-0">
+                Adding to: <strong class="text-success">@album.Name</strong>
+            </p>
+        </div>
+        <div>
+            <a asp-action="Details" asp-route-id="@album.Id" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Album
+            </a>
+        </div>
+    </div>
+
+    @if (availableCatches.Any())
+    {
+        <!-- Instructions -->
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>Select catches to add:</strong> Click the "Add to Album" button for any catch you want to include. 
+            Only catches not already in this album are shown.
+        </div>
+
+        <!-- Available Catches Grid -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-collection"></i>
+                    Available Catches (@availableCatches.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var fishCatch in availableCatches)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 border-primary">
+                                <!-- Catch Image Placeholder -->
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 120px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                    <div class="text-center text-primary">
+                                        <i class="bi bi-camera display-4"></i>
+                                    </div>
+                                </div>
+
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary">
+                                        @(fishCatch.Species?.CommonName ?? "Unknown Species")
+                                    </h6>
+                                    
+                                    <div class="mb-2">
+                                        <strong>Size:</strong> @fishCatch.Size.ToString("F1")"
+                                        @if (fishCatch.Weight.HasValue)
+                                        {
+                                            <br><strong>Weight:</strong> @fishCatch.Weight.Value.ToString("F1") <text>lbs</text>
+                                        }
+                                    </div>
+
+                                    @if (fishCatch.CatchTime.HasValue)
+                                    {
+                                        <div class="mb-2">
+                                            <small>
+                                                <i class="bi bi-clock"></i>
+                                                @fishCatch.CatchTime.Value.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(fishCatch.Session?.LocationName))
+                                    {
+                                        <div class="mb-2">
+                                            <small>
+                                                <i class="bi bi-geo-alt"></i>
+                                                @fishCatch.Session.LocationName
+                                            </small>
+                                        </div>
+                                    }
+
+                                    <div class="mb-2">
+                                        <small>
+                                            Session: @fishCatch.Session?.SessionDate.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex justify-content-between">
+                                        <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@fishCatch.SessionId" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> Session
+                                        </a>
+                                        
+                                        <form asp-action="AddCatch" method="post" class="d-inline">
+                                            <input type="hidden" name="albumId" value="@album.Id" />
+                                            <input type="hidden" name="catchId" value="@fishCatch.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-plus-circle"></i> Add to Album
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add All Option -->
+        @if (availableCatches.Count <= 10)
+        {
+            <div class="text-center mt-4">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success">
+                            <i class="bi bi-lightning-fill"></i>
+                            Quick Add All
+                        </h6>
+                        <p class="card-text">Add all @availableCatches.Count catches to this album at once?</p>
+                        <div class="d-flex justify-content-center gap-2">
+                            @foreach (var fishCatch in availableCatches)
+                            {
+                                <form asp-action="AddCatch" method="post" class="d-inline">
+                                    <input type="hidden" name="albumId" value="@album.Id" />
+                                    <input type="hidden" name="catchId" value="@fishCatch.Id" />
+                                    @Html.AntiForgeryToken()
+                                </form>
+                            }
+                            <button type="button" class="btn btn-success" onclick="addAllCatches()">
+                                <i class="bi bi-collection-fill"></i>
+                                Add All @availableCatches.Count Catches
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- No Available Catches -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-collection display-1"></i>
+            </div>
+            <h3>No Available Catches</h3>
+            <p class="mb-4">
+                All your catches are either already in this album or you haven't recorded any catches yet.
+            </p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-action="Details" asp-route-id="@album.Id" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Album
+                </a>
+                
+                <a asp-controller="FishingSession" asp-action="Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                    Start New Fishing Session
+                </a>
+            </div>
+
+            <!-- Tips -->
+            <div class="row justify-content-center mt-5">
+                <div class="col-lg-6">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="bi bi-lightbulb-fill"></i>
+                                Tips for Building Your Album
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-arrow-right text-info me-2"></i>
+                                    Go fishing and record your catches in a new session
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-arrow-right text-info me-2"></i>
+                                    Catches can be added to multiple albums
+                                </li>
+                                <li class="mb-0">
+                                    <i class="bi bi-arrow-right text-info me-2"></i>
+                                    Each album tells a different story of your fishing adventures
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function addAllCatches() {
+            if (confirm('Add all catches to this album?')) {
+                // Submit all forms at once (simplified approach)
+                const forms = document.querySelectorAll('form[action*="AddCatch"]');
+                let completed = 0;
+                
+                forms.forEach(form => {
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    }).then(() => {
+                        completed++;
+                        if (completed === forms.length) {
+                            window.location.reload();
+                        }
+                    });
+                });
+            }
+        }
+    </script>
+}

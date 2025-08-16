@@ -1,0 +1,387 @@
+﻿@page "{batchId?}"
+@model Members.Areas.Admin.Pages.AccountsReceivable.ReviewBatchInvoicesModel
+@{
+    ViewData["Title"] = $"Review Draft Batches";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Top Button placed here -->
+<button class="btn btn-sm px-1 py-0" onclick="topFunction()" id="top-button" title="Go to top">Top</button>
+
+<div class="container p-1">
+
+    @if (!string.IsNullOrEmpty(Model.BatchId))
+    {
+        <!-- Title -->
+        <h1 class="text-black mb-2 mt-4 text-center"><i class="bi bi-list-check"></i> @ViewData["Title"]</h1>
+
+    }
+
+    @if (TempData["StatusMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+            @Html.Raw(TempData["StatusMessage"]?.ToString()?.Replace("\n", "<br />"))
+            <button type="button" class="btn sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+            @Html.Raw(TempData["ErrorMessage"]?.ToString()?.Replace("\n", "<br />"))
+            <button type="button" class="btn sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show mt-4" role="alert">
+            @Html.Raw(TempData["WarningMessage"]?.ToString()?.Replace("\n", "<br />"))
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.DraftInvoices == null || !Model.DraftInvoices.Any())
+    {
+        @*<div class="alert alert-info mt-4" role="alert">
+            No draft invoices found for this batch ID, or the batch has already been processed.
+        </div> *@
+
+        <div class="mt-4">
+            <a asp-page="./CreateBatchInvoices" class="btn btn-sm btn-success rounded-2 shadow"><i class="bi bi-plus-square"></i> Create a New Batch</a>
+        </div>
+
+        return;
+    }
+
+    @if (!string.IsNullOrEmpty(Model.BatchDescription))
+    {       
+        <!-- Display Batch Summary -->
+        <div class="card mb-4 shadow">
+
+            <!-- Card Header Text -->
+            @* <div class="card-header"> *@
+
+                <h5 class="text-black d-flex align-items-start ms-2 mb-2 mt-2"><i class="bi bi-list"></i>  Select Draft Batch:</h5>
+
+                @if (Model.AvailableDraftBatches != null && Model.AvailableDraftBatches.Any())
+                {
+                    <form method="get" id="selectBatchForm">
+                    <div class="container row ps-0 pe-2 mb-3">
+
+                            <div class="col-12 text-start">
+                                <label for="SelectedBatchId" class="text-black fw-bold visually-hidden">Select Batch:</label>
+                            </div>
+
+                            <div class="col-12 px-0">
+                                <select name="batchId" id="SelectedBatchId" asp-for="BatchId" asp-items="@(new SelectList(Model.AvailableDraftBatches, "BatchId", "DisplayText", Model.BatchId))" class="text-black form-select mx-3">
+                                    <option value="">-- Select a Batch to Review --</option>
+                                </select>
+                            </div>
+
+                        </div>                        
+                    </form>
+                }
+                else if (string.IsNullOrEmpty(Model.BatchId))
+                {
+                    <div class="alert alert-info mt-4" role="alert">
+                        There are currently no draft batches available for review.
+                    </div>
+                    <div class="mt-4">
+                        <a asp-page="./CreateBatchInvoices" class="text-black btn btn-sm btn-success rounded-2 shadow">Create a New Batch</a>
+                    </div>
+                    return;
+                }
+
+                <!-- Cancel, or Finalize Buttons -->
+                <div class="mb-4 mt-4">
+                    <div class="row gy-2 justify-content-center gx-2">                        
+
+                        <!-- Cancel and Delete Batch -->
+                        <div class="col-auto">
+                            <form method="post" asp-page-handler="CancelBatch" asp-route-batchId="@Model.BatchId" style="display:inline;" id="cancelBatchForm">
+                                <button type="button" class="btn btn-sm btn-danger rounded-2 shadow"
+                                        onclick="showConfirmModal('Are you sure you want to cancel and delete all draft invoices in this batch?<br/><br/>This action cannot be undone.', function() { document.getElementById('cancelBatchForm').submit(); }, { title: 'Cancel & Delete Batch', confirmText: 'Cancel & Delete' });">
+                                    <i class="bi bi-x-circle"></i> Cancel & Delete Batch
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Finalize the Batch -->
+                        <div class="col-auto">
+                            <form method="post" asp-page-handler="FinalizeBatch" asp-route-batchId="@Model.BatchId" style="display:inline;" id="finalizeBatchForm">
+                                <button type="button" class="btn btn-sm btn-success rounded-2 shadow"
+                                        onclick="showConfirmModal('Are you sure you want to finalize this batch?<br/><br/>This will make all draft invoices active and Due (or Paid if credits applied).', function() { document.getElementById('finalizeBatchForm').submit(); }, { title: 'Finalize Batch', confirmText: 'Finalize', dangerous: false });">
+                                    <i class="bi bi-check-circle"></i> Finalize Batch
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Export to CSV -->
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-sm btn-success rounded-2 shadow" id="exportReviewBatchInvoicesTriggerButton"
+                                    data-bs-toggle="modal" data-bs-target="#exportReviewBatchInvoicesConfirmModal">
+                                <i class="bi-file-earmark-spreadsheet-fill"></i> Export to CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Confirmation Modal -->
+                <div class="modal fade" id="exportReviewBatchInvoicesConfirmModal" tabindex="-1" aria-labelledby="exportReviewBatchInvoicesConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exportReviewBatchInvoicesConfirmModalLabel">Confirm Export</h5>
+                                <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Download the CSV export for this batch of invoices?
+                            </div>
+                            <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary rounded-2 shadow" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-success rounded-2 shadow" id="confirmReviewBatchInvoicesExportButton"><i class="bi bi-save"></i> Yes, Export</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @* </div> *@
+
+        </div>
+
+        <div class="card mb-4 shadow">
+
+            <!-- Heading -->
+            <h5 class="text-black d-flex justify-content-between align-items-center mb-0 mt-2 ms-2 me-1">Invoices
+                <span class="badge bg-secondary rounded-pill">@Model.TotalInvoiceCount Invoices @Model.TotalInvoiceAmount.ToString("C")</span>
+            </h5>
+
+            <div class="card-body rounded-2 p-1">
+                <div class="table-responsive">
+                    <table class="table-striped table-hover w-100 mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.UserSort"
+                                       class="text-decoration-none text-nowrap">User</a>
+                                    @if (Model.CurrentSort == "user_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "user_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th>
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.EmailSort"
+                                       class="text-decoration-none text-nowrap">Email</a>
+                                    @if (Model.CurrentSort == "email_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "email_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th>
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.DescriptionSort"
+                                       class="text-decoration-none text-nowrap">Description</a>
+                                    @if (Model.CurrentSort == "desc_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "desc_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th class="text-end">
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.AmountDueSort"
+                                       class="text-decoration-none text-nowrap">Amount Due</a>
+                                    @if (Model.CurrentSort == "amount_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "amount_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th>
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.InvoiceDateSort"
+                                       class="text-decoration-none text-nowrap ps-2">Invoice Date</a>
+                                    @if (Model.CurrentSort == "invdate_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "invdate_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th>
+                                    <a asp-page="./ReviewBatchInvoices"
+                                       asp-route-batchId="@Model.BatchId"
+                                       asp-route-returnedFromUserId="@Model.ReturnedFromUserId"
+                                       asp-route-CurrentSort="@Model.DueDateSort"
+                                       class="text-decoration-none my-2 text-nowrap">Due Date</a>
+                                    @if (Model.CurrentSort == "duedate_asc")
+                                    {
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                    @if (Model.CurrentSort == "duedate_desc")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                </th>
+                                <th class="text-center">Billing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int i = 0;
+                            }
+                            @foreach (var invoice in Model.DraftInvoices)
+                            {
+                                <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                                    <td class="text-nowrap">@Html.DisplayFor(modelItem => invoice.UserFullName)</td>
+                                    <td class="text-nowrap">@Html.DisplayFor(modelItem => invoice.UserName)</td> @* UserName is Email in this context usually *@  
+                                    <td class="text-nowrap">@Html.DisplayFor(modelItem => invoice.Description)</td>
+                                    <td class="text-nowrap text-end">@invoice.AmountDue.ToString("C")</td>
+                                    <td class="text-nowrap ps-2">@invoice.InvoiceDate.ToString("yyyy-MM-dd")</td>
+                                    <td class="my-2 text-nowrap">@invoice.DueDate.ToString("yyyy-MM-dd")</td>
+                                    <td class="text-nowrap text-center">
+                                        <!-- New Cell -->
+                                        @if (!string.IsNullOrEmpty(invoice.UserID))
+                                        {
+                                            <a asp-area="Member"
+                                               asp-page="/MyBilling"
+                                               asp-route-userId="@invoice.UserID"
+                                               asp-route-returnUrl="@Url.Page("./ReviewBatchInvoices", new { batchId = Model.BatchId, returnedFromUserId = Model.ReturnedFromUserId })"
+                                               class="btn btn-sm btn-billing"
+                                               title="View User Billing Details">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                </tr>
+                                i++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" /> @* If you have any input fields that need validation later, otherwise optional *@  
+            <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectBatchDropdown = document.getElementById('SelectedBatchId');
+            const selectBatchForm = document.getElementById('selectBatchForm');
+
+            if (selectBatchDropdown && selectBatchForm) {
+                selectBatchDropdown.addEventListener('change', function () {
+                    // When the dropdown changes, automatically submit the form.
+                    // The form method is GET, and its action will be the current page
+                    // with the new 'batchId' from the dropdown included as a query parameter.
+                    selectBatchForm.submit();
+                });
+            }
+
+            // --- Export CSV Modal Logic for ReviewBatchInvoices ---
+            const confirmReviewBatchExportButton = document.getElementById('confirmReviewBatchInvoicesExportButton');
+            const exportReviewBatchInvoicesModalElement = document.getElementById('exportReviewBatchInvoicesConfirmModal');
+            const exportReviewBatchInvoicesTriggerButton = document.getElementById('exportReviewBatchInvoicesTriggerButton');
+
+            if (confirmReviewBatchExportButton && exportReviewBatchInvoicesModalElement && exportReviewBatchInvoicesTriggerButton) {
+                confirmReviewBatchExportButton.addEventListener('click', function () {
+                    const batchId = '@Model.BatchId';
+
+                    if (batchId) {
+                        const exportUrl = `@Url.Page("./ReviewBatchInvoices", "ExportCsv")&batchId=${encodeURIComponent(batchId)}`;
+                        window.location.href = exportUrl;
+
+                        var modalInstance = bootstrap.Modal.getInstance(exportReviewBatchInvoicesModalElement);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                        // Focus and inert handled by modal events
+                    } else {
+                        console.error("ReviewBatchInvoices.cshtml: BatchId is not available for export on button click.");
+                        alert("Cannot export: Batch ID is missing. Please ensure a batch is selected.");
+                        // If error, modal might still be open or closing, ensure inert is handled if hide is called
+                        // and focus is managed by hidden.bs.modal.
+                    }
+                });
+
+                exportReviewBatchInvoicesModalElement.addEventListener('show.bs.modal', function () {
+                    exportReviewBatchInvoicesModalElement.inert = false;
+                });
+
+                exportReviewBatchInvoicesModalElement.addEventListener('hide.bs.modal', function () {
+                    exportReviewBatchInvoicesModalElement.inert = true;
+                });
+
+                exportReviewBatchInvoicesModalElement.addEventListener('hidden.bs.modal', function () {
+                    if (exportReviewBatchInvoicesTriggerButton && typeof exportReviewBatchInvoicesTriggerButton.focus === 'function') {
+                        exportReviewBatchInvoicesTriggerButton.focus();
+                    }
+                    exportReviewBatchInvoicesModalElement.inert = false;
+                });
+            }
+            // --- End Export CSV Modal Logic ---
+
+        });
+    </script>
+
+    <!-- Top Button Script -->
+    <script>
+
+        //Get the button
+        var mybutton = document.getElementById("top-button");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function () { scrollFunction() };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 320 || document.documentElement.scrollTop > 320) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        // When the user clicks on the button, scroll to the top of the document
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+    </script>
+}

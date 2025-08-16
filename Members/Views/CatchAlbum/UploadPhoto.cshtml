@@ -1,0 +1,188 @@
+@{
+    ViewData["Title"] = "Upload Album Photo";
+    var album = (Members.Models.CatchAlbum)ViewBag.Album;
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-camera-fill"></i>
+                        Upload Album Photo
+                    </h1>
+                    <p class="text-muted mb-0">Add a cover photo for: <strong>@album.Name</strong></p>
+                </div>
+                <div>
+                    <a asp-action="Details" asp-route-id="@album.Id" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Album
+                    </a>
+                </div>
+            </div>
+
+            <!-- Current Photo (if exists) -->
+            @if (!string.IsNullOrEmpty(album.CoverImageUrl))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-image"></i>
+                            Current Album Photo
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="@album.CoverImageUrl" alt="@album.Name" 
+                             class="img-fluid rounded shadow" style="max-height: 300px;" />
+                        
+                        <div class="mt-3">
+                            <form asp-action="RemovePhoto" asp-route-id="@album.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to remove the current photo?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                    Remove Current Photo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Upload Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i>
+                        @(string.IsNullOrEmpty(album.CoverImageUrl) ? "Upload Album Photo" : "Replace Album Photo")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UploadPhoto" asp-route-id="@album.Id" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label for="photo" class="form-label">
+                                <i class="bi bi-file-earmark-image"></i> Select Photo <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" name="photo" id="photo" class="form-control" 
+                                   accept="image/jpeg,image/jpg,image/png,image/gif" required />
+                            <div class="form-text">
+                                Supported formats: JPG, JPEG, PNG, GIF • Maximum size: 5MB
+                            </div>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div class="mb-4">
+                            <label class="form-label">Preview</label>
+                            <div id="imagePreview" class="border rounded p-3 text-center bg-light" style="min-height: 200px;">
+                                <div class="text-muted">
+                                    <i class="bi bi-image display-1"></i>
+                                    <p class="mt-2">Photo preview will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@album.Id" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                                <i class="bi bi-cloud-upload"></i>
+                                Upload Photo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        Photo Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Best ratio:</strong> Landscape orientation (16:9 or 4:3)
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Good lighting:</strong> Clear, well-lit photos work best
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Focus on catches:</strong> Highlight your best fish
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Album theme:</strong> Choose photos that represent the collection
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    preview.innerHTML = '<div class="text-danger"><i class="bi bi-exclamation-triangle display-1"></i><p class="mt-2">Invalid file type. Please select a JPG, PNG, or GIF image.</p></div>';
+                    uploadBtn.disabled = true;
+                    return;
+                }
+                
+                // Validate file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    preview.innerHTML = '<div class="text-danger"><i class="bi bi-exclamation-triangle display-1"></i><p class="mt-2">File too large. Please select an image smaller than 5MB.</p></div>';
+                    uploadBtn.disabled = true;
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" 
+                             class="img-fluid rounded shadow" style="max-height: 200px;" />
+                        <p class="mt-2 text-success">
+                            <i class="bi bi-check-circle"></i> 
+                            Ready to upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                    `;
+                    uploadBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '<div class="text-muted"><i class="bi bi-image display-1"></i><p class="mt-2">Photo preview will appear here</p></div>';
+                uploadBtn.disabled = true;
+            }
+        });
+    </script>
+}

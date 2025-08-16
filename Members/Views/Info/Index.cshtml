@@ -1,0 +1,254 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Fish-Smart - Ethical Fishing Photography";
+}
+
+@if (SignInManager.IsSignedIn(User) && (User.IsInRole("Member") || User.IsInRole("Admin") || User.IsInRole("Manager")))
+{
+    <!-- Navigation Buttons for Logged-in Users -->
+    <div class="container mt-4">
+        <div class="row gy-4 justify-content-center mb-4">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="SmartCatchProfile" asp-action="Index" class="cta-button d-block text-center">
+                    <i class="bi bi-person-circle me-2"></i>
+                    My Profile
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="FishingSession" asp-action="Index" class="cta-button d-block text-center">
+                    <i class="bi bi-journal-plus me-2"></i>
+                    Fishing Sessions
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="FishingBuddies" asp-action="Index" class="cta-button d-block text-center">
+                    <i class="bi bi-people me-2"></i>
+                    Fishing Buddies
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="CatchAlbum" asp-action="Index" class="cta-button d-block text-center">
+                    <i class="bi bi-collection me-2"></i>
+                    My Albums
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Hero Section -->
+<div class="container mt-4">
+    <div class="hero-card">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center hero-content">
+                <img src="/images/LinkImages/SmallLogo.png" alt="Fish-Smart Logo" class="logo-large" />
+
+                <div class="upcoming-features-badge">
+                    🎣 Innovative Features in Development
+                </div>
+
+                <h1 class="hero-title">Fish-Smart</h1>
+                <p class="hero-subtitle">Ethical Fishing Photography & Conservation</p>
+
+                <p class="hero-description">
+                    Transform how you share your fishing adventures! Fish-Smart creates stunning composite images
+                    of your catches without stressing the fish. Keep detailed fishing logs, track your success,
+                    and share beautiful photos—all while promoting sustainable fishing practices.
+                </p>
+
+                <a href="#features" class="cta-button">
+                    Discover the Future of Fishing Photography
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div id="features" class="container mt-5">
+    <div class="features-card">
+        <div class="row justify-content-center text-center mb-5">
+            <div class="col-lg-8">
+                <h2 class="section-title">Revolutionary Features</h2>
+                <p class="section-subtitle">Combining technology with conservation for the modern angler</p>
+            </div>
+        </div>
+
+        <div class="row gx-4 gy-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <h3 class="feature-title">AI-Powered Photo Composition</h3>
+                    <p class="feature-description">
+                        Create stunning photos using your avatar, realistic fish images, and custom backgrounds.
+                        No more stressing fish for the perfect shot!
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">🎤</div>
+                    <h3 class="feature-title">Voice-Activated Logging</h3>
+                    <p class="feature-description">
+                        Hands-free catch logging with voice commands. Simply speak your catch details while
+                        you focus on safely releasing your fish.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">🌊</div>
+                    <h3 class="feature-title">Smart Environmental Data</h3>
+                    <p class="feature-description">
+                        Automatically capture weather, tide, moon phase, and location data to help you
+                        understand patterns in your fishing success.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">🐟</div>
+                    <h3 class="feature-title">Comprehensive Fish Database</h3>
+                    <p class="feature-description">
+                        Access detailed information about fish species, regulations, seasons, and sizes
+                        for both freshwater and saltwater fishing.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Advanced Analytics</h3>
+                    <p class="feature-description">
+                        Track your fishing patterns, success rates, and favorite spots with detailed
+                        analytics and searchable session history.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3 class="feature-title">Fishing Buddy Network</h3>
+                    <p class="feature-description">
+                        Connect with other anglers, share sessions, and build a community focused
+                        on sustainable fishing practices.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="container mt-5">
+    <div class="stats-card">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <div class="stat-label">Fish Stressed for Photos</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <span class="stat-number">∞</span>
+                    <div class="stat-label">Conservation Impact</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <div class="stat-label">Ethical Photography</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <span class="stat-number">🌟</span>
+                    <div class="stat-label">Future-Ready Features</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Section -->
+<div class="container mt-5">
+    <div class="preview-card">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h2 class="section-title">See Fish-Smart in Action</h2>
+                <p class="section-subtitle">Revolutionary fishing photography meets conservation technology</p>
+
+                <div class="mockup-placeholder">
+                    <h4 class="preview-title">📱 Interactive Features Preview</h4>
+                    <p class="preview-subtitle">Experience the next generation of fishing technology</p>
+
+                    <div class="icon-flow">
+                        <span class="fish-icon">🐟</span>
+                        <span class="plus-icon">+</span>
+                        <span class="fish-icon">📸</span>
+                        <span class="equals-icon">=</span>
+                        <span class="fish-icon">🖼️</span>
+                    </div>
+
+                    <p class="quote-text">
+                        "Capture memories, not stress. Create stunning fishing photos while keeping fish healthy and happy."
+                    </p>
+                </div>
+
+                <div class="row mt-5">
+                    <div class="col-md-4">
+                        <div class="preview-feature-icon">🎨</div>
+                        <h5 class="preview-feature-title">Custom Avatars</h5>
+                        <p class="preview-feature-text">Upload your photo or create custom avatars with different poses and outfits</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="preview-feature-icon">🌅</div>
+                        <h5 class="preview-feature-title">Scenic Backgrounds</h5>
+                        <p class="preview-feature-text">Choose from seawalls, beaches, piers, boats, and premium scenic locations</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="preview-feature-icon">📚</div>
+                        <h5 class="preview-feature-title">Detailed Logs</h5>
+                        <p class="preview-feature-text">Track species, sizes, locations, weather, and equipment for better fishing insights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact CTA Section -->
+<div class="container mt-5 mb-5">
+    <div class="cta-card">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="cta-title">Ready to Fish Smarter?</h2>
+                <p class="cta-subtitle">
+                    Join the conservation revolution in fishing photography. Be among the first to experience Fish-Smart's innovative features!
+                </p>
+
+                <div class="cta-buttons">
+                    <a href="/Info/Contact" class="cta-button primary-button">
+                        Contact Us
+                    </a>
+                    <a href="#features" class="cta-button secondary-button">
+                        Learn More
+                    </a>
+                </div>
+
+                <p class="cta-footer">
+                    Fish-Smart • Ethical Fishing Photography • Conservation Technology
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

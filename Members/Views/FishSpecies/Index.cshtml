@@ -1,0 +1,247 @@
+﻿@model IEnumerable<Members.Models.FishSpecies>
+
+@{
+    ViewData["Title"] = "Fish Species Database";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Fish Species Database</h2>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Species
+                    </a>
+                }
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter"></i> Filter Species
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="waterType" class="form-label">Water Type</label>
+                            <select class="form-select" id="waterType" name="waterType">
+                                <option value="All" selected="@(ViewBag.WaterType == "All")">All Waters</option>
+                                <option value="Fresh" selected="@(ViewBag.WaterType == "Fresh")">Freshwater</option>
+                                <option value="Salt" selected="@(ViewBag.WaterType == "Salt")">Saltwater</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="region" class="form-label">Region</label>
+                            <select class="form-select" id="region" name="region">
+                                <option value="All">All Regions</option>
+                                @foreach (var region in (List<string>)ViewBag.Regions)
+                                {
+                                    <option value="@region" selected="@(ViewBag.Region == region)">@region</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search"
+                                   value="@ViewBag.Search" placeholder="Search by name...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="row">
+                @if (Model.Any())
+                {
+                    @foreach (var fish in Model)
+                    {
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 fish-species-card">
+                                @if (!string.IsNullOrEmpty(fish.StockImageUrl))
+                                {
+                                    <img src="@fish.StockImageUrl" class="card-img-top" alt="@fish.CommonName"
+                                         style="height: 200px; width: 100%; object-fit: contain; object-position: center; background-color: #f8f9fa;"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="card-img-top bg-light d-none align-items-center justify-content-center"
+                                         style="height: 200px;">
+                                        <div class="text-center">
+                                            <i class="bi bi-fish text-white" style="font-size: 3rem;"></i>
+                                            <p class="text-white mt-2 mb-0">@fish.CommonName</p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                         style="height: 200px;">
+                                        <div class="text-center">
+                                            <i class="bi bi-fish text-white" style="font-size: 3rem;"></i>
+                                            <p class="text-white mt-2 mb-0">@fish.CommonName</p>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="card-body">
+                                    <h5 class="card-title">@fish.CommonName</h5>
+                                    @if (!string.IsNullOrEmpty(fish.ScientificName))
+                                    {
+                                        <p class="card-text text-white small fst-italic">@fish.ScientificName</p>
+                                    }
+
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <span class="badge bg-info">@fish.WaterType</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            @if (!string.IsNullOrEmpty(fish.Region))
+                                            {
+                                                <span class="badge bg-secondary">@fish.Region</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    @if (fish.MinSize.HasValue || fish.MaxSize.HasValue)
+                                    {
+                                        <p class="card-text">
+                                            <strong>Size Range:</strong>
+                                            @if (fish.MinSize.HasValue && fish.MaxSize.HasValue)
+                                            {
+                                                @($"{fish.MinSize:F1}\" - {fish.MaxSize:F1}\"")
+                                            }
+                                            else if (fish.MinSize.HasValue)
+                                            {
+                                                @($"Min: {fish.MinSize:F1}\"")
+                                            }
+                                            else if (fish.MaxSize.HasValue)
+                                            {
+                                                @($"Max: {fish.MaxSize:F1}\"")
+                                            }
+                                        </p>
+                                    }
+
+                                    @if (fish.SeasonStart.HasValue && fish.SeasonEnd.HasValue)
+                                    {
+                                        <p class="card-text">
+                                            <strong>Season:</strong>
+                                            @(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(fish.SeasonStart.Value)) -
+                                            @(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(fish.SeasonEnd.Value))
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(fish.RegulationNotes))
+                                    {
+                                        <div class="alert alert-warning alert-sm p-2">
+                                            <small><strong>Regulations:</strong> @fish.RegulationNotes</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="card-footer">
+                                    <div class="btn-group w-100" role="group">
+                                        <a asp-action="Details" asp-route-id="@fish.Id"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@fish.Id"
+                                               class="btn btn btn-sm">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <h4><i class="fas fa-search"></i> No Fish Species Found</h4>
+                            <p>Try adjusting your search criteria or browse all species.</p>
+                            <a href="@Url.Action("Index")" class="btn btn-primary">View All Species</a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Results Summary -->
+            @if (Model.Any())
+            {
+                <div class="mt-4">
+                    <p class="text-white">
+                        Showing @Model.Count() species
+                        @if (!string.IsNullOrEmpty(ViewBag.Search))
+                        {
+                            @: matching "@ViewBag.Search"
+                        }
+                        @if (ViewBag.WaterType != "All")
+                        {
+                            @: in @ViewBag.WaterType water
+                        }
+                        @if (ViewBag.Region != "All")
+                        {
+                            @: from @ViewBag.Region
+                        }
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .fish-species-card {
+        transition: transform 0.2s ease-in-out;
+        border: 1px solid #dee2e6;
+    }
+
+        .fish-species-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+
+    .alert-sm {
+        font-size: 0.875rem;
+    }
+
+    /* Prevent flickering text */
+    .card-title, .card-text {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    /* Smooth image loading */
+    .card-img-top {
+        transition: opacity 0.3s ease;
+    }
+
+    /* Fish icon styling */
+    .fas.fa-fish {
+        font-family: 'Font Awesome 5 Free', 'bootstrap-icons' !important;
+    }
+
+        /* Use Bootstrap icon if Font Awesome not available */
+        .fas.fa-fish:before {
+            content: "\f578"; /* Font Awesome fish */
+        }
+
+    /* Fallback to Bootstrap icon */
+    .bi-fish:before {
+        content: "\f307";
+    }
+</style>

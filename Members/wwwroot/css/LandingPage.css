@@ -1,0 +1,332 @@
+﻿/* SmartCatch Landing Page Styles */
+
+/* Hero Section Card */
+.hero-card {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 4rem 2rem;
+    border: 2px solid #4682B4;
+    box-shadow: 0 10px 30px rgba(70, 130, 180, 0.3);
+    margin-bottom: 3rem;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.logo-large {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.4rem;
+    color: #2d4a5c;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    color: #495057;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.upcoming-features-badge {
+    background: linear-gradient(45deg, #4682B4, #87CEEB);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 2rem;
+    animation: pulse 2s infinite;
+}
+
+.cta-button {
+    background: linear-gradient(45deg, #4682B4, #87CEEB);
+    color: white;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(70, 130, 180, 0.3);
+    margin: 0.5rem;
+}
+
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(70, 130, 180, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+/* Features Section */
+.features-card {
+    background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(70, 130, 180, 0.2);
+    margin-bottom: 3rem;
+}
+
+.feature-card {
+    background: linear-gradient(145deg, #3a3a3a, #2e2e2e);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: #4682B4;
+        box-shadow: 0 10px 30px rgba(70, 130, 180, 0.3);
+    }
+
+.feature-icon {
+    font-size: 3rem;
+    color: #87CEEB;
+    margin-bottom: 1rem;
+}
+
+.feature-title {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.feature-description {
+    color: #b0b0b0;
+    line-height: 1.6;
+}
+
+/* Stats Section */
+.stats-card {
+    background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(70, 130, 180, 0.2);
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.stat-item {
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #87CEEB;
+    display: block;
+}
+
+.stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    color: #e0e0e0;
+}
+
+/* Preview Section */
+.preview-card {
+    background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(70, 130, 180, 0.2);
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.section-title {
+    color: #ffffff;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    color: #87CEEB;
+    font-size: 1.2rem;
+    margin-bottom: 3rem;
+}
+
+.mockup-placeholder {
+    background: linear-gradient(145deg, #3a3a3a, #2e2e2e);
+    border: 2px dashed #4682B4;
+    border-radius: 15px;
+    padding: 4rem 2rem;
+    margin: 2rem 0;
+    color: #87CEEB;
+    font-size: 1.1rem;
+}
+
+.preview-title {
+    color: #87CEEB;
+    margin-bottom: 1rem;
+}
+
+.preview-subtitle {
+    margin-bottom: 2rem;
+    color: #e0e0e0;
+}
+
+.icon-flow {
+    font-size: 2rem;
+    margin: 2rem 0;
+}
+
+.fish-icon {
+    color: #4682B4;
+    margin: 0 1rem;
+    animation: swim 3s ease-in-out infinite;
+}
+
+.plus-icon, .equals-icon {
+    color: #ffffff;
+    margin: 0 1rem;
+}
+
+.quote-text {
+    color: #b0b0b0;
+    font-style: italic;
+    margin-top: 2rem;
+}
+
+.preview-feature-icon {
+    color: #87CEEB;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.preview-feature-title {
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.preview-feature-text {
+    color: #b0b0b0;
+}
+
+/* CTA Section */
+.cta-card {
+    background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+    border-radius: 15px;
+    padding: 4rem 2rem;
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(70, 130, 180, 0.2);
+    text-align: center;
+}
+
+.cta-title {
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.cta-subtitle {
+    color: #87CEEB;
+    font-size: 1.2rem;
+    margin-bottom: 3rem;
+}
+
+.cta-buttons {
+    margin-bottom: 2rem;
+}
+
+.primary-button {
+    background: linear-gradient(45deg, #4682B4, #87CEEB);
+    margin-right: 1rem;
+}
+
+.secondary-button {
+    background: transparent;
+    border: 2px solid #87CEEB;
+    color: #87CEEB;
+}
+
+    .secondary-button:hover {
+        background: #87CEEB;
+        color: #ffffff;
+    }
+
+.cta-footer {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes swim {
+    0%, 100% {
+        transform: translateX(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateX(10px) rotate(5deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+
+    .logo-large {
+        width: 80px;
+        height: 80px;
+    }
+
+    .hero-card, .features-card, .stats-card, .preview-card, .cta-card {
+        padding: 2rem 1rem;
+    }
+
+    .primary-button, .secondary-button {
+        margin: 0.5rem 0;
+        display: block;
+        width: 100%;
+    }
+}

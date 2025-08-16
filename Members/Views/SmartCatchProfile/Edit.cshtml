@@ -1,0 +1,199 @@
+@model Members.Models.SmartCatchProfile
+
+@{
+    ViewData["Title"] = "Edit Fish-Smart Profile";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-person-gear"></i>
+                        Edit Profile
+                    </h1>
+                    <p class="text-muted mb-0">Update your Fish-Smart preferences</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Subscription Status -->
+            <div class="alert alert-info d-flex align-items-center mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    <strong>Current Plan:</strong>
+                    @if (Model.SubscriptionType == "Premium")
+                    {
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-star-fill"></i> Premium
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Free</span>
+                        <small class="ms-2">
+                            <a asp-action="Upgrade" class="text-decoration-none">
+                                <i class="bi bi-star"></i> Upgrade to Premium
+                            </a>
+                        </small>
+                    }
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-sliders"></i>
+                        Profile Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+
+                        <!-- Display Name -->
+                        <div class="form-floating mb-3">
+                            <input asp-for="DisplayName" class="form-control" placeholder="Enter your angler name" />
+                            <label asp-for="DisplayName">Angler Display Name</label>
+                            <span asp-validation-for="DisplayName" class="text-danger"></span>
+                            <div class="form-text">This name appears on your catches and profile</div>
+                        </div>
+
+                        <!-- Preferred Water Type -->
+                        <div class="mb-3">
+                            <label asp-for="PreferredWaterType" class="form-label">Preferred Water Type</label>
+                            <select asp-for="PreferredWaterType" class="form-select">
+                                <option value="Fresh">Freshwater</option>
+                                <option value="Salt">Saltwater</option>
+                                <option value="Both">Both Fresh & Salt</option>
+                            </select>
+                            <span asp-validation-for="PreferredWaterType" class="text-danger"></span>
+                            <div class="form-text">Affects which fish species are shown first</div>
+                        </div>
+
+                        <!-- Default Region -->
+                        <div class="form-floating mb-3">
+                            <select asp-for="DefaultRegion" class="form-select">
+                                <option value="">Select your region...</option>
+                                @if (ViewBag.Regions != null)
+                                {
+                                    @foreach (var region in (IEnumerable<string>)ViewBag.Regions)
+                                    {
+                                        <option value="@region" selected="@(region == Model.DefaultRegion)">@region</option>
+                                    }
+                                }
+                            </select>
+                            <label asp-for="DefaultRegion">Default Fishing Region</label>
+                            <span asp-validation-for="DefaultRegion" class="text-danger"></span>
+                            <div class="form-text">Helps show relevant local fish species and regulations</div>
+                        </div>
+
+                        <!-- General Settings -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="WatermarkEnabled" type="checkbox" class="form-check-input" />
+                                    <label class="form-check-label" asp-for="WatermarkEnabled">
+                                        <strong>Enable watermark on images</strong>
+                                    </label>
+                                    <div class="form-text">Adds Fish-Smart logo to catch photos</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.SubscriptionType == "Premium")
+                        {
+                            <hr>
+                            <h6 class="text-warning">
+                                <i class="bi bi-star-fill"></i>
+                                Premium Features
+                            </h6>
+                            
+                            <!-- Premium Settings -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input asp-for="VoiceActivationEnabled" type="checkbox" class="form-check-input" />
+                                        <label class="form-check-label" asp-for="VoiceActivationEnabled">
+                                            <strong>Enable voice activation</strong>
+                                        </label>
+                                        <div class="form-text">Log catches using voice commands</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input asp-for="AutoLocationEnabled" type="checkbox" class="form-check-input" />
+                                        <label class="form-check-label" asp-for="AutoLocationEnabled">
+                                            <strong>Auto-populate environmental data</strong>
+                                        </label>
+                                        <div class="form-text">Automatic weather, tides, moon phase</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <hr>
+                            <div class="alert alert-light border">
+                                <h6 class="text-muted">
+                                    <i class="bi bi-lock-fill"></i>
+                                    Premium Features (Upgrade Required)
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" disabled />
+                                            <label class="form-check-label text-muted">
+                                                Voice activation
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" disabled />
+                                            <label class="form-check-label text-muted">
+                                                Auto environmental data
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    <a asp-action="Upgrade" class="text-decoration-none">
+                                        <i class="bi bi-star"></i> Upgrade to Premium
+                                    </a>
+                                    to unlock these features
+                                </small>
+                            </div>
+                        }
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

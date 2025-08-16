@@ -1,0 +1,228 @@
+@model Members.Models.FishingSession
+
+@{
+    ViewData["Title"] = "Edit Fishing Session";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit Fishing Session
+                    </h1>
+                    <p class="text-muted mb-0">Update your fishing session details</p>
+                </div>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Details
+                    </a>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journal-plus"></i>
+                        Session Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="UserId" />
+                        <input type="hidden" asp-for="CreatedAt" />
+
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="SessionDate" class="form-label">
+                                    <i class="bi bi-calendar3"></i> Date & Time
+                                </label>
+                                <input asp-for="SessionDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="SessionDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="WaterType" class="form-label">
+                                    <i class="bi bi-droplet"></i> Water Type
+                                </label>
+                                <select asp-for="WaterType" class="form-select">
+                                    <option value="Fresh">Freshwater</option>
+                                    <option value="Salt">Saltwater</option>
+                                </select>
+                                <span asp-validation-for="WaterType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <label asp-for="LocationName" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Location Name
+                            </label>
+                            <input asp-for="LocationName" class="form-control"
+                                   placeholder="e.g., Lake Smith, Jones Pier, etc." />
+                            <span asp-validation-for="LocationName" class="text-danger"></span>
+                        </div>
+
+                        <!-- GPS Coordinates -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Latitude" class="form-label">
+                                    <i class="bi bi-compass"></i> Latitude (Optional)
+                                </label>
+                                <input asp-for="Latitude" type="number" step="0.000001" class="form-control"
+                                       placeholder="e.g., 40.7128" />
+                                <span asp-validation-for="Latitude" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Longitude" class="form-label">
+                                    <i class="bi bi-compass"></i> Longitude (Optional)
+                                </label>
+                                <input asp-for="Longitude" type="number" step="0.000001" class="form-control"
+                                       placeholder="e.g., -74.0060" />
+                                <span asp-validation-for="Longitude" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Equipment Selection -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="RodReelSetupId" class="form-label">
+                                    <i class="bi bi-tools"></i> Rod & Reel Setup (Optional)
+                                </label>
+                                <select asp-for="RodReelSetupId" class="form-select">
+                                    <option value="">Select equipment...</option>
+                                    @if (ViewBag.Equipment != null)
+                                    {
+                                        @foreach (var equipment in (List<Members.Models.FishingEquipment>)ViewBag.Equipment)
+                                        {
+                                            <option value="@equipment.Id">
+                                                @equipment.Name - @equipment.Type
+                                                @if (equipment.IsPremium)
+                                                {
+                                                    <text> (Premium)</text>
+                                                }
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PrimaryBaitLureId" class="form-label">
+                                    <i class="bi bi-bounding-box"></i> Primary Bait/Lure (Optional)
+                                </label>
+                                <select asp-for="PrimaryBaitLureId" class="form-select">
+                                    <option value="">Select bait/lure...</option>
+                                    @if (ViewBag.BaitsLures != null)
+                                    {
+                                        @foreach (var baitLure in (List<Members.Models.BaitsLures>)ViewBag.BaitsLures)
+                                        {
+                                            <option value="@baitLure.Id">
+                                                @baitLure.Name - @baitLure.Type
+                                                @if (baitLure.IsPremium)
+                                                {
+                                                    <text> (Premium)</text>
+                                                }
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Session Notes -->
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">
+                                <i class="bi bi-chat-square-text"></i> Session Notes (Optional)
+                            </label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"
+                                      placeholder="Weather conditions, expectations, strategy, etc."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <!-- Premium Environmental Data -->
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-star-fill"></i>
+                                    Environmental Data (Premium/Manual Entry)
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="WeatherConditions" class="form-label">Weather Conditions</label>
+                                        <input asp-for="WeatherConditions" class="form-control" 
+                                               placeholder="e.g., Partly cloudy" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Temperature" class="form-label">Temperature (°F)</label>
+                                        <input asp-for="Temperature" type="number" step="any" class="form-control" 
+                                               placeholder="e.g., 72.5" />
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="WindDirection" class="form-label">Wind Direction</label>
+                                        <input asp-for="WindDirection" class="form-control" 
+                                               placeholder="e.g., NW" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="WindSpeed" class="form-label">Wind Speed (mph)</label>
+                                        <input asp-for="WindSpeed" type="number" step="any" class="form-control" 
+                                               placeholder="e.g., 8.5" />
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="TideConditions" class="form-label">Tide Conditions</label>
+                                        <input asp-for="TideConditions" class="form-control" 
+                                               placeholder="e.g., Rising - High at 3:15 PM" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="MoonPhase" class="form-label">Moon Phase</label>
+                                        <input asp-for="MoonPhase" class="form-control" 
+                                               placeholder="e.g., Full Moon" />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label asp-for="BarometricPressure" class="form-label">Barometric Pressure (inHg)</label>
+                                        <input asp-for="BarometricPressure" type="number" step="0.01" class="form-control" 
+                                               placeholder="e.g., 30.12" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

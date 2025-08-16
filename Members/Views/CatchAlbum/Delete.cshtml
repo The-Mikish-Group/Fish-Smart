@@ -1,0 +1,155 @@
+@model Members.Models.CatchAlbum
+
+@{
+    ViewData["Title"] = "Delete Album - " + Model.Name;
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Delete Catch Album
+                </h1>
+                <p class="text-muted">Are you sure you want to delete this album?</p>
+            </div>
+
+            <!-- Album Info Card -->
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-collection-fill"></i>
+                        Album to Delete
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Album Details -->
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Album Name:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            <h6 class="text-danger">@Model.Name</h6>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Description:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                <p class="text-muted mb-0">@Model.Description</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Created:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.CreatedAt.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Privacy:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @if (Model.IsPublic)
+                            {
+                                <span class="badge bg-info">
+                                    <i class="bi bi-globe"></i> Public Album
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-lock"></i> Private Album
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Catch Count -->
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Catches in Album:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-success fs-6">@Model.AlbumCatches.Count catches</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Messages -->
+            <div class="alert alert-warning mt-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Warning:</strong> This will permanently delete the album and remove all catch associations. 
+                The actual catch records will remain safe in your fishing sessions.
+            </div>
+
+            @if (Model.AlbumCatches.Any())
+            {
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>This album contains @Model.AlbumCatches.Count catch(es):</strong>
+                    The catches will be removed from this album but will still be available in your fishing sessions.
+                </div>
+
+                <!-- Show some catches that will be affected -->
+                @if (Model.AlbumCatches.Count <= 5)
+                {
+                    <div class="card mt-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Catches that will be removed from this album:</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @foreach (var albumCatch in Model.AlbumCatches.Take(5))
+                                {
+                                    var fishCatch = albumCatch.Catch;
+                                    if (fishCatch != null)
+                                    {
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-fish text-info me-2"></i>
+                                                <span>
+                                                    @(fishCatch.Species?.CommonName ?? "Unknown") - @fishCatch.Size.ToString("F1")"
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Cancel
+                </a>
+                
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" asp-for="Id" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger" 
+                            onclick="return confirm('Are you absolutely sure you want to delete this album? This action cannot be undone.')">
+                        <i class="bi bi-check-circle"></i>
+                        Yes, Delete Album
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
