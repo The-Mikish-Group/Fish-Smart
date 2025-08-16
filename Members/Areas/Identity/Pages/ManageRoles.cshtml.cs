@@ -164,12 +164,12 @@ namespace Members.Areas.Identity.Pages
             if (rolesToAdd.Contains("Member"))
             {
                 // Get the site name from environment variable
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "SmartCatch";
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
 
                 if (string.IsNullOrEmpty(siteName))
                 {
-                    _logger.LogError("SITE_NAME_SMARTCATCH environment variable is not set. Using default value.");
-                    siteName = "SmartCatch"; // Fallback to default if environment variable is not set
+                    _logger.LogError("SITE_NAME_FISH_SMART environment variable is not set. Using default value.");
+                    siteName = "Our Community"; // Fallback to default if environment variable is not set
                 }
 
                 // Now check if the user's email is confirmed to send the appropriate email
@@ -190,18 +190,18 @@ namespace Members.Areas.Identity.Pages
                                         "<body style=\"font-family: sans-serif; line-height: 1.6; margin: 20px;\">" +
                                         "    <p style=\"margin-bottom: 1em;\">Dear Member,</p>" +
                                         $"    <p style=\"margin-bottom: 1em;\">Welcome! Your {siteName} account has been created and is ready for you to access.</p>" +
-                                        $"    <p style=\"margin-bottom: 1em;\">You have been granted Member access and can log in to the community portal at <a href=\"https://{siteName}.illustrate.net\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.illustrate.net</a>.</p>" +
+                                        $"    <p style=\"margin-bottom: 1em;\">You have been granted Member access and can log in to the community portal at <a href=\"https://{siteName}.com\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.com</a>.</p>" +
                                         "    <div style=\"margin-bottom: 2em; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;\">" +
                                         "        <strong style=\"font-size: 1.1em;\">Important Note:</strong> If this account was automatically generated for you, please click the link below to create your password:" +
                                         "        <p style=\"margin-top: 1em;\">" +
-                                        $"            <a href=\"https://{siteName}.illustrate.net/Identity/Account/ForgotPassword\" style=\"background-color:#007bff;color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px;font-weight:bold;display:inline-block;\">" +
+                                        $"            <a href=\"https://{siteName}.com/Identity/Account/ForgotPassword\" style=\"background-color:#007bff;color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px;font-weight:bold;display:inline-block;\">" +
                                         "                Click Here to Create Your Password" +
                                         "            </a>" +
                                         "    </div>" +
                                         "    <p style=\"margin-bottom: 1em;\">You will be directed to enter your email address, and a password reset link will be sent to you. This process ensures the security of your account and verifies your email address, preventing unauthorized password creation attempts.</p>" +
                                         $"    <p style=\"margin-bottom: 1em;\">Thank you for being a part of the {siteName} Cloud Site.</p>" +
                                         "    <p style=\"margin-bottom: 0;\">Sincerely,</p>" +
-                                        $"    <p style=\"margin-top: 0;\">The {siteName} <img src=\"https://{siteName}.Illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                                        $"    <p style=\"margin-top: 0;\">The {siteName} <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                                         "</body>" +
                                         "</html>"
                         );
@@ -245,7 +245,7 @@ namespace Members.Areas.Identity.Pages
                                 $"If you did not register for an account with {siteName}, please disregard this email.</p>" +
                                 "    <p style=\"margin-bottom: 0;\">Thank you for being a part of our community.</p>" +
                                 "    <p style=\"margin-top: 0;\">Sincerely,</p>" +
-                                $"    <p style=\"margin-top: 0;\">The {siteName} Team<img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
+                                $"    <p style=\"margin-top: 0;\">The {siteName} Team<img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
                                 "</body>" +
                                 "</html>"
                             );

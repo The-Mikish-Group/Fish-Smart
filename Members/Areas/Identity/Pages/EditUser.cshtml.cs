@@ -168,9 +168,9 @@ namespace Members.Areas.Identity.Pages
                 return RedirectToPage("./Users");
             }
             await LoadUserAsync(user);
-            Input.City ??= Environment.GetEnvironmentVariable("DEFAULT_CITY_SMARTCATCH");
-            Input.State ??= Environment.GetEnvironmentVariable("DEFAULT_STATE_SMARTCATCH");
-            Input.ZipCode ??= Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_SMARTCATCH");
+            Input.City ??= Environment.GetEnvironmentVariable("DEFAULT_CITY_FISH_SMART");
+            Input.State ??= Environment.GetEnvironmentVariable("DEFAULT_STATE_FISH_SMART");
+            Input.ZipCode ??= Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_FISH_SMART");
             return Page();
         }
         public async Task<IActionResult> OnPostAsync()

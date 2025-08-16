@@ -159,12 +159,12 @@ namespace Members.Areas.Identity.Pages.Account.Manage
         private string GenerateQrCodeUri(string email, string unformattedKey)
         {
             // Get the site domain from environment variable
-            string siteDomain = Environment.GetEnvironmentVariable("SITE_DOMAIN_SMARTCATCH");
+            string siteDomain = Environment.GetEnvironmentVariable("SITE_DOMAIN_FISH_SMART");
 
             if (string.IsNullOrEmpty(siteDomain))
             {
-                _logger.LogError("SITE_DOMAIN_SMARTCATCH environment variable is not set. Using default value.");
-                siteDomain = "SmartCatch.Illustrate.net"; // Fallback to default if environment variable is not set
+                _logger.LogError("SITE_DOMAIN_FISH_SMART environment variable is not set. Using default value.");
+                siteDomain = "Fish-Smart.com"; // Fallback to default if environment variable is not set
             }
 
             return string.Format(

@@ -3,7 +3,10 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(dotnet build)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(move:*)",
+      "Bash(ren:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []

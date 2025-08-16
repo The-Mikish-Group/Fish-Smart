@@ -11,18 +11,11 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 namespace Members.Controllers
 {
     [Authorize]
-    public class CatchAlbumController : Controller
+    public class CatchAlbumController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWebHostEnvironment webHostEnvironment) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
-        public CatchAlbumController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWebHostEnvironment webHostEnvironment)
-        {
-            _context = context;
-            _userManager = userManager;
-            _webHostEnvironment = webHostEnvironment;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
 
         // GET: CatchAlbum
         public async Task<IActionResult> Index()
@@ -65,14 +58,14 @@ namespace Members.Controllers
             var userId = _userManager.GetUserId(User);
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            // Check if user has SmartCatch profile
+            // Check if user has Fish-Smart profile
             var profile = await _context.SmartCatchProfiles
                 .FirstOrDefaultAsync(p => p.UserId == userId);
 
             if (profile == null)
             {
                 TempData["Info"] = "Please complete your Fish-Smart profile setup first.";
-                return RedirectToAction("Setup", "SmartCatchProfile");
+                return RedirectToAction("Setup", "FishSmartProfile");
             }
 
             var album = new CatchAlbum

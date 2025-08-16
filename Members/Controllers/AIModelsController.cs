@@ -5,24 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace Members.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AIModelsController : Controller
+    public class AIModelsController(
+        ISegmentationService segmentationService, 
+        IModelDownloadService modelDownloadService,
+        IWebHostEnvironment environment,
+        ILogger<AIModelsController> logger) : Controller
     {
-        private readonly ISegmentationService _segmentationService;
-        private readonly IModelDownloadService _modelDownloadService;
-        private readonly IWebHostEnvironment _environment;
-        private readonly ILogger<AIModelsController> _logger;
-
-        public AIModelsController(
-            ISegmentationService segmentationService, 
-            IModelDownloadService modelDownloadService,
-            IWebHostEnvironment environment,
-            ILogger<AIModelsController> logger)
-        {
-            _segmentationService = segmentationService;
-            _modelDownloadService = modelDownloadService;
-            _environment = environment;
-            _logger = logger;
-        }
+        private readonly ISegmentationService _segmentationService = segmentationService;
+        private readonly IModelDownloadService _modelDownloadService = modelDownloadService;
+        private readonly IWebHostEnvironment _environment = environment;
+        private readonly ILogger<AIModelsController> _logger = logger;
 
         // GET: AIModels
         public async Task<IActionResult> Index()
@@ -37,7 +29,8 @@ namespace Members.Controllers
                 ModelStatus = GetModelStatus(),
                 ModelInfo = modelInfo,
                 IsModelDownloaded = isModelAvailable,
-                Instructions = GetInstallationInstructions()
+                Instructions = GetInstallationInstructions(),
+                DiagnosticInfo = GetDiagnosticInfo(modelPath)
             };
 
             return View(viewModel);
@@ -144,6 +137,38 @@ namespace Members.Controllers
                 "Alternative: Configure cloud-based APIs (Azure Computer Vision, Google Vision) for best results"
             };
         }
+
+        private string GetDiagnosticInfo(string modelPath)
+        {
+            var info = new System.Text.StringBuilder();
+            
+            info.AppendLine($"Environment: {_environment.EnvironmentName}");
+            info.AppendLine($"OS: {Environment.OSVersion}");
+            info.AppendLine($"Framework: {Environment.Version}");
+            info.AppendLine($"Model Path: {modelPath}");
+            info.AppendLine($"File Exists: {System.IO.File.Exists(modelPath)}");
+            
+            if (System.IO.File.Exists(modelPath))
+            {
+                var fileInfo = new System.IO.FileInfo(modelPath);
+                info.AppendLine($"File Size: {fileInfo.Length / (1024.0 * 1024.0):F2} MB");
+                info.AppendLine($"Last Modified: {fileInfo.LastWriteTime}");
+            }
+            
+            try
+            {
+                // Test ONNX Runtime availability
+                var testOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
+                info.AppendLine("ONNX Runtime: Available");
+                testOptions.Dispose();
+            }
+            catch (Exception ex)
+            {
+                info.AppendLine($"ONNX Runtime Error: {ex.GetType().Name} - {ex.Message}");
+            }
+            
+            return info.ToString();
+        }
     }
 
     public class AIModelsViewModel
@@ -153,5 +178,6 @@ namespace Members.Controllers
         public string ModelInfo { get; set; } = string.Empty;
         public bool IsModelDownloaded { get; set; }
         public List<string> Instructions { get; set; } = new();
+        public string DiagnosticInfo { get; set; } = string.Empty;
     }
 }

@@ -68,7 +68,7 @@ namespace Members.Services
             return sessionReady && modelExists;
         }
 
-        public async Task<bool> InitializeAIModelsAsync()
+        public Task<bool> InitializeAIModelsAsync()
         {
             try
             {
@@ -77,7 +77,7 @@ namespace Members.Services
                 if (!File.Exists(modelPath))
                 {
                     _logger.LogWarning("AI segmentation model not found at {ModelPath}. Download required.", modelPath);
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // Check file size - U2-Net models should be much larger than 4MB
@@ -93,15 +93,20 @@ namespace Members.Services
                 // Dispose existing session if any
                 _session?.Dispose();
 
-                // Create ONNX session with error handling
+                // Create ONNX session with error handling and hosting-friendly options
                 var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions
                 {
                     ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
-                    GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                    GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_BASIC, // More conservative for hosting
                     LogSeverityLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_WARNING
                 };
 
+                // Add execution providers in order of preference (CPU fallback for hosting compatibility)
+                sessionOptions.AppendExecutionProvider_CPU(0);
+
                 _logger.LogInformation("Attempting to load ONNX model from {ModelPath}", modelPath);
+                _logger.LogInformation("Environment: {Environment}, OS: {OS}", _environment.EnvironmentName, Environment.OSVersion);
+                
                 _session = new InferenceSession(modelPath, sessionOptions);
                 
                 // Verify the model loaded by checking input/output metadata
@@ -116,14 +121,28 @@ namespace Members.Services
                     _logger.LogInformation("Input: {Name}, Shape: {Shape}", input.Key, string.Join(",", input.Value.Dimensions));
                 }
                 
-                return true;
+                return Task.FromResult(true);
+            }
+            catch (PlatformNotSupportedException ex)
+            {
+                _logger.LogError(ex, "ONNX Runtime not supported on this platform. AI segmentation disabled.");
+                _session?.Dispose();
+                _session = null;
+                return Task.FromResult(false);
+            }
+            catch (DllNotFoundException ex)
+            {
+                _logger.LogError(ex, "ONNX Runtime native libraries not found. This is common in shared hosting environments. AI segmentation disabled.");
+                _session?.Dispose();
+                _session = null;
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initialize AI segmentation models: {Message}", ex.Message);
+                _logger.LogError(ex, "Failed to initialize AI segmentation models: {Message}. Check hosting environment ONNX Runtime support.", ex.Message);
                 _session?.Dispose();
                 _session = null;
-                return false;
+                return Task.FromResult(false);
             }
         }
 

@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class SmartCatchProfileController : Controller
+    public class FishSmartProfileController(ApplicationDbContext context, UserManager<IdentityUser> userManager) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public SmartCatchProfileController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
-        {
-            _context = context;
-            _userManager = userManager;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
 
         // GET: SmartCatchProfile
         public async Task<IActionResult> Index()

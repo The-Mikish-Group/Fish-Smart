@@ -47,12 +47,12 @@ namespace Members.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 // Get the site name from environment variable
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH");
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART");
 
                 if (string.IsNullOrEmpty(siteName))
                 {
-                    _logger.LogError("SITE_NAME_SMARTCATCH environment variable is not set. Using default value.");
-                    siteName = "SmartCatch"; // Fallback to default if environment variable is not set
+                    _logger.LogError("SITE_NAME_FISH_SMART environment variable is not set. Using default value.");
+                    siteName = "Our Community"; // Fallback to default if environment variable is not set
                 }
 
                 string emailSubjectUser;
@@ -75,10 +75,10 @@ namespace Members.Areas.Identity.Pages.Account
                       "    <p style=\"margin-bottom: 1em;\">Dear Member,</p>" +
                       $"   <p style=\"margin-bottom: 1em;\">Welcome to the {siteName} Cloud Site!</p>" +
                       "    <p style=\"margin-bottom: 1em;\">Thank you for confirming your email address. Your account is now <strong style=\"font-weight: bold;\">Active</strong>.</p>" +
-                      $"   <p style=\"margin-bottom: 1em;\">You can log in to the community portal at <a href=\"https://{siteName}.illustrate.net\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.illustrate.net</a>.</p>" +
+                      $"   <p style=\"margin-bottom: 1em;\">You can log in to the community portal at <a href=\"https://{siteName}.com\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.com</a>.</p>" +
                       "    <p style=\"margin-bottom: 0;\">Thank you for being a part of our community.</p>" +
                       "    <p style=\"margin-top: 0;\">Sincerely,</p>" +
-                      $"   <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                      $"   <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                       "</body>" +
                       "</html>";
                 }
@@ -99,7 +99,7 @@ namespace Members.Areas.Identity.Pages.Account
                         "    <p style=\"margin-bottom: 1em;\">Once your account has been authorized, you will receive a separate <strong style=\"font-weight: bold;\">Welcome Email</strong> with login instructions. Please be patient as we are a small team of volunteers.</p>" +
                         "    <p style=\"margin-bottom: 0;\">Thank you for your understanding.</p>" +
                         "    <p style=\"margin-top: 0;\">Sincerely,</p>" +
-                        $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                        $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                         "</body>" +
                         "</html>";
                 }
@@ -117,12 +117,12 @@ namespace Members.Areas.Identity.Pages.Account
                 {
                     string emailSubjectAdmin = $"{siteName} - Email Confirmation Notification";
                     string emailBodyAdmin;
-                    string adminEmail = Environment.GetEnvironmentVariable("SMTP_USERNAME_SMARTCATCH");
+                    string adminEmail = Environment.GetEnvironmentVariable("SMTP_USERNAME_FISH_SMART");
 
                     if (string.IsNullOrEmpty(adminEmail))
                     {
                         // Handle the case where the environment variable is not set
-                        _logger.LogError("SMTP_USERNAME_SMARTCATCH environment variable is not set. Cannot send admin notification.");
+                        _logger.LogError("SMTP_USERNAME_FISH_SMART environment variable is not set. Cannot send admin notification.");
                         return Page(); // Or handle this error as appropriate for your application
                     }
 
@@ -145,7 +145,7 @@ namespace Members.Areas.Identity.Pages.Account
                                          "    </ul>" +
                                          "    <p style=\"margin-bottom: 1em;\">The user's email address has been verified, and their account is now live with Member access.</p>" +
                                          "    <p style=\"margin-bottom: 0;\">Sincerely,</p>" +
-                                         $"    <p style=\"margin-top: 0;\">{siteName} System<img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
+                                         $"    <p style=\"margin-top: 0;\">{siteName} System<img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
                                          "</body>" +
                                          "</html>";
                     }
@@ -168,7 +168,7 @@ namespace Members.Areas.Identity.Pages.Account
                                          "    </ul>" +
                                          "    <p style=\"margin-bottom: 1em;\">The user with the email address above has confirmed their email. Please review their account and assign the 'Member' role as appropriate.</p>" +
                                          "    <p style=\"margin-bottom: 0;\">Sincerely,</p>" +
-                                         $"    <p style=\"margin-top: 0;\">{siteName} System<img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
+                                         $"    <p style=\"margin-top: 0;\">{siteName} System<img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 40px;\"></p>" +
                                          "</body>" +
                                          "</html>";
                     }

@@ -7,16 +7,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class BackgroundsController : Controller
+    public class BackgroundsController(ApplicationDbContext context, IWebHostEnvironment environment) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
-
-        public BackgroundsController(ApplicationDbContext context, IWebHostEnvironment environment)
-        {
-            _context = context;
-            _environment = environment;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _environment = environment;
 
         // GET: Backgrounds
         public async Task<IActionResult> Index()

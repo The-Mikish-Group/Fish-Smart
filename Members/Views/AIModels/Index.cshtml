@@ -81,6 +81,16 @@
                                     </div>
                                 </div>
                             }
+
+                            @if (!string.IsNullOrEmpty(Model.DiagnosticInfo))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Diagnostics:</strong></div>
+                                    <div class="col-sm-8">
+                                        <pre class="small text-muted">@Model.DiagnosticInfo</pre>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
 

@@ -28,15 +28,15 @@ namespace Members.Controllers
             try
             {
                 // Get environment variables (matching EmailService variable names)
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "Fish-Smart";
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Fish-Smart";
 
                 // Log environment variables (matching your EmailService)
                 _logger.LogInformation("Testing email with the following configuration:");
-                _logger.LogInformation("SMTP_SERVER_SMARTCATCH: {Server}", Environment.GetEnvironmentVariable("SMTP_SERVER_SMARTCATCH"));
+                _logger.LogInformation("SMTP_SERVER_FISH_SMART: {Server}", Environment.GetEnvironmentVariable("SMTP_SERVER_FISH_SMART"));
                 _logger.LogInformation("SMTP_PORT: {Port}", Environment.GetEnvironmentVariable("SMTP_PORT"));
-                _logger.LogInformation("SMTP_USERNAME_SMARTCATCH: {Username}", Environment.GetEnvironmentVariable("SMTP_USERNAME_SMARTCATCH"));
+                _logger.LogInformation("SMTP_USERNAME_FISH_SMART: {Username}", Environment.GetEnvironmentVariable("SMTP_USERNAME_FISH_SMART"));
                 _logger.LogInformation("SMTP_SSL: {SSL}", Environment.GetEnvironmentVariable("SMTP_SSL"));
-                _logger.LogInformation("SITE_NAME_SMARTCATCH: {SiteName}", siteName);
+                _logger.LogInformation("SITE_NAME_FISH_SMART: {SiteName}", siteName);
 
                 await _emailService.SendEmailAsync(
                     testEmail,

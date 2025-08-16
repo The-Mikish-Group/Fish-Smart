@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = "Manage User Roles";
-    string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH")!;
+    string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART")!;
 }
 
 @if (User.IsInRole("Admin") || User.IsInRole("Manager"))

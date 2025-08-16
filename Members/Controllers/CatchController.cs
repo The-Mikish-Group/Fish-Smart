@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class CatchController : Controller
+    public class CatchController(ApplicationDbContext context, UserManager<IdentityUser> userManager) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public CatchController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
-        {
-            _context = context;
-            _userManager = userManager;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
 
         // GET: Catch/Details/5
         public async Task<IActionResult> Details(int? id, string? returnUrl = null)

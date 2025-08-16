@@ -18,10 +18,10 @@ namespace Members.Services
         {
             _logger = logger;
 
-            _smtpHost = Environment.GetEnvironmentVariable("SMTP_SERVER_SMARTCATCH")!;
+            _smtpHost = Environment.GetEnvironmentVariable("SMTP_SERVER_FISH_SMART")!;
             string portString = Environment.GetEnvironmentVariable("SMTP_PORT")!;
-            _smtpUser = Environment.GetEnvironmentVariable("SMTP_USERNAME_SMARTCATCH")!;
-            _smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD_SMARTCATCH")!;
+            _smtpUser = Environment.GetEnvironmentVariable("SMTP_USERNAME_FISH_SMART")!;
+            _smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD_FISH_SMART")!;
             string sslString = Environment.GetEnvironmentVariable("SMTP_SSL")!;
 
             if (string.IsNullOrEmpty(_smtpHost) || string.IsNullOrEmpty(portString) || string.IsNullOrEmpty(_smtpUser) || string.IsNullOrEmpty(_smtpPassword) || string.IsNullOrEmpty(sslString))

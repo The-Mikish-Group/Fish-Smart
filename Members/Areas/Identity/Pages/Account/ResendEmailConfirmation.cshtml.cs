@@ -46,12 +46,12 @@ namespace Members.Areas.Identity.Pages.Account
             }
 
             // Get the site name from environment variable
-            string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "SmartCatch";
+            string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
 
             if (string.IsNullOrEmpty(siteName))
             {
-                _logger.LogError("SITE_NAME_SMARTCATCH environment variable is not set. Using default value.");
-                siteName = "SmartCatch"; // Fallback to default if environment variable is not set
+                _logger.LogError("SITE_NAME_FISH_SMART environment variable is not set. Using default value.");
+                siteName = "Our Community"; // Fallback to default if environment variable is not set
             }
 
             var userId = await _userManager.GetUserIdAsync(user);
@@ -86,7 +86,7 @@ namespace Members.Areas.Identity.Pages.Account
                     "    <p style=\"margin-bottom: 1em;\">Please click the link to verify your email and complete your registration. This step is important to ensure you receive important updates and can access all features of the portal.</p>" +
                     "    <p style=\"margin-bottom: 1em;\">If you have already confirmed your email, you can disregard this message.</p>" +
                     "    <p style=\"margin-bottom: 0;\">Thank you,</p>" +
-                    $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                    $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                     "</body>" +
                     "</html>"
                 );

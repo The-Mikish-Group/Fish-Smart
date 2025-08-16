@@ -17,14 +17,14 @@ string SYNCFUSION_KEY = Environment.GetEnvironmentVariable("SYNCFUSION_KEY")!;
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(SYNCFUSION_KEY);
 
 // Retrieve connection string from environment variables
-string DB_SERVER = Environment.GetEnvironmentVariable("DB_SERVER_SMARTCATCH")!;
-string DB_USER = Environment.GetEnvironmentVariable("DB_USER_SMARTCATCH")!;
-string DB_PASSWORD = Environment.GetEnvironmentVariable("DB_PASSWORD_SMARTCATCH")!;
-string DB_NAME = Environment.GetEnvironmentVariable("DB_NAME_SMARTCATCH")!;
+string DB_SERVER = Environment.GetEnvironmentVariable("DB_SERVER_FISH_SMART")!;
+string DB_USER = Environment.GetEnvironmentVariable("DB_USER_FISH_SMART")!;
+string DB_PASSWORD = Environment.GetEnvironmentVariable("DB_PASSWORD_FISH_SMART")!;
+string DB_NAME = Environment.GetEnvironmentVariable("DB_NAME_FISH_SMART")!;
 if (string.IsNullOrEmpty(DB_SERVER) || string.IsNullOrEmpty(DB_USER) || string.IsNullOrEmpty(DB_PASSWORD) || string.IsNullOrEmpty(DB_NAME))
 {
     // Handle the error: Log, throw an exception, or provide a default value
-    throw new InvalidOperationException("Database environment variables (DB_SERVER_SMARTCATCH, DB_USER_SMARTCATCH, DB_PASSWORD_SMARTCATCH, or DB_NAME_SMARTCATCH) are not set.");
+    throw new InvalidOperationException("Database environment variables (DB_SERVER_FISH_SMART, DB_USER_FISH_SMART, DB_PASSWORD_FISH_SMART, or DB_NAME_FISH_SMART) are not set.");
 }
 string connectionString = $"Data Source={DB_SERVER};Initial Catalog={DB_NAME};User Id={DB_USER};Password={DB_PASSWORD}";
 
@@ -147,11 +147,11 @@ using (var scope = app.Services.CreateScope())
 {
     var UserManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); // Get the ApplicationDbContext
-    string ADMIN_EMAIL = Environment.GetEnvironmentVariable("ADMIN_EMAIL_SMARTCATCH")!;
-    string ADMIN_PASSWORD = Environment.GetEnvironmentVariable("ADMIN_PASSWORD_SMARTCATCH")!;
+    string ADMIN_EMAIL = Environment.GetEnvironmentVariable("ADMIN_EMAIL_FISH_SMART")!;
+    string ADMIN_PASSWORD = Environment.GetEnvironmentVariable("ADMIN_PASSWORD_FISH_SMART")!;
     if (string.IsNullOrEmpty(ADMIN_EMAIL) || string.IsNullOrEmpty(ADMIN_PASSWORD))
     {
-        throw new InvalidOperationException("ADMIN_EMAIL_SMARTCATCH or ADMIN_PASSWORD_SMARTCATCH environment variables are not set.");
+        throw new InvalidOperationException("ADMIN_EMAIL_FISH_SMART or ADMIN_PASSWORD_FISH_SMART environment variables are not set.");
     }
     var adminUser = await UserManager.FindByEmailAsync(ADMIN_EMAIL);
     if (adminUser == null)
@@ -168,10 +168,10 @@ using (var scope = app.Services.CreateScope())
         {
             await UserManager.AddToRoleAsync(adminUser, "Admin");
             // Update UserProfile
-            string default_City = Environment.GetEnvironmentVariable("DEFAULT_CITY_SMARTCATCH")!;
-            string default_State = Environment.GetEnvironmentVariable("DEFAULT_STATE_SMARTCATCH")!;
-            string default_Zipcode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_SMARTCATCH")!;
-            string default_Name = Environment.GetEnvironmentVariable("DEFAULT_NAME_SMARTCATCH")!;
+            string default_City = Environment.GetEnvironmentVariable("DEFAULT_CITY_FISH_SMART")!;
+            string default_State = Environment.GetEnvironmentVariable("DEFAULT_STATE_FISH_SMART")!;
+            string default_Zipcode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_FISH_SMART")!;
+            string default_Name = Environment.GetEnvironmentVariable("DEFAULT_NAME_FISH_SMART")!;
 
             var adminProfile = await dbContext.UserProfile.FirstOrDefaultAsync(up => up.UserId == adminUser.Id);
             if (adminProfile == null)

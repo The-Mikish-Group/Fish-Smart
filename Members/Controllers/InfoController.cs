@@ -11,7 +11,7 @@ namespace Members.Controllers
 
         public IActionResult Index()
         {
-            string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "Fish-Smart";
+            string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Fish-Smart";
 
             // Set the default view name and message
             ViewBag.Message = "Home";
@@ -36,8 +36,8 @@ namespace Members.Controllers
             }
             try
             {
-                string siteEmail = Environment.GetEnvironmentVariable("SMTP_USERNAME_SMARTCATCH") ?? string.Empty;
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "Fish-Smart";
+                string siteEmail = Environment.GetEnvironmentVariable("SMTP_USERNAME_FISH_SMART") ?? string.Empty;
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Fish-Smart";
 
                 // Create properly formatted HTML email body like other system emails
                 string htmlBody = "<!DOCTYPE html>" +

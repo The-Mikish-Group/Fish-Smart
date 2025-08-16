@@ -757,7 +757,7 @@ namespace Members.Areas.Admin.Pages.AccountsReceivable
 
             int emailsSentCount = 0;
             var emailErrors = new List<string>();
-            var siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "Our Community";
+            var siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
             var today = DateTime.Today;
             var dueDate = new DateTime(today.Year, today.Month, 1).AddMonths(1);
 
@@ -792,7 +792,7 @@ namespace Members.Areas.Admin.Pages.AccountsReceivable
                             <p style=""margin-bottom: 1em;"">You can view your detailed billing history and make payments by logging into your account at <a href=""https://{Request.Host}/Member/MyBilling"" style=""color: #007bff; text-decoration: none;"">https://{Request.Host}/Member/MyBilling</a>.</p>
                             {(member.CreditBalance > 0 ? $"<p style=\"margin-bottom: 1em;\">You also have an available credit balance of <strong>{member.CreditBalance:C}</strong>. This credit will be automatically applied to new charges.</p>" : "")}
                             <p style=""margin-bottom: 0;"">Sincerely,</p>
-                            <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.Illustrate.net/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
+                            <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.com/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
                         </body>
                         </html>";
                 }
@@ -814,7 +814,7 @@ namespace Members.Areas.Admin.Pages.AccountsReceivable
                             <p style=""margin-bottom: 1em;"">This credit will be automatically applied to any future charges on your account.</p>
                             <p style=""margin-bottom: 1em;"">You can view your detailed billing history by logging into your account at <a href=""https://{Request.Host}/Member/MyBilling"" style=""color: #007bff; text-decoration: none;"">https://{Request.Host}/Member/MyBilling</a>.</p>
                             <p style=""margin-bottom: 0;"">Sincerely,</p>
-                            <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
+                            <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.com/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
                         </body>
                         </html>";
                 }
@@ -957,7 +957,7 @@ namespace Members.Areas.Admin.Pages.AccountsReceivable
 
             int emailsSentCount = 0;
             var emailErrors = new List<string>();
-            var siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "Our Community";
+            var siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
             var fifthOfMonth = new DateTime(today.Year, today.Month, 5);
 
             foreach (var member in usersToEmail)
@@ -992,7 +992,7 @@ namespace Members.Areas.Admin.Pages.AccountsReceivable
                         </p>
                         {(member.CreditBalance > 0 ? $"<p style=\"margin-bottom: 1em;\">You also have an available credit balance of <strong>{member.CreditBalance:C}</strong>. This credit will be automatically applied to new charges, which may reduce or cover your outstanding balance.</p>" : "")}
                         <p style=""margin-bottom: 0;"">Sincerely,</p>
-                        <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
+                        <p style=""margin-top: 0;"">The {siteName} Team <img src=""https://{siteName}.com/Images/LinkImages/SmallLogo.png"" alt=""{siteName} Logo"" style=""vertical-align: middle; margin-left: 3px; height: 35px;""></p>
                     </body>
                     </html>";
 

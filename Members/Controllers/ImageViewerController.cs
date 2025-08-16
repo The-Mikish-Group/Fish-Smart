@@ -9,24 +9,16 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class ImageViewerController : Controller
+    public class ImageViewerController(
+        ApplicationDbContext context, 
+        UserManager<IdentityUser> userManager,
+        IImageCompositionService imageCompositionService,
+        ISegmentationService segmentationService) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IImageCompositionService _imageCompositionService;
-        private readonly ISegmentationService _segmentationService;
-
-        public ImageViewerController(
-            ApplicationDbContext context, 
-            UserManager<IdentityUser> userManager,
-            IImageCompositionService imageCompositionService,
-            ISegmentationService segmentationService)
-        {
-            _context = context;
-            _userManager = userManager;
-            _imageCompositionService = imageCompositionService;
-            _segmentationService = segmentationService;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly IImageCompositionService _imageCompositionService = imageCompositionService;
+        private readonly ISegmentationService _segmentationService = segmentationService;
 
         // GET: ImageViewer/AlbumCover/5
         public async Task<IActionResult> AlbumCover(int id, string? returnUrl = null)
@@ -449,7 +441,7 @@ namespace Members.Controllers
                 var isAvailable = _segmentationService?.IsAISegmentationAvailable() ?? false;
                 return Json(new { isAvailable = isAvailable });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { isAvailable = false });
             }

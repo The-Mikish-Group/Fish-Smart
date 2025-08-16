@@ -44,6 +44,12 @@ namespace Members.Data
             base.OnModelCreating(builder);
 
             // Existing Members configurations
+            
+            // Configure PDFCategory - ensure CategoryID is auto-generated
+            builder.Entity<PDFCategory>()
+                .Property(p => p.CategoryID)
+                .ValueGeneratedOnAdd();
+            
             builder.Entity<BillableAsset>()
                 .HasIndex(ba => ba.PlotID)
                 .IsUnique();
@@ -100,7 +106,7 @@ namespace Members.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // SmartCatch Configurations
+            // Fish-Smart Configurations
 
             // SmartCatchProfile - unique per user
             builder.Entity<SmartCatchProfile>()
@@ -174,7 +180,7 @@ namespace Members.Data
                 .Property(f => f.BarometricPressure)
                 .HasPrecision(6, 2);
 
-            // Performance indexes for SmartCatch
+            // Performance indexes for Fish-Smart
             builder.Entity<FishSpecies>()
                 .HasIndex(f => new { f.WaterType, f.Region });
 
@@ -205,7 +211,7 @@ namespace Members.Data
             builder.Entity<CatchAlbum>()
                 .HasIndex(a => a.UserId);
 
-            // Configure SmartCatch relationships with proper cascade behavior
+            // Configure Fish-Smart relationships with proper cascade behavior
 
             // Catches relationships - avoid cascade conflicts
             builder.Entity<Catch>()

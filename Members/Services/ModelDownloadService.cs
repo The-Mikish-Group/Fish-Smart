@@ -3,20 +3,14 @@ using System.Text;
 
 namespace Members.Services
 {
-    public class ModelDownloadService : IModelDownloadService
+    public class ModelDownloadService(ILogger<ModelDownloadService> logger, HttpClient httpClient) : IModelDownloadService
     {
-        private readonly ILogger<ModelDownloadService> _logger;
-        private readonly HttpClient _httpClient;
+        private readonly ILogger<ModelDownloadService> _logger = logger;
+        private readonly HttpClient _httpClient = httpClient;
 
         // U2-Net model from reliable sources
         private const string U2NET_LITE_MODEL_URL = "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2netp/u2netp.onnx";
         private const string U2NET_MODEL_URL = "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2net/u2net.onnx";
-
-        public ModelDownloadService(ILogger<ModelDownloadService> logger, HttpClient httpClient)
-        {
-            _logger = logger;
-            _httpClient = httpClient;
-        }
 
         public async Task<bool> DownloadU2NetModelAsync(string destinationPath)
         {
@@ -91,11 +85,18 @@ namespace Members.Services
 
                 var fileInfo = new FileInfo(modelPath);
                 
-                // Check if file size is reasonable (U2-Net models are typically 100MB+)
-                if (fileInfo.Length < 1024 * 1024) // Less than 1MB is likely incomplete
+                // Check if file size is reasonable (allow for compressed/optimized models)
+                if (fileInfo.Length < 100 * 1024) // Less than 100KB is likely incomplete
                 {
                     _logger.LogWarning("Model file {ModelPath} appears incomplete (size: {Size} bytes)", modelPath, fileInfo.Length);
                     return false;
+                }
+
+                // Log info about smaller models (they may be optimized versions)
+                var sizeMB = fileInfo.Length / (1024.0 * 1024.0);
+                if (sizeMB < 50)
+                {
+                    _logger.LogInformation("Model file {ModelPath} is smaller than typical U2-Net ({Size:F2} MB). This may be an optimized or compressed version.", modelPath, sizeMB);
                 }
 
                 return await VerifyModelIntegrityAsync(modelPath);

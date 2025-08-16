@@ -11,18 +11,11 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 namespace Members.Controllers
 {
     [Authorize]
-    public class CatchPhotoController : Controller
+    public class CatchPhotoController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWebHostEnvironment webHostEnvironment) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
-        public CatchPhotoController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWebHostEnvironment webHostEnvironment)
-        {
-            _context = context;
-            _userManager = userManager;
-            _webHostEnvironment = webHostEnvironment;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
 
         // GET: CatchPhoto/Upload/5
         public async Task<IActionResult> Upload(int id)

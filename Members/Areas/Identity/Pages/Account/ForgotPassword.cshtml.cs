@@ -41,12 +41,12 @@ namespace Members.Areas.Identity.Pages.Account
                 }
 
                 // Get the site name from environment variable
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH");
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART");
 
                 if (string.IsNullOrEmpty(siteName))
                 {
-                    _logger.LogError("SITE_NAME_SMARTCATCH environment variable is not set. Using default value.");
-                    siteName = "SmartCatch"; // Fallback to default if environment variable is not set
+                    _logger.LogError("SITE_NAME_FISH_SMART environment variable is not set. Using default value.");
+                    siteName = "Our Community"; // Fallback to default if environment variable is not set
                 }
 
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -78,7 +78,7 @@ namespace Members.Areas.Identity.Pages.Account
                     "    </div>" +
                     "    <p style=\"margin-bottom: 1em;\">This password reset link is valid for a limited time. If you did not request a password reset, you can ignore this email. Your password will not be changed.</p>" +
                     "    <p style=\"margin-bottom: 0;\">Thank you,</p>" +
-                    $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                    $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                     "</body>" +
                     "</html>"
                 );

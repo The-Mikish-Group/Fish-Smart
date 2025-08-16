@@ -131,11 +131,6 @@
     <None Remove="Areas\Identity\Pages\EditUser.cshtml_Save" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Properties\PublishProfiles\avonparknaz-001-site7 - FTP.pubxml.user" />
-    <None Include="Properties\PublishProfiles\avonparknaz-001-site7 - Web Deploy.pubxml.user" />
-    <None Include="Properties\PublishProfiles\avonparknaz-001-subsite12 - FTP.pubxml.user" />
-    <None Include="Properties\PublishProfiles\avonparknaz-001-subsite12 - Web Deploy.pubxml.user" />
-    <None Include="Properties\PublishProfiles\FolderProfile.pubxml.user" />
     <None Include="Properties\serviceDependencies.local.json.user" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +147,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.8" />
     <PackageReference Include="Syncfusion.Licensing" Version="30.2.5" />
     <PackageReference Include="Syncfusion.Pdf.Imaging.NET" Version="30.2.5" />

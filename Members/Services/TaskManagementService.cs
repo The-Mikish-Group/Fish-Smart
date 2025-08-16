@@ -21,21 +21,14 @@ namespace Members.Services
         Task<bool> MarkTaskCompletedAutomaticallyAsync(string actionHandler, string? notes = null);
     }
 
-    public class TaskManagementService : ITaskManagementService
+    public class TaskManagementService(
+        ApplicationDbContext context,
+        UserManager<IdentityUser> userManager,
+        ILogger<TaskManagementService> logger) : ITaskManagementService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly ILogger<TaskManagementService> _logger;
-
-        public TaskManagementService(
-            ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
-            ILogger<TaskManagementService> logger)
-        {
-            _context = context;
-            _userManager = userManager;
-            _logger = logger;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly ILogger<TaskManagementService> _logger = logger;
 
         public async Task<List<TaskStatusViewModel>> GetCurrentTaskStatusAsync()
         {

@@ -121,15 +121,15 @@ namespace Members.Areas.Identity.Pages.Account.Manage
             // Apply default values from environment variables if the loaded data is empty
             if (string.IsNullOrEmpty(Input.City))
             {
-                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_SMARTCATCH") ?? string.Empty;
+                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.State))
             {
-                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_SMARTCATCH") ?? string.Empty;
+                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.ZipCode))
             {
-                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_SMARTCATCH") ?? string.Empty;
+                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_FISH_SMART") ?? string.Empty;
             }
 
             return Page();

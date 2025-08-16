@@ -9,16 +9,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace Members.Areas.Admin.Pages
 {
     [Authorize(Roles = "Admin,Manager")]
-    public class TasksManagementModel : PageModel
+    public class TasksManagementModel(ITaskManagementService taskService, UserManager<IdentityUser> userManager) : PageModel
     {
-        private readonly ITaskManagementService _taskService;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public TasksManagementModel(ITaskManagementService taskService, UserManager<IdentityUser> userManager)
-        {
-            _taskService = taskService;
-            _userManager = userManager;
-        }
+        private readonly ITaskManagementService _taskService = taskService;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
 
         public List<TaskStatusViewModel> Tasks { get; set; } = new();
         public TasksSummaryViewModel TasksSummary { get; set; } = new();

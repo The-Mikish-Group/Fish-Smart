@@ -129,15 +129,15 @@ namespace Members.Areas.Identity.Pages
         {
             if (string.IsNullOrEmpty(Input.City))
             {
-                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_SMARTCATCH") ?? string.Empty;
+                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.State))
             {
-                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_SMARTCATCH") ?? string.Empty;
+                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.ZipCode))
             {
-                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_SMARTCATCH") ?? string.Empty;
+                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_FISH_SMART") ?? string.Empty;
             }
         }
 
@@ -164,12 +164,12 @@ namespace Members.Areas.Identity.Pages
                     _logger.LogInformation("Successfully created user with ID: {UserId} and Email: {Email}", user.Id, user.Email);
 
                     // Get the site name from environment variable
-                    string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH");
+                    string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART");
 
                     if (string.IsNullOrEmpty(siteName))
                     {
-                        _logger.LogError("SITE_NAME_SMARTCATCH environment variable is not set. Using default value.");
-                        siteName = "SmartCatch"; // Fallback to default if environment variable is not set
+                        _logger.LogError("SITE_NAME_FISH_SMART environment variable is not set. Using default value.");
+                        siteName = "Fish-Smart"; // Fallback to default if environment variable is not set
                     }
 
                     var code = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -209,10 +209,10 @@ namespace Members.Areas.Identity.Pages
                         "        </a>" +
                         "    </div>" +
                         "    <p style=\"margin-bottom: 1em;\">This step is necessary to confirm your email address and ensure the security of your account. It also prevents unauthorized individuals from setting a password for your account.</p>" +
-                        $"    <p style=\"margin-bottom: 1em;\">Once you create your password, you will be able to log in to the {siteName} community portal at <a href=\"https://{siteName}.illustrate.net\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.illustrate.net</a>.</p>" +
+                        $"    <p style=\"margin-bottom: 1em;\">Once you create your password, you will be able to log in to the {siteName} community portal at <a href=\"https://{siteName}.com\" style=\"color: #007bff; text-decoration: none;\">https://{siteName}.com</a>.</p>" +
                         "    <p style=\"margin-bottom: 0;\">Thank you for being a part of our community.</p>" +
                         "    <p style=\"margin-top: 0;\">Sincerely,</p>" +
-                        $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                        $"    <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                         "</body>" +
                         "</html>"
                     );

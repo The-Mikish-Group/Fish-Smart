@@ -126,7 +126,7 @@ namespace Members.Controllers
             ViewBag.NextSortOrder = (categories.Count != 0 ? categories.Max(c => c.SortOrder) : 0) + 1;
             ViewData["CurrentCategoryName"] = categoryName; 
             ViewData["CurrentSortOrder"] = sortOrder;
-            return View("~/Views/PdfCategory/CategoriesMenu.cshtml", categories);
+            return View("~/Views/PdfCategory/Categories.cshtml", categories);
         }
 
         [HttpPost]

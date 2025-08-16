@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishingSessionController : Controller
+    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
-        {
-            _context = context;
-            _userManager = userManager;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
 
         // GET: FishingSession
         public async Task<IActionResult> Index()
@@ -70,7 +64,7 @@ namespace Members.Controllers
             if (profile == null)
             {
                 TempData["Info"] = "Please complete your Fish-Smart profile setup first.";
-                return RedirectToAction("Setup", "SmartCatchProfile");
+                return RedirectToAction("Setup", "FishSmartProfile");
             }
 
             // Create new session with default values

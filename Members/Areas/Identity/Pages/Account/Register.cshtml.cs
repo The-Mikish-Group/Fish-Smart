@@ -152,15 +152,15 @@ namespace Members.Areas.Identity.Pages.Account
             // Apply default values from environment variables if the Input properties are empty
             if (string.IsNullOrEmpty(Input.City))
             {
-                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_SMARTCATCH") ?? string.Empty;
+                Input.City = Environment.GetEnvironmentVariable("DEFAULT_CITY_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.State))
             {
-                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_SMARTCATCH") ?? string.Empty;
+                Input.State = Environment.GetEnvironmentVariable("DEFAULT_STATE_FISH_SMART") ?? string.Empty;
             }
             if (string.IsNullOrEmpty(Input.ZipCode))
             {
-                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_SMARTCATCH") ?? string.Empty;
+                Input.ZipCode = Environment.GetEnvironmentVariable("DEFAULT_ZIPCODE_FISH_SMART") ?? string.Empty;
             }
         }
 
@@ -279,8 +279,8 @@ namespace Members.Areas.Identity.Pages.Account
             try
             {
                 // Get environment variables for dynamic content
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "SmartCatch";
-                string siteUrl = Environment.GetEnvironmentVariable("SITE_URL_SMARTCATCH") ?? string.Empty;
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
+                string siteUrl = Environment.GetEnvironmentVariable("SITE_URL_FISH_SMART") ?? string.Empty;
 
                 await _emailSender.SendEmailAsync(
                     email,
@@ -304,7 +304,7 @@ namespace Members.Areas.Identity.Pages.Account
                     "    <p style=\"margin-bottom: 1em;\">Please note that a staff member must now authorize your account, and this process could take up to <strong>24 hours</strong>. At that time, you will receive a <strong>Welcome Email</strong>. We appreciate your patience as we are a small team of volunteers.</p>" +
                     "    <p style=\"margin-bottom: 0;\">Thank you for your understanding.</p>" +
                     "    <p style=\"margin-top: 0;\">Sincerely,</p>" +
-                    $"   <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.illustrate.net/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
+                    $"   <p style=\"margin-top: 0;\">The {siteName} Team <img src=\"https://{siteName}.com/Images/LinkImages/SmallLogo.png\" alt=\"{siteName} Logo\" style=\"vertical-align: middle; margin-left: 3px; height: 35px;\"></p>" +
                     "</body>" +
                     "</html>"
                 );
@@ -332,7 +332,7 @@ namespace Members.Areas.Identity.Pages.Account
                 }
 
                 // Get environment variables for dynamic content
-                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_SMARTCATCH") ?? "SmartCatch";
+                string siteName = Environment.GetEnvironmentVariable("SITE_NAME_FISH_SMART") ?? "Our Community";
 
                 string emailSubject = $"{siteName} - New Member Registration";
                 string emailBody = $"<!DOCTYPE html>" +

@@ -7,14 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishSpeciesController : Controller
+    public class FishSpeciesController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
-
-        public FishSpeciesController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ApplicationDbContext _context = context;
 
         // GET: FishSpecies
         public async Task<IActionResult> Index(string waterType = "All", string region = "All", string search = "")

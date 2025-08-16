@@ -8,16 +8,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishingBuddiesController : Controller
+    public class FishingBuddiesController(ApplicationDbContext context, UserManager<IdentityUser> userManager) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public FishingBuddiesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
-        {
-            _context = context;
-            _userManager = userManager;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
 
         // GET: FishingBuddies
         public async Task<IActionResult> Index()

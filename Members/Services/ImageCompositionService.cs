@@ -7,24 +7,16 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Members.Services
 {
-    public class ImageCompositionService : IImageCompositionService
+    public class ImageCompositionService(
+        ApplicationDbContext context,
+        ILogger<ImageCompositionService> logger,
+        ISegmentationService segmentationService,
+        IWebHostEnvironment environment) : IImageCompositionService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<ImageCompositionService> _logger;
-        private readonly ISegmentationService _segmentationService;
-        private readonly string _imagesPath;
-
-        public ImageCompositionService(
-            ApplicationDbContext context,
-            ILogger<ImageCompositionService> logger,
-            ISegmentationService segmentationService,
-            IWebHostEnvironment environment)
-        {
-            _context = context;
-            _logger = logger;
-            _segmentationService = segmentationService;
-            _imagesPath = Path.Combine(environment.WebRootPath, "Images");
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly ILogger<ImageCompositionService> _logger = logger;
+        private readonly ISegmentationService _segmentationService = segmentationService;
+        private readonly string _imagesPath = Path.Combine(environment.WebRootPath, "Images");
 
         public async Task<(bool Success, string Message, string? ProcessedImagePath)> ReplaceBackgroundAsync(
             string originalImagePath, string backgroundImagePath, string outputPath)
