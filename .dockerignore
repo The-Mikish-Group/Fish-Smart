@@ -1,0 +1,125 @@
+# .dockerignore for Fish-Smart
+# Optimizes build performance by excluding unnecessary files
+
+#==============================================================================
+# Build outputs and temporary files
+#==============================================================================
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+#==============================================================================
+# Development and IDE files
+#==============================================================================
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.sln.docstates
+.idea/
+*.swp
+*.swo
+*~
+
+#==============================================================================
+# Package management
+#==============================================================================
+**/packages/
+**/node_modules/
+**/.nuget/
+**/package-lock.json
+
+#==============================================================================
+# Git and version control
+#==============================================================================
+.git/
+.gitignore
+.gitattributes
+**/.git
+**/.gitignore
+
+#==============================================================================
+# Documentation and README files (not needed in container)
+#==============================================================================
+README.md
+*.md
+!CLAUDE.md
+docs/
+documentation/
+
+#==============================================================================
+# Local environment and secrets (IMPORTANT: never include in container)
+#==============================================================================
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/appsettings.Development.json
+**/secrets.json
+**/*.pfx
+**/*.p12
+
+#==============================================================================
+# Testing files
+#==============================================================================
+**/coverage/
+**/*.coverage
+**/*.coveragexml
+**/TestResults/
+
+#==============================================================================
+# Logs and temporary data
+#==============================================================================
+**/logs/
+**/*.log
+**/tmp/
+**/temp/
+
+#==============================================================================
+# Large gallery images (will be mounted as volumes or external storage)
+#==============================================================================
+**/wwwroot/Galleries/
+# Keep a few sample images for testing
+!**/wwwroot/Galleries/Oaks-Village/
+# But exclude the large image collections
+**/wwwroot/Galleries/2025*/
+**/wwwroot/Galleries/Sunsets/
+**/wwwroot/Galleries/Traveling/
+
+#==============================================================================
+# Protected files (will be mounted as volumes)
+#==============================================================================
+**/ProtectedFiles/
+!**/ProtectedFiles/.gitkeep
+
+#==============================================================================
+# Build and deployment files not needed in container
+#==============================================================================
+**/Properties/PublishProfiles/
+**/publish/
+**/docker-compose.yml
+**/docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+#==============================================================================
+# OS-specific files
+#==============================================================================
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+
+#==============================================================================
+# Database files (using external SQL Server)
+#==============================================================================
+**/*.mdf
+**/*.ldf
+**/*.db
+**/*.sqlite
+
+#==============================================================================
+# SQL scripts (not needed at runtime)
+#==============================================================================
+**/*.sql
+!**/Migrations/**/*.sql

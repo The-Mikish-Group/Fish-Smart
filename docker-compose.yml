@@ -1,0 +1,87 @@
+# Fish-Smart Docker Compose Configuration
+# For local development and testing with external database
+
+version: '3.8'
+
+services:
+  fish-smart:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Database configuration
+      - DB_SERVER_FISH_SMART=${DB_SERVER_FISH_SMART}
+      - DB_USER_FISH_SMART=${DB_USER_FISH_SMART}
+      - DB_PASSWORD_FISH_SMART=${DB_PASSWORD_FISH_SMART}
+      - DB_NAME_FISH_SMART=${DB_NAME_FISH_SMART}
+      
+      # Application configuration
+      - ADMIN_EMAIL_FISH_SMART=${ADMIN_EMAIL_FISH_SMART}
+      - ADMIN_PASSWORD_FISH_SMART=${ADMIN_PASSWORD_FISH_SMART}
+      - SYNCFUSION_KEY=${SYNCFUSION_KEY}
+      - DEFAULT_CITY_FISH_SMART=${DEFAULT_CITY_FISH_SMART}
+      - DEFAULT_STATE_FISH_SMART=${DEFAULT_STATE_FISH_SMART}
+      - DEFAULT_ZIPCODE_FISH_SMART=${DEFAULT_ZIPCODE_FISH_SMART}
+      
+      # Site information
+      - SITE_URL_FISH_SMART=${SITE_URL_FISH_SMART}
+      - SITE_NAME_FISH_SMART=${SITE_NAME_FISH_SMART}
+      - SITE_DOMAIN_FISH_SMART=${SITE_DOMAIN_FISH_SMART}
+      - SITE_ORG=${SITE_ORG}
+      
+      # SMTP configuration
+      - SMTP_SERVER_FISH_SMART=${SMTP_SERVER_FISH_SMART}
+      - SMTP_USERNAME_FISH_SMART=${SMTP_USERNAME_FISH_SMART}
+      - SMTP_PASSWORD_FISH_SMART=${SMTP_PASSWORD_FISH_SMART}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SSL=${SMTP_SSL}
+      
+      # Container-specific settings
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DOTNET_RUNNING_IN_CONTAINER=true
+    
+    volumes:
+      # Mount galleries for persistent image storage during development
+      - ./Members/wwwroot/Galleries:/app/wwwroot/Galleries
+      # Mount protected files
+      - ./Members/ProtectedFiles:/app/ProtectedFiles
+      # Mount models directory for ONNX models
+      - ./Members/wwwroot/Models:/app/wwwroot/Models
+    
+    networks:
+      - fish-smart-network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/Health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  fish-smart-network:
+    driver: bridge
+
+# Development override for local database testing
+# Uncomment the following section if you want to test with a local SQL Server container
+# 
+# services:
+#   sqlserver:
+#     image: mcr.microsoft.com/mssql/server:2022-latest
+#     environment:
+#       - ACCEPT_EULA=Y
+#       - SA_PASSWORD=YourStrong!Passw0rd
+#       - MSSQL_PID=Express
+#     ports:
+#       - "1433:1433"
+#     volumes:
+#       - sqlserver_data:/var/opt/mssql
+#     networks:
+#       - fish-smart-network
+# 
+# volumes:
+#   sqlserver_data:
