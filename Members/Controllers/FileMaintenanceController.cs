@@ -126,6 +126,28 @@ namespace Members.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CleanOrphanedRecords()
+        {
+            try
+            {
+                var result = await CleanupOrphanedFileReferences();
+                TempData["Success"] = $"Cleanup completed! Processed {result.TotalProcessed} records. Cleared {result.ClearedCount} orphaned references. {result.ErrorCount} errors occurred.";
+                
+                if (result.Errors.Any())
+                {
+                    TempData["Errors"] = string.Join("<br>", result.Errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cleaning orphaned records");
+                TempData["Error"] = $"Error occurred: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task<FileFixResult> FixBackgroundFilenames()
         {
             var result = new FileFixResult();
@@ -530,9 +552,129 @@ namespace Members.Controllers
             }
         }
 
+        private async Task<CleanupResult> CleanupOrphanedFileReferences()
+        {
+            var result = new CleanupResult();
+
+            // Clean up catch photos
+            var catches = await _context.Catches.Where(c => c.PhotoUrl != null).ToListAsync();
+            var catchesFolder = Path.Combine(_environment.WebRootPath, "Images", "Catches");
+            
+            foreach (var catchItem in catches)
+            {
+                try
+                {
+                    result.TotalProcessed++;
+                    
+                    if (string.IsNullOrEmpty(catchItem.PhotoUrl))
+                        continue;
+
+                    var fileName = catchItem.PhotoUrl.Replace("/Images/Catches/", "").Replace("/Images/Catches", "");
+                    if (fileName.StartsWith("/")) fileName = fileName.Substring(1);
+                    
+                    var filePath = Path.Combine(catchesFolder, fileName);
+                    
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        _logger.LogInformation("Clearing orphaned catch photo reference: Catch {Id}, missing file: {FileName}", catchItem.Id, fileName);
+                        catchItem.PhotoUrl = null;
+                        result.ClearedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Error processing catch {catchItem.Id}: {ex.Message}");
+                    _logger.LogError(ex, "Error checking catch {Id}", catchItem.Id);
+                }
+            }
+
+            // Clean up background images
+            var backgrounds = await _context.Backgrounds.Where(b => b.ImageUrl != null).ToListAsync();
+            var backgroundsFolder = Path.Combine(_environment.WebRootPath, "Images", "Backgrounds");
+            
+            foreach (var background in backgrounds)
+            {
+                try
+                {
+                    result.TotalProcessed++;
+                    
+                    if (string.IsNullOrEmpty(background.ImageUrl))
+                        continue;
+
+                    var fileName = background.ImageUrl.Replace("/Images/Backgrounds/", "").Replace("/Images/Backgrounds", "");
+                    if (fileName.StartsWith("/")) fileName = fileName.Substring(1);
+                    
+                    var filePath = Path.Combine(backgroundsFolder, fileName);
+                    
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        _logger.LogInformation("Clearing orphaned background reference: Background {Id} '{Name}', missing file: {FileName}", background.Id, background.Name, fileName);
+                        background.ImageUrl = null;
+                        result.ClearedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Error processing background {background.Id}: {ex.Message}");
+                    _logger.LogError(ex, "Error checking background {Id}", background.Id);
+                }
+            }
+
+            // Clean up album images
+            var albums = await _context.CatchAlbums.Where(a => a.CoverImageUrl != null).ToListAsync();
+            var albumsFolder = Path.Combine(_environment.WebRootPath, "Images", "Albums");
+            
+            foreach (var album in albums)
+            {
+                try
+                {
+                    result.TotalProcessed++;
+                    
+                    if (string.IsNullOrEmpty(album.CoverImageUrl))
+                        continue;
+
+                    var fileName = album.CoverImageUrl.Replace("/Images/Albums/", "").Replace("/Images/Albums", "");
+                    if (fileName.StartsWith("/")) fileName = fileName.Substring(1);
+                    
+                    var filePath = Path.Combine(albumsFolder, fileName);
+                    
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        _logger.LogInformation("Clearing orphaned album image reference: Album {Id} '{Name}', missing file: {FileName}", album.Id, album.Name, fileName);
+                        album.CoverImageUrl = null;
+                        result.ClearedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Error processing album {album.Id}: {ex.Message}");
+                    _logger.LogError(ex, "Error checking album {Id}", album.Id);
+                }
+            }
+
+            if (result.ClearedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Saved {Count} orphaned reference cleanups to database", result.ClearedCount);
+            }
+
+            return result;
+        }
+
         public class FileFixResult
         {
             public int RenamedCount { get; set; }
+            public int ErrorCount { get; set; }
+            public List<string> Errors { get; set; } = new List<string>();
+        }
+
+        public class CleanupResult
+        {
+            public int TotalProcessed { get; set; }
+            public int ClearedCount { get; set; }
             public int ErrorCount { get; set; }
             public List<string> Errors { get; set; } = new List<string>();
         }

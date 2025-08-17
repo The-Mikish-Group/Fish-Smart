@@ -78,6 +78,14 @@
                         
                         <hr>
                         
+                        <form method="post" asp-action="CleanOrphanedRecords" onsubmit="return confirm('This will remove database references to missing physical files. This action cannot be undone. Continue?');">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-trash-alt"></i> Clean Orphaned Records
+                            </button>
+                        </form>
+                        
+                        <hr>
+                        
                         <a href="@Url.Action("Index")" class="btn btn-secondary">
                             <i class="fas fa-refresh"></i> Refresh Report
                         </a>
@@ -91,11 +99,19 @@
                     
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle"></i> How this works:</h6>
+                        <p><strong>Fix Long Filenames:</strong></p>
                         <ol>
                             <li>Updates database URL first</li>
                             <li>Renames physical file to match</li>
                             <li>Rolls back if anything fails</li>
                             <li>Creates safe, short filenames</li>
+                        </ol>
+                        <p><strong>Clean Orphaned Records:</strong></p>
+                        <ol>
+                            <li>Checks each database file reference</li>
+                            <li>Verifies physical file exists</li>
+                            <li>Sets URL to null if file is missing</li>
+                            <li>Removes broken references safely</li>
                         </ol>
                     </div>
 
