@@ -50,6 +50,79 @@ namespace Members.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> FixLongCatchPhotoFilenames()
+        {
+            try
+            {
+                var result = await FixCatchPhotoFilenames();
+                TempData["Success"] = $"Successfully renamed {result.RenamedCount} catch photo files. {result.ErrorCount} errors occurred.";
+                
+                if (result.Errors.Any())
+                {
+                    TempData["Errors"] = string.Join("<br>", result.Errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fixing catch photo filenames");
+                TempData["Error"] = $"Error occurred: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> FixLongAlbumImageFilenames()
+        {
+            try
+            {
+                var result = await FixAlbumImageFilenames();
+                TempData["Success"] = $"Successfully renamed {result.RenamedCount} album image files. {result.ErrorCount} errors occurred.";
+                
+                if (result.Errors.Any())
+                {
+                    TempData["Errors"] = string.Join("<br>", result.Errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fixing album image filenames");
+                TempData["Error"] = $"Error occurred: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> FixAllLongFilenames()
+        {
+            try
+            {
+                var bgResult = await FixBackgroundFilenames();
+                var catchResult = await FixCatchPhotoFilenames();
+                var albumResult = await FixAlbumImageFilenames();
+
+                var totalRenamed = bgResult.RenamedCount + catchResult.RenamedCount + albumResult.RenamedCount;
+                var totalErrors = bgResult.ErrorCount + catchResult.ErrorCount + albumResult.ErrorCount;
+
+                TempData["Success"] = $"Fixed all long filenames! Renamed {totalRenamed} files total. Backgrounds: {bgResult.RenamedCount}, Catch Photos: {catchResult.RenamedCount}, Albums: {albumResult.RenamedCount}. {totalErrors} errors occurred.";
+                
+                var allErrors = bgResult.Errors.Concat(catchResult.Errors).Concat(albumResult.Errors);
+                if (allErrors.Any())
+                {
+                    TempData["Errors"] = string.Join("<br>", allErrors);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fixing all long filenames");
+                TempData["Error"] = $"Error occurred: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task<FileFixResult> FixBackgroundFilenames()
         {
             var result = new FileFixResult();
@@ -144,60 +217,253 @@ namespace Members.Controllers
             return result;
         }
 
+        private async Task<FileFixResult> FixCatchPhotoFilenames()
+        {
+            var result = new FileFixResult();
+            var catchesFolder = Path.Combine(_environment.WebRootPath, "Images", "Catches");
+
+            if (!Directory.Exists(catchesFolder))
+            {
+                result.Errors.Add("Catches folder not found");
+                return result;
+            }
+
+            // Get catches with long PhotoUrl
+            var problematicCatches = await _context.Catches
+                .Where(c => c.PhotoUrl != null && c.PhotoUrl.Length > 150)
+                .ToListAsync();
+
+            _logger.LogInformation("Found {Count} catches with long PhotoUrl", problematicCatches.Count);
+
+            foreach (var catchItem in problematicCatches)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(catchItem.PhotoUrl))
+                        continue;
+
+                    var currentFileName = catchItem.PhotoUrl.Replace("/Images/Catches/", "").Replace("/Images/Catches", "");
+                    if (currentFileName.StartsWith("/"))
+                        currentFileName = currentFileName.Substring(1);
+
+                    var currentFilePath = Path.Combine(catchesFolder, currentFileName);
+
+                    if (!System.IO.File.Exists(currentFilePath))
+                    {
+                        result.Errors.Add($"Physical file not found for catch {catchItem.Id}: {currentFileName}");
+                        continue;
+                    }
+
+                    var extension = Path.GetExtension(currentFileName);
+                    var safeName = $"catch_{catchItem.Id}";
+                    var newFileName = FileNameHelper.CreateSafeFileName(safeName + extension);
+                    var newFilePath = Path.Combine(catchesFolder, newFileName);
+
+                    int counter = 1;
+                    while (System.IO.File.Exists(newFilePath))
+                    {
+                        var uniqueName = $"catch_{catchItem.Id}_{counter}";
+                        newFileName = FileNameHelper.CreateSafeFileName(uniqueName + extension);
+                        newFilePath = Path.Combine(catchesFolder, newFileName);
+                        counter++;
+                    }
+
+                    var oldUrl = catchItem.PhotoUrl;
+                    catchItem.PhotoUrl = $"/Images/Catches/{newFileName}";
+                    await _context.SaveChangesAsync();
+
+                    try
+                    {
+                        System.IO.File.Move(currentFilePath, newFilePath);
+                        result.RenamedCount++;
+                        _logger.LogInformation("Successfully renamed catch photo: {Old} -> {New}", currentFileName, newFileName);
+                    }
+                    catch (Exception fileEx)
+                    {
+                        catchItem.PhotoUrl = oldUrl;
+                        await _context.SaveChangesAsync();
+                        result.ErrorCount++;
+                        result.Errors.Add($"Failed to rename catch photo {catchItem.Id}: {fileEx.Message}");
+                        _logger.LogError(fileEx, "Failed to rename catch photo file, rolled back database change");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Error processing catch {catchItem.Id}: {ex.Message}");
+                    _logger.LogError(ex, "Error processing catch {Id}", catchItem.Id);
+                }
+            }
+
+            return result;
+        }
+
+        private async Task<FileFixResult> FixAlbumImageFilenames()
+        {
+            var result = new FileFixResult();
+            var albumsFolder = Path.Combine(_environment.WebRootPath, "Images", "Albums");
+
+            if (!Directory.Exists(albumsFolder))
+            {
+                result.Errors.Add("Albums folder not found");
+                return result;
+            }
+
+            // Get albums with long cover image URLs
+            var problematicAlbums = await _context.CatchAlbums
+                .Where(a => a.CoverImageUrl != null && a.CoverImageUrl.Length > 150)
+                .ToListAsync();
+
+            _logger.LogInformation("Found {Count} albums with long CoverImageUrl", problematicAlbums.Count);
+
+            foreach (var album in problematicAlbums)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(album.CoverImageUrl))
+                        continue;
+
+                    var currentFileName = album.CoverImageUrl.Replace("/Images/Albums/", "").Replace("/Images/Albums", "");
+                    if (currentFileName.StartsWith("/"))
+                        currentFileName = currentFileName.Substring(1);
+
+                    var currentFilePath = Path.Combine(albumsFolder, currentFileName);
+
+                    if (!System.IO.File.Exists(currentFilePath))
+                    {
+                        result.Errors.Add($"Physical file not found for album {album.Id}: {currentFileName}");
+                        continue;
+                    }
+
+                    var extension = Path.GetExtension(currentFileName);
+                    var safeName = $"album_{album.Id}_{album.Name?.Replace(" ", "_") ?? "unnamed"}";
+                    var newFileName = FileNameHelper.CreateSafeFileName(safeName + extension);
+                    var newFilePath = Path.Combine(albumsFolder, newFileName);
+
+                    int counter = 1;
+                    while (System.IO.File.Exists(newFilePath))
+                    {
+                        var uniqueName = $"album_{album.Id}_{counter}";
+                        newFileName = FileNameHelper.CreateSafeFileName(uniqueName + extension);
+                        newFilePath = Path.Combine(albumsFolder, newFileName);
+                        counter++;
+                    }
+
+                    var oldUrl = album.CoverImageUrl;
+                    album.CoverImageUrl = $"/Images/Albums/{newFileName}";
+                    await _context.SaveChangesAsync();
+
+                    try
+                    {
+                        System.IO.File.Move(currentFilePath, newFilePath);
+                        result.RenamedCount++;
+                        _logger.LogInformation("Successfully renamed album photo: {Old} -> {New}", currentFileName, newFileName);
+                    }
+                    catch (Exception fileEx)
+                    {
+                        album.CoverImageUrl = oldUrl;
+                        await _context.SaveChangesAsync();
+                        result.ErrorCount++;
+                        result.Errors.Add($"Failed to rename album photo {album.Id}: {fileEx.Message}");
+                        _logger.LogError(fileEx, "Failed to rename album photo file, rolled back database change");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Error processing album {album.Id}: {ex.Message}");
+                    _logger.LogError(ex, "Error processing album {Id}", album.Id);
+                }
+            }
+
+            return result;
+        }
+
         private async Task<string> GenerateFileStatusReport()
         {
             var report = new System.Text.StringBuilder();
-            report.AppendLine("=== Background Files Status Report ===\n");
+            report.AppendLine("=== Long Filename Status Report ===\n");
 
+            // Backgrounds
             var backgrounds = await _context.Backgrounds.ToListAsync();
-            var longUrlCount = backgrounds.Count(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150);
+            var longBgCount = backgrounds.Count(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150);
+            report.AppendLine($"BACKGROUNDS:");
+            report.AppendLine($"  Total: {backgrounds.Count}, Long URLs: {longBgCount}");
 
-            report.AppendLine($"Total backgrounds in database: {backgrounds.Count}");
-            report.AppendLine($"Backgrounds with long URLs (>150 chars): {longUrlCount}");
+            // Catch Photos
+            var catches = await _context.Catches.ToListAsync();
+            var longCatchCount = catches.Count(c => !string.IsNullOrEmpty(c.PhotoUrl) && c.PhotoUrl.Length > 150);
+            report.AppendLine($"CATCH PHOTOS:");
+            report.AppendLine($"  Total: {catches.Count}, Long URLs: {longCatchCount}");
 
-            if (longUrlCount > 0)
+            // Albums
+            var albums = await _context.CatchAlbums.ToListAsync();
+            var longAlbumCount = albums.Count(a => !string.IsNullOrEmpty(a.CoverImageUrl) && a.CoverImageUrl.Length > 150);
+            report.AppendLine($"ALBUM IMAGES:");
+            report.AppendLine($"  Total: {albums.Count}, Long URLs: {longAlbumCount}");
+
+            var totalLongUrls = longBgCount + longCatchCount + longAlbumCount;
+            report.AppendLine($"\nTOTAL FILES WITH LONG URLS: {totalLongUrls}");
+
+            if (totalLongUrls > 0)
             {
-                report.AppendLine("\nBackgrounds with long URLs:");
-                var longUrlBackgrounds = backgrounds.Where(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150).Take(10);
-                foreach (var bg in longUrlBackgrounds)
+                report.AppendLine("\n--- PROBLEMATIC FILES ---");
+                
+                if (longBgCount > 0)
                 {
-                    report.AppendLine($"  • {bg.Name}: {bg.ImageUrl?.Length} characters");
+                    report.AppendLine($"\nBackgrounds with long URLs ({longBgCount}):");
+                    var longBgs = backgrounds.Where(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150).Take(3);
+                    foreach (var bg in longBgs)
+                    {
+                        report.AppendLine($"  • {bg.Name}: {bg.ImageUrl?.Length} chars");
+                    }
+                    if (longBgCount > 3) report.AppendLine($"  ... and {longBgCount - 3} more");
                 }
-                if (longUrlCount > 10)
+
+                if (longCatchCount > 0)
                 {
-                    report.AppendLine($"  ... and {longUrlCount - 10} more");
+                    report.AppendLine($"\nCatch photos with long URLs ({longCatchCount}):");
+                    var longCatches = catches.Where(c => !string.IsNullOrEmpty(c.PhotoUrl) && c.PhotoUrl.Length > 150).Take(3);
+                    foreach (var catchItem in longCatches)
+                    {
+                        report.AppendLine($"  • Catch {catchItem.Id}: {catchItem.PhotoUrl?.Length} chars");
+                    }
+                    if (longCatchCount > 3) report.AppendLine($"  ... and {longCatchCount - 3} more");
+                }
+
+                if (longAlbumCount > 0)
+                {
+                    report.AppendLine($"\nAlbum images with long URLs ({longAlbumCount}):");
+                    var longAlbums = albums.Where(a => !string.IsNullOrEmpty(a.CoverImageUrl) && a.CoverImageUrl.Length > 150).Take(3);
+                    foreach (var album in longAlbums)
+                    {
+                        report.AppendLine($"  • {album.Name}: {album.CoverImageUrl?.Length} chars");
+                    }
+                    if (longAlbumCount > 3) report.AppendLine($"  ... and {longAlbumCount - 3} more");
                 }
             }
 
-            var backgroundsFolder = Path.Combine(_environment.WebRootPath, "Images", "Backgrounds");
-            if (Directory.Exists(backgroundsFolder))
+            // Physical file check
+            report.AppendLine("\n--- PHYSICAL FILE STATUS ---");
+            CheckPhysicalFiles(report, "Backgrounds", Path.Combine(_environment.WebRootPath, "Images", "Backgrounds"));
+            CheckPhysicalFiles(report, "Catches", Path.Combine(_environment.WebRootPath, "Images", "Catches"));
+            CheckPhysicalFiles(report, "Albums", Path.Combine(_environment.WebRootPath, "Images", "Albums"));
+
+            return report.ToString();
+        }
+
+        private void CheckPhysicalFiles(System.Text.StringBuilder report, string folderName, string folderPath)
+        {
+            if (Directory.Exists(folderPath))
             {
-                var physicalFiles = Directory.GetFiles(backgroundsFolder);
+                var physicalFiles = Directory.GetFiles(folderPath);
                 var longFileNames = physicalFiles.Where(f => Path.GetFileName(f).Length > 100).ToList();
-
-                report.AppendLine($"\nPhysical files in backgrounds folder: {physicalFiles.Length}");
-                report.AppendLine($"Files with long names (>100 chars): {longFileNames.Count}");
-
-                if (longFileNames.Any())
-                {
-                    report.AppendLine("\nFiles with long names:");
-                    foreach (var file in longFileNames.Take(5))
-                    {
-                        var fileName = Path.GetFileName(file);
-                        report.AppendLine($"  • {fileName.Substring(0, Math.Min(50, fileName.Length))}... ({fileName.Length} chars)");
-                    }
-                    if (longFileNames.Count > 5)
-                    {
-                        report.AppendLine($"  ... and {longFileNames.Count - 5} more");
-                    }
-                }
+                report.AppendLine($"{folderName}: {physicalFiles.Length} files, {longFileNames.Count} with long names");
             }
             else
             {
-                report.AppendLine("\nBackgrounds folder not found!");
+                report.AppendLine($"{folderName}: Folder not found");
             }
-
-            return report.ToString();
         }
 
         public class FileFixResult
