@@ -14,12 +14,14 @@ namespace Members.Controllers
         UserManager<IdentityUser> userManager,
         IImageCompositionService imageCompositionService,
         ISegmentationService segmentationService,
+        IWebHostEnvironment environment,
         ILogger<ImageViewerController> logger) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly UserManager<IdentityUser> _userManager = userManager;
         private readonly IImageCompositionService _imageCompositionService = imageCompositionService;
         private readonly ISegmentationService _segmentationService = segmentationService;
+        private readonly IWebHostEnvironment _environment = environment;
         private readonly ILogger<ImageViewerController> _logger = logger;
 
         // GET: ImageViewer/AlbumCover/5
@@ -272,7 +274,28 @@ namespace Members.Controllers
                 var originalImagePath = await GetImagePathAsync(request.ImageType, request.SourceId);
                 if (string.IsNullOrEmpty(originalImagePath))
                 {
-                    return Json(new { success = false, message = "Original image not found" });
+                    _logger.LogWarning("GetImagePathAsync returned null/empty for ImageType: {ImageType}, SourceId: {SourceId}", request.ImageType, request.SourceId);
+                    return Json(new { success = false, message = "Original image not found in database" });
+                }
+
+                // Get background image path using WebRootPath for container compatibility
+                var backgroundImagePath = Path.Combine(_environment.WebRootPath, background.ImageUrl!.TrimStart('/'));
+                
+                _logger.LogDebug("Background image resolution - BackgroundId: {BackgroundId}, ImageUrl: {ImageUrl}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
+                    background.Id, background.ImageUrl, backgroundImagePath, System.IO.File.Exists(backgroundImagePath));
+
+                // Verify the physical file exists
+                if (!System.IO.File.Exists(originalImagePath))
+                {
+                    _logger.LogWarning("Source image file does not exist at path: {Path}", originalImagePath);
+                    return Json(new { success = false, message = $"Source image file not found at: {originalImagePath}" });
+                }
+
+                // Verify background file exists
+                if (!System.IO.File.Exists(backgroundImagePath))
+                {
+                    _logger.LogWarning("Background image file does not exist at path: {Path}", backgroundImagePath);
+                    return Json(new { success = false, message = $"Background image file not found at: {backgroundImagePath}" });
                 }
 
                 // Create backup of original image first
@@ -299,9 +322,6 @@ namespace Members.Controllers
                 // Generate temporary output path to avoid overwriting original during processing
                 var tempFileName = $"{fileName}_temp_processed{extension}";
                 var tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, tempFileName);
-
-                // Get background image path
-                var backgroundImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", background.ImageUrl!.TrimStart('/'));
 
                 // Perform background replacement to temporary file
                 var result = await _imageCompositionService.ReplaceBackgroundAsync(
@@ -597,9 +617,14 @@ namespace Members.Controllers
 
             if (string.IsNullOrEmpty(imageUrl)) return null;
 
-            // Convert URL to physical path
+            // Convert URL to physical path using WebRootPath for container compatibility
             var relativePath = imageUrl.TrimStart('/');
-            return Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
+            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath);
+            
+            _logger.LogDebug("Resolving image path - ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
+                imageType, sourceId, imageUrl, physicalPath, System.IO.File.Exists(physicalPath));
+            
+            return physicalPath;
         }
 
         private async Task UpdateImageUrlAsync(string imageType, int sourceId, string newImageUrl)
