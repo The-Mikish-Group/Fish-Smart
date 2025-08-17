@@ -1,5 +1,6 @@
 using Members.Data;
 using Members.Models;
+using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -55,15 +56,15 @@ namespace Members.Controllers
                     var uploadsFolder = Path.Combine(_environment.WebRootPath, "Images", "Backgrounds");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    var uniqueFileName = $"{Guid.NewGuid()}_{imageFile.FileName}";
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    var safeFileName = FileNameHelper.CreateSafeFileName(imageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, safeFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
                         await imageFile.CopyToAsync(fileStream);
                     }
 
-                    background.ImageUrl = $"/Images/Backgrounds/{uniqueFileName}";
+                    background.ImageUrl = FileNameHelper.CreateSafeUrlPath("/Images/Backgrounds", safeFileName);
                 }
 
                 _context.Add(background);
@@ -112,15 +113,15 @@ namespace Members.Controllers
                         var uploadsFolder = Path.Combine(_environment.WebRootPath, "Images", "Backgrounds");
                         Directory.CreateDirectory(uploadsFolder);
 
-                        var uniqueFileName = $"{Guid.NewGuid()}_{imageFile.FileName}";
-                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        var safeFileName = FileNameHelper.CreateSafeFileName(imageFile.FileName);
+                        var filePath = Path.Combine(uploadsFolder, safeFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await imageFile.CopyToAsync(fileStream);
                         }
 
-                        background.ImageUrl = $"/Images/Backgrounds/{uniqueFileName}";
+                        background.ImageUrl = FileNameHelper.CreateSafeUrlPath("/Images/Backgrounds", safeFileName);
                     }
 
                     _context.Update(background);

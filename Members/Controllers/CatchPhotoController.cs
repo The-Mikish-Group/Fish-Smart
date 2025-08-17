@@ -1,5 +1,6 @@
 using Members.Data;
 using Members.Models;
+using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -67,8 +68,9 @@ namespace Members.Controllers
 
                 try
                 {
-                    // Create unique filename
-                    var fileName = $"catch_{catchItem.Id}_{Guid.NewGuid()}{fileExtension}";
+                    // Create unique filename using safe filename helper
+                    var originalName = $"catch_{catchItem.Id}{fileExtension}";
+                    var fileName = FileNameHelper.CreateSafeFileName(originalName);
                     var catchesPath = Path.Combine(_webHostEnvironment.WebRootPath, "Images", "Catches");
                     
                     // Ensure directory exists
