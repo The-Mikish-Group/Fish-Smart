@@ -664,6 +664,67 @@ namespace Members.Controllers
                 return "";
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> DebugPaths([FromQuery] string imageType, [FromQuery] int sourceId, [FromQuery] int backgroundId)
+        {
+            try
+            {
+                // Get source image info
+                var sourceImagePath = await GetImagePathAsync(imageType, sourceId);
+                
+                // Get background info
+                var background = await _context.Backgrounds.FindAsync(backgroundId);
+                var backgroundImagePath = background?.ImageUrl != null 
+                    ? Path.Combine(_environment.WebRootPath, background.ImageUrl.TrimStart('/'))
+                    : null;
+
+                var debugInfo = new
+                {
+                    Environment = new
+                    {
+                        WebRootPath = _environment.WebRootPath,
+                        ContentRootPath = _environment.ContentRootPath,
+                        CurrentDirectory = Directory.GetCurrentDirectory()
+                    },
+                    SourceImage = new
+                    {
+                        ImageType = imageType,
+                        SourceId = sourceId,
+                        ResolvedPath = sourceImagePath,
+                        Exists = !string.IsNullOrEmpty(sourceImagePath) && System.IO.File.Exists(sourceImagePath),
+                        DirectoryExists = !string.IsNullOrEmpty(sourceImagePath) && Directory.Exists(Path.GetDirectoryName(sourceImagePath))
+                    },
+                    BackgroundImage = new
+                    {
+                        BackgroundId = backgroundId,
+                        ImageUrl = background?.ImageUrl,
+                        ResolvedPath = backgroundImagePath,
+                        Exists = !string.IsNullOrEmpty(backgroundImagePath) && System.IO.File.Exists(backgroundImagePath),
+                        DirectoryExists = !string.IsNullOrEmpty(backgroundImagePath) && Directory.Exists(Path.GetDirectoryName(backgroundImagePath))
+                    },
+                    DirectoryContents = new
+                    {
+                        WebRoot = Directory.Exists(_environment.WebRootPath) 
+                            ? Directory.GetDirectories(_environment.WebRootPath).Take(10).ToArray()
+                            : new string[] { "WebRoot not found" },
+                        ImagesFolder = Directory.Exists(Path.Combine(_environment.WebRootPath, "Images"))
+                            ? Directory.GetDirectories(Path.Combine(_environment.WebRootPath, "Images")).Take(10).ToArray()
+                            : new string[] { "Images folder not found" }
+                    }
+                };
+
+                return Json(debugInfo);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    error = ex.Message, 
+                    stackTrace = ex.StackTrace,
+                    webRootPath = _environment.WebRootPath 
+                });
+            }
+        }
     }
 
     // View Model for Image Viewer

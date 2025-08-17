@@ -299,6 +299,7 @@ function processBackgroundReplacement() {
                     onBackgroundReplaced(result.newImageUrl);
                 }
             } else {
+                console.error('Background replacement failed with message:', result.message);
                 showNotification('Error: ' + result.message, 'error');
             }
         })
@@ -373,21 +374,25 @@ function showNotification(message, type) {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px; background-color: ' + (type === 'error' ? '#dc3545' : '#198754') + ' !important; border-color: ' + (type === 'error' ? '#dc3545' : '#198754') + ' !important; color: white !important;';
+    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px; word-wrap: break-word; background-color: ' + (type === 'error' ? '#dc3545' : '#198754') + ' !important; border-color: ' + (type === 'error' ? '#dc3545' : '#198754') + ' !important; color: white !important;';
+    
+    const copyButton = type === 'error' ? `<br><small style="cursor: pointer; text-decoration: underline;" onclick="navigator.clipboard.writeText('${message.replace(/'/g, "\\'")}'); this.textContent='Copied!'">Click to copy error</small>` : '';
+    
     notification.innerHTML = `
         <strong>${type === 'error' ? '❌ Error' : '✅ Success'}</strong><br>
-        ${message}
+        ${message}${copyButton}
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     `;
     
     document.body.appendChild(notification);
     
-    // Auto-remove after 5 seconds
+    // Auto-remove after different times based on type (errors stay longer)
+    const timeout = type === 'error' ? 15000 : 5000; // 15 seconds for errors, 5 for success
     setTimeout(() => {
         if (notification.parentNode) {
             notification.remove();
         }
-    }, 5000);
+    }, timeout);
 }
 
 // Initialize filters on modal show

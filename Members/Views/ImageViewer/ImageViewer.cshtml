@@ -40,6 +40,11 @@
                             <span class="d-none d-sm-inline">Change Background</span>
                             <span class="d-sm-none">Background</span>
                         </button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="showDebugInfo()" title="Debug file paths (for container testing)">
+                            <i class="bi bi-bug"></i>
+                            <span class="d-none d-sm-inline">Debug Paths</span>
+                            <span class="d-sm-none">Debug</span>
+                        </button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
                             <i class="bi bi-arrow-counterclockwise"></i>
                             <span class="d-none d-sm-inline">Undo</span>
@@ -454,6 +459,13 @@ function updateBackgroundModal(backgrounds) {
 
 async function replaceImageBackground(backgroundId, backgroundUrl) {
     try {
+        console.log('Starting background replacement with:', {
+            imageType: '@Model.ImageType',
+            sourceId: @Model.SourceId,
+            backgroundId: backgroundId,
+            backgroundUrl: backgroundUrl
+        });
+
         const response = await fetch('/ImageViewer/ReplaceBackground', {
             method: 'POST',
             headers: {
@@ -468,9 +480,27 @@ async function replaceImageBackground(backgroundId, backgroundUrl) {
         });
 
         const result = await response.json();
+        
+        console.log('Background replacement response:', result);
+        
+        if (!result.success) {
+            console.error('Background replacement failed:', {
+                message: result.message,
+                imageType: '@Model.ImageType',
+                sourceId: @Model.SourceId,
+                backgroundId: backgroundId
+            });
+        }
+        
         return result;
     } catch (error) {
         console.error('Error replacing background:', error);
+        console.error('Request details:', {
+            imageType: '@Model.ImageType',
+            sourceId: @Model.SourceId,
+            backgroundId: backgroundId,
+            backgroundUrl: backgroundUrl
+        });
         throw error;
     }
 }
@@ -652,6 +682,66 @@ async function undoBackgroundChange() {
         const undoBtn = document.getElementById('undoBtn');
         undoBtn.innerHTML = originalText;
         undoBtn.disabled = false;
+    }
+}
+
+async function showDebugInfo() {
+    try {
+        const response = await fetch(`/ImageViewer/DebugPaths?imageType=@Model.ImageType&sourceId=@Model.SourceId&backgroundId=1`);
+        const debugData = await response.json();
+        
+        // Create a more readable debug display
+        let debugHtml = '<div style="font-family: monospace; text-align: left; max-height: 400px; overflow-y: auto;">';
+        debugHtml += '<h6>🐛 Container Debug Information</h6>';
+        
+        if (debugData.error) {
+            debugHtml += `<div style="color: red;"><strong>ERROR:</strong> ${debugData.error}</div>`;
+        } else {
+            debugHtml += '<div><strong>Environment:</strong></div>';
+            debugHtml += `<div style="margin-left: 10px;">WebRootPath: ${debugData.Environment.WebRootPath}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">ContentRootPath: ${debugData.Environment.ContentRootPath}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">CurrentDirectory: ${debugData.Environment.CurrentDirectory}</div><br>`;
+            
+            debugHtml += '<div><strong>Source Image:</strong></div>';
+            debugHtml += `<div style="margin-left: 10px;">Type: ${debugData.SourceImage.ImageType}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">ID: ${debugData.SourceImage.SourceId}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">Path: ${debugData.SourceImage.ResolvedPath}</div>`;
+            debugHtml += `<div style="margin-left: 10px; color: ${debugData.SourceImage.Exists ? 'green' : 'red'};">Exists: ${debugData.SourceImage.Exists ? '✅' : '❌'}</div><br>`;
+            
+            debugHtml += '<div><strong>Background Image:</strong></div>';
+            debugHtml += `<div style="margin-left: 10px;">URL: ${debugData.BackgroundImage.ImageUrl}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">Path: ${debugData.BackgroundImage.ResolvedPath}</div>`;
+            debugHtml += `<div style="margin-left: 10px; color: ${debugData.BackgroundImage.Exists ? 'green' : 'red'};">Exists: ${debugData.BackgroundImage.Exists ? '✅' : '❌'}</div><br>`;
+            
+            debugHtml += '<div><strong>Directory Contents:</strong></div>';
+            debugHtml += `<div style="margin-left: 10px;">WebRoot folders: ${debugData.DirectoryContents.WebRoot.join(', ')}</div>`;
+            debugHtml += `<div style="margin-left: 10px;">Images folders: ${debugData.DirectoryContents.ImagesFolder.join(', ')}</div>`;
+        }
+        
+        debugHtml += '</div>';
+        debugHtml += '<br><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(JSON.stringify(debugData, null, 2)); this.textContent=\'Copied!\'">Copy Raw Data</button>';
+        
+        // Show in a modal-like notification that stays longer
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 50px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 600px; max-width: 80vw; word-wrap: break-word;';
+        notification.innerHTML = `
+            ${debugHtml}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 30000);
+        
+    } catch (error) {
+        console.error('Debug error:', error);
+        showNotification('Failed to get debug info: ' + error.message, 'error');
     }
 }
 </script>
