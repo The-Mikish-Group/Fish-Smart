@@ -1,5 +1,6 @@
 using Members.Data;
 using Members.Models;
+using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -332,8 +333,9 @@ namespace Members.Controllers
 
                 try
                 {
-                    // Create unique filename
-                    var fileName = $"album_{album.Id}_{Guid.NewGuid()}{fileExtension}";
+                    // Create safe filename using FileNameHelper
+                    var safeName = $"album_{album.Id}_{album.Name?.Replace(" ", "_") ?? "unnamed"}{fileExtension}";
+                    var fileName = FileNameHelper.CreateSafeFileName(safeName);
                     var albumsPath = Path.Combine(_webHostEnvironment.WebRootPath, "Images", "Albums");
                     
                     // Ensure directory exists

@@ -1,0 +1,126 @@
+FISH SPECIES FOR IMAGE GENERATION - FISH-SMART APPLICATION
+=========================================================
+
+Use this list to generate consistent fish images with AI tools like Midjourney, DALL-E, or Stable Diffusion.
+
+SUGGESTED PROMPT TEMPLATE:
+"Professional fishing photography of a [FISH NAME], side profile view, clean white background, high resolution, scientific illustration style, detailed fins and scales visible"
+
+=========================================================
+
+FRESHWATER SPECIES (25 total):
+
+GAME FISH:
+1. Largemouth Bass (Micropterus salmoides)
+2. Smallmouth Bass (Micropterus dolomieu)
+3. Northern Pike (Esox lucius)
+4. Walleye (Sander vitreus)
+5. Muskellunge (Esox masquinongy)
+6. Chain Pickerel (Esox niger)
+
+PANFISH:
+7. Bluegill (Lepomis macrochirus)
+8. Black Crappie (Pomoxis nigromaculatus)
+9. White Crappie (Pomoxis annularis)
+10. Redear Sunfish (Lepomis microlophus)
+11. Rock Bass (Ambloplites rupestris)
+
+CATFISH:
+12. Channel Catfish (Ictalurus punctatus)
+13. Blue Catfish (Ictalurus furcatus)
+14. Flathead Catfish (Pylodictis olivaris)
+15. White Catfish (Ameiurus catus)
+
+TROUT:
+16. Rainbow Trout (Oncorhynchus mykiss)
+17. Brown Trout (Salmo trutta)
+18. Brook Trout (Salvelinus fontinalis)
+19. Lake Trout (Salvelinus namaycush)
+
+OTHER POPULAR:
+20. White Bass (Morone chrysops)
+21. Yellow Perch (Perca flavescens)
+22. Sauger (Sander canadensis)
+23. Common Carp (Cyprinus carpio)
+24. Longnose Gar (Lepisosteus osseus)
+
+=========================================================
+
+SALTWATER SPECIES (24 total):
+
+INSHORE/NEARSHORE:
+25. Red Snapper (Lutjanus campechanus)
+26. Red Grouper (Epinephelus morio)
+27. Summer Flounder (Paralichthys dentatus)
+28. Redfish (Sciaenops ocellatus)
+29. Speckled Trout (Cynoscion nebulosus)
+30. Black Drum (Pogonias cromis)
+31. Sheepshead (Archosargus probatocephalus)
+32. Tarpon (Megalops atlanticus)
+33. Snook (Centropomus undecimalis)
+
+OFFSHORE:
+34. King Mackerel (Scomberomorus cavalla)
+35. Spanish Mackerel (Scomberomorus maculatus)
+36. Cobia (Rachycentron canadum)
+37. Mahi Mahi (Coryphaena hippurus)
+38. Yellowfin Tuna (Thunnus albacares)
+39. Blackfin Tuna (Thunnus atlanticus)
+40. Wahoo (Acanthocybium solandri)
+41. Atlantic Sailfish (Istiophorus platypterus)
+42. Blue Marlin (Makaira nigricans)
+
+SHARKS & RAYS:
+43. Blacktip Shark (Carcharhinus limbatus)
+44. Bull Shark (Carcharhinus leucas)
+45. Hammerhead Shark (Sphyrna lewini)
+46. Southern Stingray (Dasyatis americana)
+
+BOTTOM FISH:
+47. Vermillion Snapper (Rhomboplites aurorubens)
+48. Gray Triggerfish (Balistes capriscus)
+49. Greater Amberjack (Seriola dumerili)
+
+=========================================================
+
+BOTH WATERS:
+50. Striped Bass (Morone saxatilis) - Lives in both fresh and salt water
+
+=========================================================
+
+IMAGE SPECIFICATIONS:
+- Size: 800x600px recommended (minimum 400x300px)
+- Format: JPG or PNG
+- Background: White or transparent preferred
+- Orientation: Side profile view
+- Style: Scientific illustration or professional fishing photography
+- Quality: High resolution for clear detail
+
+EXAMPLE AI PROMPTS:
+
+For Midjourney:
+"/imagine professional fishing photography of a largemouth bass, side profile view, clean white background, high resolution, scientific illustration style, detailed fins and scales visible --v 6 --ar 4:3"
+
+For DALL-E:
+"Create a professional fishing photography image of a rainbow trout in side profile view against a clean white background, scientific illustration style with detailed fins and scales visible, high resolution"
+
+For Stable Diffusion:
+"professional fishing photography, largemouth bass, side profile, white background, scientific illustration, detailed scales and fins, high resolution, studio lighting"
+
+=========================================================
+
+USAGE NOTES:
+- These images will be used in a fishing application for species identification
+- Consistent style across all images is important
+- Images should clearly show distinctive features of each species
+- Consider creating multiple angles for important game fish
+- Ensure images are copyright-free or properly licensed for commercial use
+
+=========================================================
+
+TOTAL: 50 Fish Species
+- 25 Freshwater species
+- 24 Saltwater species  
+- 1 Both waters species
+
+This comprehensive list covers the most popular and important fish species for recreational fishing in North America.

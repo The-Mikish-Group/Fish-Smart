@@ -212,7 +212,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Seed color variables
+// Seed color variables and fish species
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -221,8 +221,15 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogInformation("Seeding database...");
         var context = services.GetRequiredService<Members.Data.ApplicationDbContext>();
+        
+        // Seed color variables
         var cssPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "site-colors.css");
         Members.Data.ColorVarSeeder.SeedAsync(context, cssPath).Wait();
+        
+        // Seed fish species
+        Members.Data.FishSpeciesSeeder.SeedAsync(context).Wait();
+        logger.LogInformation("Fish species seeded successfully.");
+        
         logger.LogInformation("Database seeding complete.");
     }
     catch (Exception ex)

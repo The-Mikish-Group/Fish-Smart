@@ -13,12 +13,14 @@ namespace Members.Controllers
         ApplicationDbContext context, 
         UserManager<IdentityUser> userManager,
         IImageCompositionService imageCompositionService,
-        ISegmentationService segmentationService) : Controller
+        ISegmentationService segmentationService,
+        ILogger<ImageViewerController> logger) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly UserManager<IdentityUser> _userManager = userManager;
         private readonly IImageCompositionService _imageCompositionService = imageCompositionService;
         private readonly ISegmentationService _segmentationService = segmentationService;
+        private readonly ILogger<ImageViewerController> _logger = logger;
 
         // GET: ImageViewer/AlbumCover/5
         public async Task<IActionResult> AlbumCover(int id, string? returnUrl = null)
@@ -279,35 +281,69 @@ namespace Members.Controllers
                 var backupFileName = $"{fileName}_original_backup{extension}";
                 var backupPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, backupFileName);
                 
-                // Only create backup if it doesn't already exist
-                if (!System.IO.File.Exists(backupPath))
+                // Always create/update backup before processing
+                try
                 {
-                    System.IO.File.Copy(originalImagePath, backupPath);
+                    if (System.IO.File.Exists(originalImagePath))
+                    {
+                        System.IO.File.Copy(originalImagePath, backupPath, overwrite: true);
+                        _logger.LogInformation("Created backup: {BackupPath}", backupPath);
+                    }
+                }
+                catch (Exception backupEx)
+                {
+                    _logger.LogError(backupEx, "Failed to create backup");
+                    return Json(new { success = false, message = "Failed to create backup before processing" });
                 }
 
-                // Generate output path (replace the original)
-                var outputPath = originalImagePath; // Replace the original file
+                // Generate temporary output path to avoid overwriting original during processing
+                var tempFileName = $"{fileName}_temp_processed{extension}";
+                var tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, tempFileName);
 
                 // Get background image path
                 var backgroundImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", background.ImageUrl!.TrimStart('/'));
 
-                // Perform background replacement
+                // Perform background replacement to temporary file
                 var result = await _imageCompositionService.ReplaceBackgroundAsync(
-                    originalImagePath, backgroundImagePath, outputPath);
+                    originalImagePath, backgroundImagePath, tempOutputPath);
 
                 if (result.Success)
                 {
-                    // Update the database with the new image URL
-                    await UpdateImageUrlAsync(request.ImageType, request.SourceId, result.ProcessedImagePath!);
-
-                    return Json(new { 
-                        success = true, 
-                        message = result.Message,
-                        newImageUrl = result.ProcessedImagePath
-                    });
+                    try
+                    {
+                        // Only replace original if processing was successful
+                        if (System.IO.File.Exists(tempOutputPath))
+                        {
+                            System.IO.File.Copy(tempOutputPath, originalImagePath, overwrite: true);
+                            System.IO.File.Delete(tempOutputPath); // Clean up temp file
+                            
+                            _logger.LogInformation("Successfully replaced background for {ImagePath}", originalImagePath);
+                            
+                            // No need to update database URL since we kept the same path
+                            return Json(new { 
+                                success = true, 
+                                message = "Background replaced successfully",
+                                newImageUrl = GetImageUrlFromPath(originalImagePath)
+                            });
+                        }
+                        else
+                        {
+                            return Json(new { success = false, message = "Background replacement failed - no output generated" });
+                        }
+                    }
+                    catch (Exception replaceEx)
+                    {
+                        _logger.LogError(replaceEx, "Failed to replace original with processed image");
+                        return Json(new { success = false, message = "Failed to save processed image" });
+                    }
                 }
                 else
                 {
+                    // Clean up temp file if it exists
+                    if (System.IO.File.Exists(tempOutputPath))
+                    {
+                        try { System.IO.File.Delete(tempOutputPath); } catch { }
+                    }
                     return Json(new { success = false, message = result.Message });
                 }
             }
@@ -447,6 +483,60 @@ namespace Members.Controllers
             }
         }
 
+        // GET: ImageViewer/DownloadImage
+        [HttpGet]
+        public async Task<IActionResult> DownloadImage(string imageType, int sourceId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return Unauthorized();
+
+            try
+            {
+                // Validate ownership
+                var hasAccess = await ValidateImageAccessAsync(imageType, sourceId, userId);
+                if (!hasAccess)
+                {
+                    return Forbid();
+                }
+
+                // Get image path
+                var imagePath = await GetImagePathAsync(imageType, sourceId);
+                if (string.IsNullOrEmpty(imagePath) || !System.IO.File.Exists(imagePath))
+                {
+                    return NotFound("Image not found");
+                }
+
+                // Check if user is premium
+                var userProfile = await _context.SmartCatchProfiles
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+                var isPremiumUser = userProfile?.SubscriptionType == "Premium";
+
+                if (isPremiumUser)
+                {
+                    // Premium users get the original image
+                    var imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+                    var fileName = $"{imageType}_{sourceId}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                    return File(imageBytes, "image/jpeg", fileName);
+                }
+                else
+                {
+                    // Non-premium users get watermarked image
+                    var watermarkedImageBytes = await _imageCompositionService.AddWatermarkToImageAsync(imagePath);
+                    if (watermarkedImageBytes == null)
+                    {
+                        return StatusCode(500, "Error processing image for download");
+                    }
+                    
+                    var fileName = $"{imageType}_{sourceId}_watermarked_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                    return File(watermarkedImageBytes, "image/jpeg", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error downloading image: {ex.Message}");
+            }
+        }
+
         private Task DeletePhysicalFile(string imageUrl)
         {
             try
@@ -533,6 +623,20 @@ namespace Members.Controllers
                         await _context.SaveChangesAsync();
                     }
                     break;
+            }
+        }
+
+        private string GetImageUrlFromPath(string physicalPath)
+        {
+            try
+            {
+                var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var relativePath = Path.GetRelativePath(wwwrootPath, physicalPath);
+                return "/" + relativePath.Replace('\\', '/');
+            }
+            catch
+            {
+                return "";
             }
         }
     }

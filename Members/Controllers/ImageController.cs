@@ -1,4 +1,5 @@
 ﻿using Members.Models; // Assuming your models are in the Members.Models namespace
+using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
@@ -484,9 +485,8 @@ namespace Members.Controllers
                     continue; // Skip to the next file
                 }
 
-                // *** CRITICAL CHANGE: Use the original filename directly ***
-                // Sanitize file name to prevent path traversal (Path.GetFileName does this)
-                var fileName = Path.GetFileName(imageFile.FileName);
+                // Create safe filename to prevent long filename issues
+                var fileName = FileNameHelper.CreateSafeFileName(imageFile.FileName);
                 var filePath = Path.Combine(uploadsPath, fileName);
 
                 // OPTIONAL: Add a check here if you want to explicitly warn the user if a file with the same name exists.

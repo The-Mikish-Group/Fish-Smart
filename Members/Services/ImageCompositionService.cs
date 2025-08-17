@@ -324,6 +324,108 @@ namespace Members.Services
             // For now, this is a placeholder
         }
 
+        public async Task<byte[]?> AddWatermarkToImageAsync(string imagePath)
+        {
+            try
+            {
+                using var image = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(imagePath);
+                
+                // Add Fish-Smart watermark logo/text
+                AddFishSmartWatermark(image);
+                
+                using var outputStream = new MemoryStream();
+                await image.SaveAsJpegAsync(outputStream);
+                return outputStream.ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding watermark to image {ImagePath}", imagePath);
+                return null;
+            }
+        }
+
+        private void AddFishSmartWatermark(Image<Rgba32> image)
+        {
+            try
+            {
+                // Create a semi-transparent overlay in bottom-right corner
+                var watermarkWidth = Math.Max(200, image.Width / 4);
+                var watermarkHeight = Math.Max(60, image.Height / 10);
+                var x = image.Width - watermarkWidth - 20;
+                var y = image.Height - watermarkHeight - 20;
+
+                // Create simple watermark background using pixels
+                var blackTransparent = new Rgba32(0, 0, 0, 180); // Semi-transparent black
+                var whiteTransparent = new Rgba32(255, 255, 255, 220); // Semi-transparent white
+
+                // Draw background rectangle
+                for (int py = y; py < y + watermarkHeight && py < image.Height; py++)
+                {
+                    for (int px = x; px < x + watermarkWidth && px < image.Width; px++)
+                    {
+                        if (px >= 0 && py >= 0)
+                        {
+                            image[px, py] = blackTransparent;
+                        }
+                    }
+                }
+
+                // Draw border
+                for (int i = 0; i < 2; i++)
+                {
+                    // Top and bottom borders
+                    for (int px = x + i; px < x + watermarkWidth - i && px < image.Width; px++)
+                    {
+                        if (px >= 0 && y + i >= 0 && y + i < image.Height)
+                            image[px, y + i] = whiteTransparent;
+                        if (px >= 0 && y + watermarkHeight - 1 - i >= 0 && y + watermarkHeight - 1 - i < image.Height)
+                            image[px, y + watermarkHeight - 1 - i] = whiteTransparent;
+                    }
+                    // Left and right borders
+                    for (int py = y + i; py < y + watermarkHeight - i && py < image.Height; py++)
+                    {
+                        if (py >= 0 && x + i >= 0 && x + i < image.Width)
+                            image[x + i, py] = whiteTransparent;
+                        if (py >= 0 && x + watermarkWidth - 1 - i >= 0 && x + watermarkWidth - 1 - i < image.Width)
+                            image[x + watermarkWidth - 1 - i, py] = whiteTransparent;
+                    }
+                }
+
+                // Add text (simplified implementation without ImageSharp.Drawing)
+                AddSimpleTextWatermark(image, "Fish-Smart", x + 10, y + 15);
+                AddSimpleTextWatermark(image, "Get Premium for", x + 10, y + 30);
+                AddSimpleTextWatermark(image, "watermark-free images", x + 10, y + 45);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding Fish-Smart watermark");
+            }
+        }
+
+        private void AddSimpleTextWatermark(Image<Rgba32> image, string text, int startX, int startY)
+        {
+            // Very basic pixel-based text rendering (just for demo - in production use ImageSharp.Drawing)
+            var white = new Rgba32(255, 255, 255, 255);
+            var fontSize = 12;
+            
+            for (int i = 0; i < Math.Min(text.Length, 25); i++)
+            {
+                var charX = startX + (i * fontSize);
+                if (charX + fontSize < image.Width && startY + fontSize < image.Height)
+                {
+                    // Draw a simple vertical line for each character (placeholder)
+                    for (int py = startY; py < startY + fontSize && py < image.Height; py++)
+                    {
+                        if (charX >= 0 && charX < image.Width)
+                        {
+                            image[charX, py] = white;
+                            if (charX + 1 < image.Width) image[charX + 1, py] = white;
+                        }
+                    }
+                }
+            }
+        }
+
         private async Task<bool> DetectSubjectInImageAsync(string imagePath)
         {
             // Placeholder for subject detection

@@ -372,11 +372,12 @@ async function showBackgroundWarningModal(onConfirm) {
 function showNotification(message, type) {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed text-white`;
+    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px; background-color: ' + (type === 'error' ? '#dc3545' : '#198754') + '; border-color: ' + (type === 'error' ? '#dc3545' : '#198754') + ';';
     notification.innerHTML = `
+        <strong>${type === 'error' ? '❌ Error' : '✅ Success'}</strong><br>
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     `;
     
     document.body.appendChild(notification);

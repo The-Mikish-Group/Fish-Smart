@@ -29,48 +29,57 @@
                 </div>
             </div>
 
-            <!-- Right side: Action buttons -->
-            <div class="d-flex align-items-center">
+            <!-- Right side: Action buttons - Mobile Responsive -->
+            <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2">
                 @if (Model.CanEdit)
                 {
-                    <!-- AI Editing Buttons -->
-                    <div class="btn-group me-3" role="group">
-                        <button type="button" class="btn btn-primary" onclick="showBackgroundSelector()" id="changeBackgroundBtn">
+                    <!-- Row 1: AI Editing Buttons -->
+                    <div class="d-flex flex-wrap gap-1">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showBackgroundSelector()" id="changeBackgroundBtn">
                             <i class="bi bi-palette"></i>
-                            Change Background
+                            <span class="d-none d-sm-inline">Change Background</span>
+                            <span class="d-sm-none">Background</span>
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
                             <i class="bi bi-arrow-counterclockwise"></i>
-                            Undo
+                            <span class="d-none d-sm-inline">Undo</span>
                         </button>
-                        <button type="button" class="btn btn-warning" disabled title="Coming Soon">
+                        <button type="button" class="btn btn-warning btn-sm" disabled title="Coming Soon">
                             <i class="bi bi-magic"></i>
-                            AI Enhance
+                            <span class="d-none d-sm-inline">AI Enhance</span>
+                            <span class="d-sm-none">AI</span>
                         </button>
-                        <button type="button" class="btn btn-info" disabled title="Coming Soon">
+                        <button type="button" class="btn btn-info btn-sm" disabled title="Coming Soon">
                             <i class="bi bi-sliders"></i>
-                            Filters
+                            <span class="d-none d-sm-inline">Filters</span>
                         </button>
                     </div>
 
-                    <!-- Image Actions -->
-                    <div class="btn-group me-3" role="group">
-                        <button type="button" class="btn btn-success" onclick="downloadImage()">
+                    <!-- Row 2: Image Actions -->
+                    <div class="d-flex flex-wrap gap-1">
+                        <button type="button" class="btn btn-success btn-sm" onclick="downloadImage()">
                             <i class="bi bi-download"></i>
-                            Download
+                            <span class="d-none d-sm-inline">Download</span>
                         </button>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
                             <i class="bi bi-trash"></i>
-                            Delete
+                            <span class="d-none d-sm-inline">Delete</span>
+                        </button>
+                        <!-- Info Panel Toggle -->
+                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
+                            <i class="bi bi-info-circle"></i>
+                            <span class="d-none d-sm-inline">Info</span>
                         </button>
                     </div>
                 }
-
-                <!-- Info Panel Toggle -->
-                <button type="button" class="btn btn-light text-eye-view" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
-                    <i class="bi bi-info-circle"></i>
-                    Info
-                </button>
+                else
+                {
+                    <!-- Info Panel Toggle for non-editable -->
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="d-none d-sm-inline">Info</span>
+                    </button>
+                }
             </div>
         </div>
     </nav>
@@ -297,11 +306,18 @@ function toggleFullscreen(img) {
 }
 
 function downloadImage() {
-    const img = document.querySelector('img');
+    // Use server endpoint to handle watermarking for non-premium users
+    const downloadUrl = '/ImageViewer/DownloadImage?imageType=@Model.ImageType&sourceId=@Model.SourceId';
+    
+    // Create a temporary link to trigger download
     const link = document.createElement('a');
-    link.href = img.src;
-    link.download = '@Model.Title.Replace(" ", "_")' + '.jpg';
+    link.href = downloadUrl;
+    link.download = ''; // Let server determine filename
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
 // Close fullscreen on escape key

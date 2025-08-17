@@ -55,6 +55,13 @@ namespace Members.Services
         /// <param name="imagePath">Path to image to validate</param>
         /// <returns>Validation result with recommendations</returns>
         Task<ImageValidationResult> ValidateImageForProcessingAsync(string imagePath);
+
+        /// <summary>
+        /// Adds a watermark to an image and returns the watermarked image as bytes
+        /// </summary>
+        /// <param name="imagePath">Path to the original image</param>
+        /// <returns>Watermarked image as byte array</returns>
+        Task<byte[]?> AddWatermarkToImageAsync(string imagePath);
     }
 
     public class CompositionOptions

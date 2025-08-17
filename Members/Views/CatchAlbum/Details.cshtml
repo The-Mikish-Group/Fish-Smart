@@ -12,7 +12,7 @@
                 <i class="bi bi-collection-fill"></i>
                 @Model.Name
             </h1>
-            <p class="text-muted mb-0">
+            <p class="text-light mb-0">
                 Created @Model.CreatedAt.ToString("MMMM dd, yyyy")
                 @if (Model.IsPublic)
                 {
@@ -28,23 +28,34 @@
                 }
             </p>
         </div>
-        <div>
-            <a asp-action="Index" class="btn btn-secondary me-2">
-                <i class="bi bi-arrow-left"></i>
-                Back to Albums
-            </a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
-                <i class="bi bi-pencil"></i>
-                Edit Album
-            </a>
-            <a asp-action="UploadPhoto" asp-route-id="@Model.Id" class="btn btn-primary me-2">
-                <i class="bi bi-camera"></i>
-                @(string.IsNullOrEmpty(Model.CoverImageUrl) ? "Add Photo" : "Change Photo")
-            </a>
-            <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i>
-                Add Catches
-            </a>
+        <div class="d-flex flex-column flex-md-row gap-2">
+            <!-- Row 1: Navigation and primary actions -->
+            <div class="d-flex flex-wrap gap-1">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="d-none d-sm-inline">Back to Albums</span>
+                    <span class="d-sm-none">Back</span>
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil"></i>
+                    <span class="d-none d-sm-inline">Edit Album</span>
+                    <span class="d-sm-none">Edit</span>
+                </a>
+            </div>
+            
+            <!-- Row 2: Media actions -->
+            <div class="d-flex flex-wrap gap-1">
+                <a asp-action="UploadPhoto" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
+                    <i class="bi bi-camera"></i>
+                    <span class="d-none d-sm-inline">@(string.IsNullOrEmpty(Model.CoverImageUrl) ? "Add Photo" : "Change Photo")</span>
+                    <span class="d-sm-none">Photo</span>
+                </a>
+                <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-circle"></i>
+                    <span class="d-none d-sm-inline">Add Catches</span>
+                    <span class="d-sm-none">Add</span>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -53,7 +64,7 @@
     {
         <div class="card mb-4">
             <div class="card-body">
-                <h6 class="card-title text-muted">
+                <h6 class="card-title text-secondary">
                     <i class="bi bi-chat-square-text"></i>
                     About This Album
                 </h6>
@@ -165,7 +176,7 @@
                                         @if (fishCatch.CatchTime.HasValue)
                                         {
                                             <div class="mb-2">
-                                                <small class="text-muted">
+                                                <small class="text-secondary">
                                                     <i class="bi bi-clock"></i>
                                                     @fishCatch.CatchTime.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
                                                 </small>
@@ -175,7 +186,7 @@
                                         @if (!string.IsNullOrEmpty(fishCatch.Session?.LocationName))
                                         {
                                             <div class="mb-2">
-                                                <small class="text-muted">
+                                                <small class="text-secondary">
                                                     <i class="bi bi-geo-alt"></i>
                                                     @fishCatch.Session.LocationName
                                                 </small>
@@ -183,7 +194,7 @@
                                         }
 
                                         <div class="mb-2">
-                                            <small class="text-muted">
+                                            <small class="text-secondary">
                                                 Added to album: @albumCatch.AddedAt.ToString("MMM dd, yyyy")
                                             </small>
                                         </div>
@@ -249,9 +260,9 @@
         <!-- Empty Album State -->
         <div class="card text-center py-5">
             <div class="card-body">
-                <i class="bi bi-images display-1 text-muted mb-3"></i>
-                <h4 class="text-muted">This Album is Empty</h4>
-                <p class="text-muted mb-4">Start adding your catches to build this collection!</p>
+                <i class="bi bi-images display-1 text-light mb-3"></i>
+                <h4 class="text-light">This Album is Empty</h4>
+                <p class="text-light mb-4">Start adding your catches to build this collection!</p>
                 
                 <a asp-action="AddCatch" asp-route-id="@Model.Id" class="btn btn-success btn-lg">
                     <i class="bi bi-plus-circle"></i>
@@ -259,7 +270,7 @@
                 </a>
                 
                 <div class="mt-4">
-                    <small class="text-muted">
+                    <small class="text-light">
                         You can add catches from any of your fishing sessions to this album
                     </small>
                 </div>

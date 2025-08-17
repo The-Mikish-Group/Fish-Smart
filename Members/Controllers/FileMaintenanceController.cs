@@ -134,10 +134,18 @@ namespace Members.Controllers
                 return result;
             }
 
-            // Get backgrounds with long URLs
-            var problematicBackgrounds = await _context.Backgrounds
-                .Where(b => b.ImageUrl != null && b.ImageUrl.Length > 150)
+            // Get backgrounds with long filenames (extract filename from URL path)
+            var allBackgrounds = await _context.Backgrounds
+                .Where(b => b.ImageUrl != null)
                 .ToListAsync();
+            
+            var problematicBackgrounds = allBackgrounds
+                .Where(b => {
+                    var filename = b.ImageUrl?.Replace("/Images/Backgrounds/", "").Replace("/Images/Backgrounds", "") ?? "";
+                    if (filename.StartsWith("/")) filename = filename.Substring(1);
+                    return filename.Length > 100; // Focus on filename length, not full URL
+                })
+                .ToList();
 
             _logger.LogInformation("Found {Count} backgrounds with long URLs", problematicBackgrounds.Count);
 
@@ -228,10 +236,18 @@ namespace Members.Controllers
                 return result;
             }
 
-            // Get catches with long PhotoUrl
-            var problematicCatches = await _context.Catches
-                .Where(c => c.PhotoUrl != null && c.PhotoUrl.Length > 150)
+            // Get catches with long filenames (extract filename from URL path)
+            var allCatches = await _context.Catches
+                .Where(c => c.PhotoUrl != null)
                 .ToListAsync();
+            
+            var problematicCatches = allCatches
+                .Where(c => {
+                    var filename = c.PhotoUrl?.Replace("/Images/Catches/", "").Replace("/Images/Catches", "") ?? "";
+                    if (filename.StartsWith("/")) filename = filename.Substring(1);
+                    return filename.Length > 100; // Focus on filename length, not full URL
+                })
+                .ToList();
 
             _logger.LogInformation("Found {Count} catches with long PhotoUrl", problematicCatches.Count);
 
@@ -309,10 +325,18 @@ namespace Members.Controllers
                 return result;
             }
 
-            // Get albums with long cover image URLs
-            var problematicAlbums = await _context.CatchAlbums
-                .Where(a => a.CoverImageUrl != null && a.CoverImageUrl.Length > 150)
+            // Get albums with long filenames (extract filename from URL path)
+            var allAlbums = await _context.CatchAlbums
+                .Where(a => a.CoverImageUrl != null)
                 .ToListAsync();
+            
+            var problematicAlbums = allAlbums
+                .Where(a => {
+                    var filename = a.CoverImageUrl?.Replace("/Images/Albums/", "").Replace("/Images/Albums", "") ?? "";
+                    if (filename.StartsWith("/")) filename = filename.Substring(1);
+                    return filename.Length > 100; // Focus on filename length, not full URL
+                })
+                .ToList();
 
             _logger.LogInformation("Found {Count} albums with long CoverImageUrl", problematicAlbums.Count);
 
@@ -383,61 +407,98 @@ namespace Members.Controllers
         {
             var report = new System.Text.StringBuilder();
             report.AppendLine("=== Long Filename Status Report ===\n");
+            report.AppendLine("NOTE: This checks actual FILENAME length (>100 chars), not full URL length.\n");
 
             // Backgrounds
             var backgrounds = await _context.Backgrounds.ToListAsync();
-            var longBgCount = backgrounds.Count(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150);
+            var longBgCount = backgrounds.Count(b => {
+                if (string.IsNullOrEmpty(b.ImageUrl)) return false;
+                var filename = b.ImageUrl?.Replace("/Images/Backgrounds/", "").Replace("/Images/Backgrounds", "") ?? "";
+                if (filename.StartsWith("/")) filename = filename.Substring(1);
+                return filename.Length > 100;
+            });
             report.AppendLine($"BACKGROUNDS:");
-            report.AppendLine($"  Total: {backgrounds.Count}, Long URLs: {longBgCount}");
+            report.AppendLine($"  Total: {backgrounds.Count}, Long Filenames: {longBgCount}");
 
             // Catch Photos
             var catches = await _context.Catches.ToListAsync();
-            var longCatchCount = catches.Count(c => !string.IsNullOrEmpty(c.PhotoUrl) && c.PhotoUrl.Length > 150);
+            var longCatchCount = catches.Count(c => {
+                if (string.IsNullOrEmpty(c.PhotoUrl)) return false;
+                var filename = c.PhotoUrl?.Replace("/Images/Catches/", "").Replace("/Images/Catches", "") ?? "";
+                if (filename.StartsWith("/")) filename = filename.Substring(1);
+                return filename.Length > 100;
+            });
             report.AppendLine($"CATCH PHOTOS:");
-            report.AppendLine($"  Total: {catches.Count}, Long URLs: {longCatchCount}");
+            report.AppendLine($"  Total: {catches.Count}, Long Filenames: {longCatchCount}");
 
             // Albums
             var albums = await _context.CatchAlbums.ToListAsync();
-            var longAlbumCount = albums.Count(a => !string.IsNullOrEmpty(a.CoverImageUrl) && a.CoverImageUrl.Length > 150);
+            var longAlbumCount = albums.Count(a => {
+                if (string.IsNullOrEmpty(a.CoverImageUrl)) return false;
+                var filename = a.CoverImageUrl?.Replace("/Images/Albums/", "").Replace("/Images/Albums", "") ?? "";
+                if (filename.StartsWith("/")) filename = filename.Substring(1);
+                return filename.Length > 100;
+            });
             report.AppendLine($"ALBUM IMAGES:");
-            report.AppendLine($"  Total: {albums.Count}, Long URLs: {longAlbumCount}");
+            report.AppendLine($"  Total: {albums.Count}, Long Filenames: {longAlbumCount}");
 
-            var totalLongUrls = longBgCount + longCatchCount + longAlbumCount;
-            report.AppendLine($"\nTOTAL FILES WITH LONG URLS: {totalLongUrls}");
+            var totalLongFilenames = longBgCount + longCatchCount + longAlbumCount;
+            report.AppendLine($"\nTOTAL FILES WITH LONG FILENAMES: {totalLongFilenames}");
 
-            if (totalLongUrls > 0)
+            if (totalLongFilenames > 0)
             {
                 report.AppendLine("\n--- PROBLEMATIC FILES ---");
                 
                 if (longBgCount > 0)
                 {
-                    report.AppendLine($"\nBackgrounds with long URLs ({longBgCount}):");
-                    var longBgs = backgrounds.Where(b => !string.IsNullOrEmpty(b.ImageUrl) && b.ImageUrl.Length > 150).Take(3);
+                    report.AppendLine($"\nBackgrounds with long filenames ({longBgCount}):");
+                    var longBgs = backgrounds.Where(b => {
+                        if (string.IsNullOrEmpty(b.ImageUrl)) return false;
+                        var filename = b.ImageUrl?.Replace("/Images/Backgrounds/", "").Replace("/Images/Backgrounds", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        return filename.Length > 100;
+                    }).Take(3);
                     foreach (var bg in longBgs)
                     {
-                        report.AppendLine($"  • {bg.Name}: {bg.ImageUrl?.Length} chars");
+                        var filename = bg.ImageUrl?.Replace("/Images/Backgrounds/", "").Replace("/Images/Backgrounds", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        report.AppendLine($"  • {bg.Name}: {filename.Length} chars (filename: {filename.Substring(0, Math.Min(30, filename.Length))}...)");
                     }
                     if (longBgCount > 3) report.AppendLine($"  ... and {longBgCount - 3} more");
                 }
 
                 if (longCatchCount > 0)
                 {
-                    report.AppendLine($"\nCatch photos with long URLs ({longCatchCount}):");
-                    var longCatches = catches.Where(c => !string.IsNullOrEmpty(c.PhotoUrl) && c.PhotoUrl.Length > 150).Take(3);
+                    report.AppendLine($"\nCatch photos with long filenames ({longCatchCount}):");
+                    var longCatches = catches.Where(c => {
+                        if (string.IsNullOrEmpty(c.PhotoUrl)) return false;
+                        var filename = c.PhotoUrl?.Replace("/Images/Catches/", "").Replace("/Images/Catches", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        return filename.Length > 100;
+                    }).Take(3);
                     foreach (var catchItem in longCatches)
                     {
-                        report.AppendLine($"  • Catch {catchItem.Id}: {catchItem.PhotoUrl?.Length} chars");
+                        var filename = catchItem.PhotoUrl?.Replace("/Images/Catches/", "").Replace("/Images/Catches", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        report.AppendLine($"  • Catch {catchItem.Id}: {filename.Length} chars (filename: {filename.Substring(0, Math.Min(30, filename.Length))}...)");
                     }
                     if (longCatchCount > 3) report.AppendLine($"  ... and {longCatchCount - 3} more");
                 }
 
                 if (longAlbumCount > 0)
                 {
-                    report.AppendLine($"\nAlbum images with long URLs ({longAlbumCount}):");
-                    var longAlbums = albums.Where(a => !string.IsNullOrEmpty(a.CoverImageUrl) && a.CoverImageUrl.Length > 150).Take(3);
+                    report.AppendLine($"\nAlbum images with long filenames ({longAlbumCount}):");
+                    var longAlbums = albums.Where(a => {
+                        if (string.IsNullOrEmpty(a.CoverImageUrl)) return false;
+                        var filename = a.CoverImageUrl?.Replace("/Images/Albums/", "").Replace("/Images/Albums", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        return filename.Length > 100;
+                    }).Take(3);
                     foreach (var album in longAlbums)
                     {
-                        report.AppendLine($"  • {album.Name}: {album.CoverImageUrl?.Length} chars");
+                        var filename = album.CoverImageUrl?.Replace("/Images/Albums/", "").Replace("/Images/Albums", "") ?? "";
+                        if (filename.StartsWith("/")) filename = filename.Substring(1);
+                        report.AppendLine($"  • {album.Name}: {filename.Length} chars (filename: {filename.Substring(0, Math.Min(30, filename.Length))}...)");
                     }
                     if (longAlbumCount > 3) report.AppendLine($"  ... and {longAlbumCount - 3} more");
                 }

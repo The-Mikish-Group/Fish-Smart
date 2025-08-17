@@ -77,7 +77,7 @@
                                 <div class="row mb-3">
                                     <div class="col-sm-4"><strong>Model Info:</strong></div>
                                     <div class="col-sm-8">
-                                        <pre class="small text-muted">@Model.ModelInfo</pre>
+                                        <pre class="small text-secondary">@Model.ModelInfo</pre>
                                     </div>
                                 </div>
                             }
@@ -87,7 +87,7 @@
                                 <div class="row mb-3">
                                     <div class="col-sm-4"><strong>Diagnostics:</strong></div>
                                     <div class="col-sm-8">
-                                        <pre class="small text-muted">@Model.DiagnosticInfo</pre>
+                                        <pre class="small text-secondary">@Model.DiagnosticInfo</pre>
                                     </div>
                                 </div>
                             }
@@ -130,7 +130,7 @@
                                             Downloading AI model... This may take several minutes.
                                         </div>
                                     </div>
-                                    <small class="text-muted">
+                                    <small class="text-light">
                                         The U2-Net model is approximately 170MB. Please be patient during download.
                                     </small>
                                 </div>
@@ -140,19 +140,22 @@
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Setup Instructions</h5>
+                    @if (!Model.IsAISegmentationAvailable || !Model.IsModelDownloaded)
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Setup Instructions</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="list-group list-group-numbered">
+                                    @foreach (var instruction in Model.Instructions)
+                                    {
+                                        <li class="list-group-item">@instruction</li>
+                                    }
+                                </ol>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <ol class="list-group list-group-numbered">
-                                @foreach (var instruction in Model.Instructions)
-                                {
-                                    <li class="list-group-item">@instruction</li>
-                                }
-                            </ol>
-                        </div>
-                    </div>
+                    }
 
                     <div class="card mt-4">
                         <div class="card-header">
@@ -196,7 +199,7 @@
                                         <li>Download and convert to ONNX (requires technical setup)</li>
                                     </ol>
                                     
-                                    <small class="text-muted"><strong>Expected size:</strong> ~170MB. Current file (4.36MB) is too small to work properly.</small>
+                                    <small class="text-light"><strong>Expected size:</strong> ~170MB. Current file (4.36MB) is too small to work properly.</small>
                                 </div>
                             }
                         </div>

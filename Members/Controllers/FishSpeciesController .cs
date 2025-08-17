@@ -91,6 +91,43 @@ namespace Members.Controllers
             return Json(fishSpecies);
         }
 
+        // GET: FishSpecies/Export - Export all species data for image collection
+        [HttpGet]
+        public async Task<IActionResult> Export()
+        {
+            var fishSpecies = await _context.FishSpecies
+                .Where(f => f.IsActive)
+                .OrderBy(f => f.WaterType)
+                .ThenBy(f => f.CommonName)
+                .Select(f => new {
+                    id = f.Id,
+                    commonName = f.CommonName,
+                    scientificName = f.ScientificName,
+                    waterType = f.WaterType,
+                    region = f.Region,
+                    minSize = f.MinSize,
+                    maxSize = f.MaxSize,
+                    stockImageUrl = f.StockImageUrl,
+                    hasImage = !string.IsNullOrEmpty(f.StockImageUrl),
+                    regulationNotes = f.RegulationNotes
+                })
+                .ToListAsync();
+
+            // Group by water type for easy viewing
+            var grouped = new
+            {
+                totalSpecies = fishSpecies.Count,
+                speciesWithImages = fishSpecies.Count(s => s.hasImage),
+                speciesNeedingImages = fishSpecies.Count(s => !s.hasImage),
+                freshwaterSpecies = fishSpecies.Where(s => s.waterType == "Fresh").ToList(),
+                saltwaterSpecies = fishSpecies.Where(s => s.waterType == "Salt").ToList(),
+                bothWaterSpecies = fishSpecies.Where(s => s.waterType == "Both").ToList(),
+                allSpecies = fishSpecies
+            };
+
+            return Json(grouped);
+        }
+
         // GET: FishSpecies/Search (for autocomplete)
         [HttpGet]
         public async Task<IActionResult> Search(string term, string waterType = "Both")

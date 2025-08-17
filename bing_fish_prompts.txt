@@ -1,0 +1,202 @@
+BING IMAGE CREATOR PROMPTS FOR FISH-SMART
+==========================================
+
+INSTRUCTIONS:
+1. Go to: bing.com/images/create
+2. Sign in with Microsoft account (free)
+3. Copy each prompt below and paste into Bing
+4. Generate and download images
+5. Save to: D:\Projects\Repos\Fish-Smart\Members\wwwroot\Images\FishSpecies\
+6. Name files exactly as shown (e.g., largemouth_bass.jpg)
+
+DAILY LIMIT: 15 images per account per day
+STRATEGY: You + friend = 30 images/day = 2 days total!
+
+Use this and change the fish name each time:
+Professional fishing photography of a {fish} side profile view against WHITE background with studio lighting showing detailed scales and fins, scientific specimen. Your picture should NOT be bigger than the image size... the whole fish should show. Currently, some of your images are getting the nose and tail cut off. Leave a little space on the right and left edges.
+==========================================
+
+DAY 1 - SET A (15 PROMPTS)
+==========================
+
+x FILE: largemouth_bass.jpg
+PROMPT: Professional fishing photography of a largemouth bass in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: smallmouth_bass.jpg
+PROMPT: Professional fishing photography of a smallmouth bass in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: northern_pike.jpg
+PROMPT: Professional fishing photography of a northern pike in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: walleye.jpg
+PROMPT: Professional fishing photography of a walleye in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: muskellunge.jpg
+PROMPT: Professional fishing photography of a muskellunge in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: chain_pickerel.jpg
+PROMPT: Professional fishing photography of a chain pickerel in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: bluegill.jpg
+PROMPT: Professional fishing photography of a bluegill in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: black_crappie.jpg
+PROMPT: Professional fishing photography of a black crappie in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: white_crappie.jpg
+PROMPT: Professional fishing photography of a white crappie in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: redear_sunfish.jpg
+PROMPT: Professional fishing photography of a redear sunfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: rock_bass.jpg
+PROMPT: Professional fishing photography of a rock bass in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: channel_catfish.jpg
+PROMPT: Professional fishing photography of a channel catfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: blue_catfish.jpg
+PROMPT: Professional fishing photography of a blue catfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: flathead_catfish.jpg
+PROMPT: Professional fishing photography of a flathead catfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: white_catfish.jpg
+PROMPT: Professional fishing photography of a white catfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+==========================================
+
+DAY 1 - SET B (15 PROMPTS FOR YOUR FRIEND)
+==========================================
+
+x FILE: rainbow_trout.jpg
+PROMPT: Professional fishing photography of a rainbow trout in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: brown_trout.jpg
+PROMPT: Professional fishing photography of a brown trout in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: brook_trout.jpg
+PROMPT: Professional fishing photography of a brook trout in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: lake_trout.jpg
+PROMPT: Professional fishing photography of a lake trout in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: white_bass.jpg
+PROMPT: Professional fishing photography of a white bass in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: yellow_perch.jpg
+PROMPT: Professional fishing photography of a yellow perch in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: sauger.jpg
+PROMPT: Professional fishing photography of a sauger in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: common_carp.jpg
+PROMPT: Professional fishing photography of a common carp in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: longnose_gar.jpg
+PROMPT: Professional fishing photography of a longnose gar in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: striped_bass.jpg
+PROMPT: Professional fishing photography of a striped bass in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: red_snapper.jpg
+PROMPT: Professional fishing photography of a red snapper in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: red_grouper.jpg
+PROMPT: Professional fishing photography of a red grouper in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: summer_flounder.jpg
+PROMPT: Professional fishing photography of a summer flounder in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: redfish.jpg
+PROMPT: Professional fishing photography of a redfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: speckled_trout.jpg
+PROMPT: Professional fishing photography of a speckled trout in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+==========================================
+
+DAY 2 - SET A (15 PROMPTS)
+==========================
+
+FILE: black_drum.jpg
+PROMPT: Professional fishing photography of a black drum in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: sheepshead.jpg
+PROMPT: Professional fishing photography of a sheepshead in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: tarpon.jpg
+PROMPT: Professional fishing photography of a tarpon in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: snook.jpg
+PROMPT: Professional fishing photography of a snook in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: king_mackerel.jpg
+PROMPT: Professional fishing photography of a king mackerel in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: spanish_mackerel.jpg
+PROMPT: Professional fishing photography of a spanish mackerel in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: cobia.jpg
+PROMPT: Professional fishing photography of a cobia in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: mahi_mahi.jpg
+PROMPT: Professional fishing photography of a mahi mahi in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: yellowfin_tuna.jpg
+PROMPT: Professional fishing photography of a yellowfin tuna in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: blackfin_tuna.jpg
+PROMPT: Professional fishing photography of a blackfin tuna in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: wahoo.jpg
+PROMPT: Professional fishing photography of a wahoo in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: atlantic_sailfish.jpg
+PROMPT: Professional fishing photography of an atlantic sailfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: blue_marlin.jpg
+PROMPT: Professional fishing photography of a blue marlin in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: blacktip_shark.jpg
+PROMPT: Professional fishing photography of a blacktip shark in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: bull_shark.jpg
+PROMPT: Professional fishing photography of a bull shark in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+==========================================
+
+DAY 2 - SET B (5 PROMPTS FOR YOUR FRIEND)
+=========================================
+
+FILE: hammerhead_shark.jpg
+PROMPT: Professional fishing photography of a hammerhead shark in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: southern_stingray.jpg
+PROMPT: Professional fishing photography of a southern stingray in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: vermillion_snapper.jpg
+PROMPT: Professional fishing photography of a vermillion snapper in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+FILE: gray_triggerfish.jpg
+PROMPT: Professional fishing photography of a gray triggerfish in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+x FILE: greater_amberjack.jpg
+PROMPT: Professional fishing photography of a greater amberjack in side profile view against white background with studio lighting showing detailed scales and fins, scientific specimen
+
+==========================================
+
+SUMMARY:
+========
+TOTAL: 50 fish species
+DAY 1: You (15) + Friend (15) = 30 fish
+DAY 2: You (15) + Friend (5) = 20 fish
+TOTAL TIME: 2 days with 2 people
+
+SAVE LOCATION: D:\Projects\Repos\Fish-Smart\Members\wwwroot\Images\FishSpecies\
+
+BING URL: bing.com/images/create
+
+TIP: If any fish doesn't look good, regenerate with same prompt the next day!
+
+==========================================
