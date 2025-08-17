@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "File Maintenance";
+}
+
+<div class="container">
+    <h2>File Maintenance</h2>
+    <p class="text-muted">Administrative tool to fix long filename issues</p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Html.Raw(TempData["Success"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Errors"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h6>Some errors occurred:</h6>
+            @Html.Raw(TempData["Errors"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Current File Status</h5>
+                </div>
+                <div class="card-body">
+                    <pre style="white-space: pre-wrap; font-family: monospace; background-color: #f8f9fa; padding: 15px; border-radius: 5px;">@ViewBag.Report</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <form method="post" asp-action="FixLongBackgroundFilenames" onsubmit="return confirm('This will rename background files and update database records. Continue?');">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-tools"></i> Fix Long Background Filenames
+                            </button>
+                        </form>
+                        
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-refresh"></i> Refresh Report
+                        </a>
+                        
+                        <a href="@Url.Action("Index", "Backgrounds")" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Backgrounds
+                        </a>
+                    </div>
+
+                    <hr>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> How this works:</h6>
+                        <ol>
+                            <li>Updates database URL first</li>
+                            <li>Renames physical file to match</li>
+                            <li>Rolls back if anything fails</li>
+                            <li>Creates safe, short filenames</li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Safety:</h6>
+                        <ul>
+                            <li>Always backup first</li>
+                            <li>Test on staging if possible</li>
+                            <li>Run during low traffic times</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
