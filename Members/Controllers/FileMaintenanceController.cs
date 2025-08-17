@@ -23,6 +23,9 @@ namespace Members.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // Clear any cached entities to ensure fresh data
+            _context.ChangeTracker.Clear();
+            
             var report = await GenerateFileStatusReport();
             ViewBag.Report = report;
             return View();
