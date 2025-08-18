@@ -45,6 +45,11 @@
                             <span class="d-none d-sm-inline">Debug Paths</span>
                             <span class="d-sm-none">Debug</span>
                         </button>
+                        <button type="button" class="btn btn-info btn-sm" onclick="inspectDatabase()" title="Check what's in the database">
+                            <i class="bi bi-database"></i>
+                            <span class="d-none d-sm-inline">DB Check</span>
+                            <span class="d-sm-none">DB</span>
+                        </button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
                             <i class="bi bi-arrow-counterclockwise"></i>
                             <span class="d-none d-sm-inline">Undo</span>
@@ -742,6 +747,75 @@ async function showDebugInfo() {
     } catch (error) {
         console.error('Debug error:', error);
         showNotification('Failed to get debug info: ' + error.message, 'error');
+    }
+}
+
+async function inspectDatabase() {
+    try {
+        const response = await fetch(`/ImageViewer/InspectDatabase?imageType=@Model.ImageType&sourceId=@Model.SourceId`);
+        const dbData = await response.json();
+        
+        let dbHtml = '<div style="font-family: monospace; text-align: left; max-height: 400px; overflow-y: auto;">';
+        dbHtml += '<h6>🗃️ Database Record Inspection</h6>';
+        
+        if (dbData.Error) {
+            dbHtml += `<div style="color: red;"><strong>ERROR:</strong> ${dbData.Error}</div>`;
+        } else {
+            dbHtml += `<div><strong>Request:</strong> ${dbData.Request.imageType} ID ${dbData.Request.sourceId}</div>`;
+            dbHtml += `<div><strong>Timestamp:</strong> ${new Date(dbData.Timestamp).toLocaleString()}</div><br>`;
+            
+            if (dbData.Found) {
+                dbHtml += '<div style="color: green;"><strong>✅ Record Found</strong></div>';
+                
+                if (dbData.Request.imageType === 'CatchPhoto') {
+                    const record = dbData.DatabaseRecord;
+                    dbHtml += `<div><strong>Catch Details:</strong></div>`;
+                    dbHtml += `<div style="margin-left: 10px;">ID: ${record.Id}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Photo URL: ${record.PhotoUrl || 'NULL'}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Species: ${record.CommonName || 'Unknown'}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Size: ${record.Size}"</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Catch Time: ${record.CatchTime || 'Not set'}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Session ID: ${record.SessionId}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">User ID: ${record.UserId}</div>`;
+                } else if (dbData.Request.imageType === 'AlbumCover') {
+                    const record = dbData.DatabaseRecord;
+                    dbHtml += `<div><strong>Album Details:</strong></div>`;
+                    dbHtml += `<div style="margin-left: 10px;">ID: ${record.Id}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Name: ${record.Name}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Cover Image URL: ${record.CoverImageUrl || 'NULL'}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Created: ${new Date(record.CreatedAt).toLocaleString()}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">Catch Count: ${record.CatchCount}</div>`;
+                    dbHtml += `<div style="margin-left: 10px;">User ID: ${record.UserId}</div>`;
+                }
+            } else {
+                dbHtml += '<div style="color: red;"><strong>❌ No Record Found</strong></div>';
+                dbHtml += '<div>This ID does not exist in the database.</div>';
+            }
+        }
+        
+        dbHtml += '</div>';
+        dbHtml += '<br><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(JSON.stringify(dbData, null, 2)); this.textContent=\'Copied!\'">Copy Raw Data</button>';
+        
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 50px; right: 20px; z-index: 9999; min-width: 500px; max-width: 70vw; word-wrap: break-word;';
+        notification.innerHTML = `
+            ${dbHtml}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 45 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 45000);
+        
+    } catch (error) {
+        console.error('Database inspection error:', error);
+        showNotification('Failed to inspect database: ' + error.message, 'error');
     }
 }
 </script>

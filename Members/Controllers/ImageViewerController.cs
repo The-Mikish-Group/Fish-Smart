@@ -635,64 +635,31 @@ namespace Members.Controllers
 
             var relativePath = imageUrl.TrimStart('/');
             
-            // Try multiple possible paths for container compatibility
-            var possiblePaths = new[]
+            // Use standard ASP.NET static file path resolution  
+            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath);
+            
+            _logger.LogDebug("Resolving image path - ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}, WebRootPath: {WebRootPath}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
+                imageType, sourceId, imageUrl, _environment.WebRootPath, physicalPath, System.IO.File.Exists(physicalPath));
+            
+            if (System.IO.File.Exists(physicalPath))
             {
-                Path.Combine(_environment.WebRootPath, relativePath),           // Standard: /app/wwwroot/Images/...
-                Path.Combine(_environment.ContentRootPath, relativePath),      // Container: /app/Images/...
-                Path.Combine("/app", relativePath),                            // Direct: /app/Images/...
-                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath), // Legacy
-                Path.Combine(Directory.GetCurrentDirectory(), relativePath)    // Direct from working dir
-            };
-
-            foreach (var possiblePath in possiblePaths)
-            {
-                _logger.LogDebug("Checking path: {Path}, Exists: {Exists}", possiblePath, System.IO.File.Exists(possiblePath));
-                
-                if (System.IO.File.Exists(possiblePath))
-                {
-                    _logger.LogInformation("Found image at: {Path} for ImageType: {ImageType}, SourceId: {SourceId}", possiblePath, imageType, sourceId);
-                    return possiblePath;
-                }
+                return physicalPath;
             }
             
-            _logger.LogWarning("Image not found at any location for ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}. Tried paths: {Paths}", 
-                imageType, sourceId, imageUrl, string.Join(", ", possiblePaths));
-            
-            // Return null to indicate file not found at any location
+            // Return null to indicate file not found
+            _logger.LogWarning("Image file not found at: {PhysicalPath}", physicalPath);
             return null;
         }
 
         private string GetPhysicalPath(string imageUrl)
         {
             var relativePath = imageUrl.TrimStart('/');
+            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath);
             
-            // Try multiple possible paths for container compatibility
-            var possiblePaths = new[]
-            {
-                Path.Combine(_environment.WebRootPath, relativePath),           // Standard: /app/wwwroot/Images/...
-                Path.Combine(_environment.ContentRootPath, relativePath),      // Container: /app/Images/...
-                Path.Combine("/app", relativePath),                            // Direct: /app/Images/...
-                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath), // Legacy
-                Path.Combine(Directory.GetCurrentDirectory(), relativePath)    // Direct from working dir
-            };
-
-            foreach (var possiblePath in possiblePaths)
-            {
-                _logger.LogDebug("Checking background path: {Path}, Exists: {Exists}", possiblePath, System.IO.File.Exists(possiblePath));
-                
-                if (System.IO.File.Exists(possiblePath))
-                {
-                    _logger.LogInformation("Found background image at: {Path} for URL: {ImageUrl}", possiblePath, imageUrl);
-                    return possiblePath;
-                }
-            }
+            _logger.LogDebug("Resolving background path - ImageUrl: {ImageUrl}, WebRootPath: {WebRootPath}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
+                imageUrl, _environment.WebRootPath, physicalPath, System.IO.File.Exists(physicalPath));
             
-            _logger.LogWarning("Background image not found at any location for URL: {ImageUrl}. Tried paths: {Paths}", 
-                imageUrl, string.Join(", ", possiblePaths));
-            
-            // Return the first path as fallback (for error messaging)
-            return possiblePaths[0];
+            return physicalPath;
         }
 
         private async Task UpdateImageUrlAsync(string imageType, int sourceId, string newImageUrl)
@@ -833,6 +800,82 @@ namespace Members.Controllers
                     error = ex.Message, 
                     stackTrace = ex.StackTrace,
                     webRootPath = _environment.WebRootPath 
+                });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> InspectDatabase([FromQuery] string imageType, [FromQuery] int sourceId)
+        {
+            try
+            {
+                var result = new
+                {
+                    Timestamp = DateTime.UtcNow,
+                    Request = new { imageType, sourceId }
+                };
+
+                if (imageType == "CatchPhoto")
+                {
+                    var catchInfo = await _context.Catches
+                        .Where(c => c.Id == sourceId)
+                        .Select(c => new
+                        {
+                            c.Id,
+                            c.PhotoUrl,
+                            c.Species.CommonName,
+                            c.Size,
+                            c.CatchTime,
+                            SessionId = c.SessionId,
+                            UserId = c.Session.UserId
+                        })
+                        .FirstOrDefaultAsync();
+
+                    return Json(new
+                    {
+                        result.Timestamp,
+                        result.Request,
+                        DatabaseRecord = catchInfo,
+                        Found = catchInfo != null
+                    });
+                }
+                else if (imageType == "AlbumCover")
+                {
+                    var albumInfo = await _context.CatchAlbums
+                        .Where(a => a.Id == sourceId)
+                        .Select(a => new
+                        {
+                            a.Id,
+                            a.Name,
+                            a.CoverImageUrl,
+                            a.CreatedAt,
+                            a.UserId,
+                            CatchCount = a.AlbumCatches.Count
+                        })
+                        .FirstOrDefaultAsync();
+
+                    return Json(new
+                    {
+                        result.Timestamp,
+                        result.Request,
+                        DatabaseRecord = albumInfo,
+                        Found = albumInfo != null
+                    });
+                }
+
+                return Json(new
+                {
+                    result.Timestamp,
+                    result.Request,
+                    Error = "Unsupported image type"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    Error = ex.Message,
+                    StackTrace = ex.StackTrace
                 });
             }
         }
