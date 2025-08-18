@@ -491,10 +491,22 @@ async function replaceImageBackground(backgroundId, backgroundUrl) {
         if (!result.success) {
             console.error('Background replacement failed:', {
                 message: result.message,
+                errorType: result.errorType,
+                stackTrace: result.stackTrace,
                 imageType: '@Model.ImageType',
                 sourceId: @Model.SourceId,
                 backgroundId: backgroundId
             });
+            
+            // Show detailed error to user for debugging
+            let errorMessage = result.message;
+            if (result.errorType) {
+                errorMessage += `\n\nError Type: ${result.errorType}`;
+            }
+            if (result.stackTrace) {
+                errorMessage += `\n\nStack Trace:\n${result.stackTrace}`;
+            }
+            console.log('Full error details:', errorMessage);
         }
         
         return result;

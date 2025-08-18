@@ -385,7 +385,15 @@ namespace Members.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error processing image: {ex.Message}" });
+                _logger.LogError(ex, "Background replacement failed for ImageType: {ImageType}, SourceId: {SourceId}, BackgroundId: {BackgroundId}", 
+                    request.ImageType, request.SourceId, request.BackgroundId);
+                
+                return Json(new { 
+                    success = false, 
+                    message = $"Error processing image: {ex.Message}",
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace.Length ?? 0))
+                });
             }
         }
 
