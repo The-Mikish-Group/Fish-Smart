@@ -4,6 +4,9 @@ using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace Members.Controllers
 {
@@ -116,9 +119,21 @@ namespace Members.Controllers
                         var safeFileName = FileNameHelper.CreateSafeFileName(imageFile.FileName);
                         var filePath = Path.Combine(uploadsFolder, safeFileName);
 
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        // Resize and save background image (max 1920px width for backgrounds)
+                        using (var imageStream = imageFile.OpenReadStream())
+                        using (var image = await SixLabors.ImageSharp.Image.LoadAsync(imageStream))
                         {
-                            await imageFile.CopyToAsync(fileStream);
+                            // Resize background to reasonable size (backgrounds can be larger than catches)
+                            var maxWidth = 1920;
+                            if (image.Width > maxWidth)
+                            {
+                                var aspectRatio = (float)image.Height / image.Width;
+                                var newHeight = (int)(maxWidth * aspectRatio);
+                                image.Mutate(x => x.Resize(maxWidth, newHeight));
+                            }
+                            
+                            // Save with high quality for backgrounds
+                            await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 92 });
                         }
 
                         background.ImageUrl = FileNameHelper.CreateSafeUrlPath("/Images/Backgrounds", safeFileName);

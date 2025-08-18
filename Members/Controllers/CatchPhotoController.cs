@@ -81,10 +81,21 @@ namespace Members.Controllers
 
                     var filePath = Path.Combine(catchesPath, fileName);
 
-                    // Save and process the image
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    // Resize and save the main image (max 1200px width for phone/desktop viewing)
+                    using (var imageStream = photo.OpenReadStream())
+                    using (var image = await Image.LoadAsync(imageStream))
                     {
-                        await photo.CopyToAsync(stream);
+                        // Resize main image to reasonable size for viewing
+                        var maxWidth = 1200;
+                        if (image.Width > maxWidth)
+                        {
+                            var aspectRatio = (float)image.Height / image.Width;
+                            var newHeight = (int)(maxWidth * aspectRatio);
+                            image.Mutate(x => x.Resize(maxWidth, newHeight));
+                        }
+                        
+                        // Save main image with good quality but reasonable file size
+                        await image.SaveAsJpegAsync(filePath, new JpegEncoder { Quality = 90 });
                     }
 
                     // Generate thumbnail

@@ -4,6 +4,10 @@ using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Diagnostics;
 
 namespace Members.Controllers
 {
@@ -27,8 +31,73 @@ namespace Members.Controllers
             _context.ChangeTracker.Clear();
             
             var report = await GenerateFileStatusReport();
+            var sizeReport = await GenerateImageSizeReport();
+            
             ViewBag.Report = report;
+            ViewBag.SizeReport = sizeReport;
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResizeAllImages()
+        {
+            try
+            {
+                var stopwatch = Stopwatch.StartNew();
+                
+                var catchResults = await ResizeImagesInFolder("Images/Catches", 1200, "catch photos");
+                var albumResults = await ResizeImagesInFolder("Images/Albums", 1200, "album covers");
+                var backgroundResults = await ResizeImagesInFolder("Images/Backgrounds", 1920, "backgrounds");
+                
+                stopwatch.Stop();
+
+                var totalResized = catchResults.ResizedCount + albumResults.ResizedCount + backgroundResults.ResizedCount;
+                var totalSaved = catchResults.SpaceSaved + albumResults.SpaceSaved + backgroundResults.SpaceSaved;
+                var totalErrors = catchResults.ErrorCount + albumResults.ErrorCount + backgroundResults.ErrorCount;
+
+                TempData["Success"] = $"Resized {totalResized} images total. " +
+                                    $"Saved {FormatFileSize(totalSaved)} of storage space. " +
+                                    $"Completed in {stopwatch.Elapsed.TotalSeconds:F1} seconds.";
+                
+                if (totalErrors > 0)
+                {
+                    TempData["Warning"] = $"{totalErrors} files had errors and were skipped.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resizing all images");
+                TempData["Error"] = $"Error resizing images: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResizeImages(string folder, int maxWidth, string description)
+        {
+            try
+            {
+                var stopwatch = Stopwatch.StartNew();
+                var results = await ResizeImagesInFolder(folder, maxWidth, description);
+                stopwatch.Stop();
+
+                TempData["Success"] = $"Resized {results.ResizedCount} {description}. " +
+                                    $"Saved {FormatFileSize(results.SpaceSaved)}. " +
+                                    $"Completed in {stopwatch.Elapsed.TotalSeconds:F1} seconds.";
+                
+                if (results.ErrorCount > 0)
+                {
+                    TempData["Warning"] = $"{results.ErrorCount} files had errors and were skipped.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resizing images in folder: {Folder}", folder);
+                TempData["Error"] = $"Error resizing images: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -662,6 +731,214 @@ namespace Members.Controllers
             }
 
             return result;
+        }
+
+        private async Task<string> GenerateImageSizeReport()
+        {
+            var report = new System.Text.StringBuilder();
+            report.AppendLine("=== Image Size Analysis Report ===\n");
+
+            // Analyze each folder
+            var catchesAnalysis = await AnalyzeImageSizes("Images/Catches", 1200);
+            var albumsAnalysis = await AnalyzeImageSizes("Images/Albums", 1200);
+            var backgroundsAnalysis = await AnalyzeImageSizes("Images/Backgrounds", 1920);
+
+            report.AppendLine("CATCH PHOTOS:");
+            report.AppendLine($"  Total: {catchesAnalysis.TotalFiles} files");
+            report.AppendLine($"  Total Size: {FormatFileSize(catchesAnalysis.TotalSize)}");
+            report.AppendLine($"  Oversized (>{catchesAnalysis.TargetMaxWidth}px): {catchesAnalysis.OversizedFiles} files");
+            report.AppendLine($"  Oversized Total: {FormatFileSize(catchesAnalysis.OversizedTotalSize)}");
+            report.AppendLine($"  Estimated Savings: {FormatFileSize(catchesAnalysis.EstimatedSavings)}\n");
+
+            report.AppendLine("ALBUM COVERS:");
+            report.AppendLine($"  Total: {albumsAnalysis.TotalFiles} files");
+            report.AppendLine($"  Total Size: {FormatFileSize(albumsAnalysis.TotalSize)}");
+            report.AppendLine($"  Oversized (>{albumsAnalysis.TargetMaxWidth}px): {albumsAnalysis.OversizedFiles} files");
+            report.AppendLine($"  Oversized Total: {FormatFileSize(albumsAnalysis.OversizedTotalSize)}");
+            report.AppendLine($"  Estimated Savings: {FormatFileSize(albumsAnalysis.EstimatedSavings)}\n");
+
+            report.AppendLine("BACKGROUNDS:");
+            report.AppendLine($"  Total: {backgroundsAnalysis.TotalFiles} files");
+            report.AppendLine($"  Total Size: {FormatFileSize(backgroundsAnalysis.TotalSize)}");
+            report.AppendLine($"  Oversized (>{backgroundsAnalysis.TargetMaxWidth}px): {backgroundsAnalysis.OversizedFiles} files");
+            report.AppendLine($"  Oversized Total: {FormatFileSize(backgroundsAnalysis.OversizedTotalSize)}");
+            report.AppendLine($"  Estimated Savings: {FormatFileSize(backgroundsAnalysis.EstimatedSavings)}\n");
+
+            var totalOversized = catchesAnalysis.OversizedFiles + albumsAnalysis.OversizedFiles + backgroundsAnalysis.OversizedFiles;
+            var totalSavings = catchesAnalysis.EstimatedSavings + albumsAnalysis.EstimatedSavings + backgroundsAnalysis.EstimatedSavings;
+
+            report.AppendLine($"TOTAL OVERSIZED FILES: {totalOversized}");
+            report.AppendLine($"TOTAL ESTIMATED SAVINGS: {FormatFileSize(totalSavings)}");
+
+            return report.ToString();
+        }
+
+        private async Task<ImageSizeAnalysis> AnalyzeImageSizes(string relativePath, int targetMaxWidth)
+        {
+            var analysis = new ImageSizeAnalysis
+            {
+                FolderName = relativePath,
+                TargetMaxWidth = targetMaxWidth
+            };
+
+            try
+            {
+                var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
+                if (!Directory.Exists(fullPath))
+                {
+                    return analysis;
+                }
+
+                var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+                var files = Directory.GetFiles(fullPath)
+                    .Where(f => imageExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                    .Where(f => !Path.GetFileName(f).Contains("_thumb")) // Exclude thumbnails
+                    .ToArray();
+
+                analysis.TotalFiles = files.Length;
+                analysis.TotalSize = files.Sum(f => new FileInfo(f).Length);
+
+                await Task.Run(() =>
+                {
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            using var image = Image.Load(file);
+                            if (image.Width > targetMaxWidth || image.Height > targetMaxWidth)
+                            {
+                                analysis.OversizedFiles++;
+                                analysis.OversizedTotalSize += new FileInfo(file).Length;
+                            }
+                        }
+                        catch
+                        {
+                            // Skip files that can't be processed
+                        }
+                    }
+                });
+
+                // Estimate savings (typically 60-80% size reduction)
+                analysis.EstimatedSavings = (long)(analysis.OversizedTotalSize * 0.65);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error analyzing image sizes in directory: {Path}", relativePath);
+            }
+
+            return analysis;
+        }
+
+        private async Task<ResizeResults> ResizeImagesInFolder(string relativePath, int maxWidth, string description)
+        {
+            var results = new ResizeResults();
+            var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
+
+            if (!Directory.Exists(fullPath))
+                return results;
+
+            var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+            var files = Directory.GetFiles(fullPath)
+                .Where(f => imageExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                .Where(f => !Path.GetFileName(f).Contains("_thumb")) // Exclude thumbnails
+                .ToArray();
+
+            _logger.LogInformation("Starting resize of {Count} files in {Path} (max width: {MaxWidth})", 
+                files.Length, relativePath, maxWidth);
+
+            foreach (var filePath in files)
+            {
+                try
+                {
+                    var originalSize = new FileInfo(filePath).Length;
+                    
+                    using (var image = await Image.LoadAsync(filePath))
+                    {
+                        if (image.Width > maxWidth || image.Height > maxWidth)
+                        {
+                            // Create backup
+                            var backupPath = filePath + ".backup";
+                            if (!System.IO.File.Exists(backupPath))
+                            {
+                                System.IO.File.Copy(filePath, backupPath);
+                            }
+
+                            // Calculate new dimensions maintaining aspect ratio
+                            int newWidth, newHeight;
+                            if (image.Width > image.Height)
+                            {
+                                newWidth = Math.Min(maxWidth, image.Width);
+                                newHeight = (int)(image.Height * ((float)newWidth / image.Width));
+                            }
+                            else
+                            {
+                                newHeight = Math.Min(maxWidth, image.Height);
+                                newWidth = (int)(image.Width * ((float)newHeight / image.Height));
+                            }
+
+                            // Resize image
+                            image.Mutate(x => x.Resize(newWidth, newHeight));
+
+                            // Save resized image with appropriate quality
+                            var quality = relativePath.Contains("Background") ? 92 : 90;
+                            await image.SaveAsJpegAsync(filePath, new JpegEncoder { Quality = quality });
+
+                            var newSize = new FileInfo(filePath).Length;
+                            results.SpaceSaved += originalSize - newSize;
+                            results.ResizedCount++;
+
+                            _logger.LogInformation("Resized {File}: {OriginalWidth}x{OriginalHeight} -> {NewWidth}x{NewHeight}, {OriginalSize} -> {NewSize}", 
+                                Path.GetFileName(filePath), 
+                                image.Width, image.Height, newWidth, newHeight,
+                                FormatFileSize(originalSize), 
+                                FormatFileSize(newSize));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error resizing file: {File}", filePath);
+                    results.ErrorCount++;
+                }
+            }
+
+            _logger.LogInformation("Completed resizing {Description}: {ResizedCount} files resized, {ErrorCount} errors, {SpaceSaved} saved", 
+                description, results.ResizedCount, results.ErrorCount, FormatFileSize(results.SpaceSaved));
+
+            return results;
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes == 0) return "0 B";
+            
+            string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+            int counter = 0;
+            decimal number = bytes;
+            while (Math.Round(number / 1024) >= 1)
+            {
+                number /= 1024;
+                counter++;
+            }
+            return $"{number:n1} {suffixes[counter]}";
+        }
+
+        public class ImageSizeAnalysis
+        {
+            public string FolderName { get; set; } = string.Empty;
+            public int TotalFiles { get; set; }
+            public long TotalSize { get; set; }
+            public int OversizedFiles { get; set; }
+            public long OversizedTotalSize { get; set; }
+            public long EstimatedSavings { get; set; }
+            public int TargetMaxWidth { get; set; }
+        }
+
+        public class ResizeResults
+        {
+            public int ResizedCount { get; set; }
+            public long SpaceSaved { get; set; }
+            public int ErrorCount { get; set; }
         }
 
         public class FileFixResult

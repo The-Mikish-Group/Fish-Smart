@@ -392,7 +392,7 @@ namespace Members.Controllers
                     success = false, 
                     message = $"Error processing image: {ex.Message}",
                     errorType = ex.GetType().Name,
-                    stackTrace = ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace.Length ?? 0))
+                    stackTrace = ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace.Length))
                 });
             }
         }

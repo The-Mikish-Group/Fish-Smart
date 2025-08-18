@@ -163,3 +163,45 @@ This is the core feature with sophisticated automation:
 3. **Development**: Use `dotnet run` for local development
 4. **Testing**: Currently manual - automated tests should be added
 5. **Deployment**: Uses publish profiles for various hosting environments
+
+## Recent Updates and Fixes (2025-01-18)
+
+### Database Field Padding Issue Resolution
+- **Issue**: Database string fields (PhotoUrl, CoverImageUrl, ImageUrl) were using CHAR type causing massive trailing whitespace padding (~300 characters)
+- **Root Cause**: CHAR fields pad with spaces to fill column width, causing file path resolution failures
+- **Solution**: Changed to VARCHAR(500) in EF Designer for all image URL fields:
+  - `Catch.PhotoUrl` 
+  - `CatchAlbum.CoverImageUrl`
+  - `Background.ImageUrl`
+- **Impact**: Fixes background replacement "source image can't be found" errors
+
+### ImageViewer Controller Enhancements
+- **Container Path Resolution**: Added proper IWebHostEnvironment.WebRootPath usage for Docker containers
+- **Enhanced Error Handling**: Added detailed error logging with exception types and stack traces for debugging
+- **Debug Tools**: Added comprehensive debugging endpoints:
+  - `/ImageViewer/DebugPaths` - Tests all possible file path combinations
+  - `/ImageViewer/InspectDatabase` - Shows database record details
+- **Background Replacement**: Fixed file path trimming and improved error reporting
+
+### UI/UX Improvements
+- **Compact Button Layout**: Reorganized ImageViewer buttons into primary actions + dropdown menu
+- **Mobile Responsiveness**: Improved button visibility and text labels across screen sizes
+- **Checkbox Styling**: Fixed hard-to-click "Make album public" checkbox with better styling
+- **Space Optimization**: Reduced navbar spacing to give more room for image display
+
+### Future Roadmap Considerations
+- **Voice Control Integration**: Planning for voice-activated commands for image operations
+- **Workflow Streamlining**: Multiple steps currently required for common operations need consolidation
+- **Cross-Page Button Integration**: Consider adding background editing buttons to other relevant pages
+- **UI Consistency**: Standardize button layouts and styling across the application
+
+### Technical Debt
+- **Manual Testing**: Need automated test suite for background replacement functionality
+- **Error Handling**: Consider global error handling middleware for better user experience
+- **Performance**: Background replacement can be slow - consider progress indicators
+- **Caching**: Image cache-busting needs optimization for faster updates
+
+## Known Issues
+- Background replacement requires page refresh to see changes
+- Container deployments take 5+ minutes, slowing debugging cycles
+- Debug tools should be hidden in production builds
