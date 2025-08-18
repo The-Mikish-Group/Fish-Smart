@@ -275,7 +275,23 @@ namespace Members.Controllers
                 if (string.IsNullOrEmpty(originalImagePath))
                 {
                     _logger.LogWarning("GetImagePathAsync returned null/empty for ImageType: {ImageType}, SourceId: {SourceId}", request.ImageType, request.SourceId);
-                    return Json(new { success = false, message = "Original image not found in database" });
+                    
+                    // Get the database URL for better error message
+                    string? dbUrl = request.ImageType switch
+                    {
+                        "AlbumCover" => await _context.CatchAlbums.Where(a => a.Id == request.SourceId).Select(a => a.CoverImageUrl).FirstOrDefaultAsync(),
+                        "CatchPhoto" => await _context.Catches.Where(c => c.Id == request.SourceId).Select(c => c.PhotoUrl).FirstOrDefaultAsync(),
+                        _ => null
+                    };
+                    
+                    if (string.IsNullOrEmpty(dbUrl))
+                    {
+                        return Json(new { success = false, message = $"No image URL found in database for {request.ImageType} ID {request.SourceId}" });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = $"Source image file not found at any container location. Database URL: {dbUrl}. Tried paths: /app/wwwroot/Images/, /app/Images/, etc. Use Debug Paths for details." });
+                    }
                 }
 
                 // Get background image path using container-compatible path resolution
@@ -643,8 +659,8 @@ namespace Members.Controllers
             _logger.LogWarning("Image not found at any location for ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}. Tried paths: {Paths}", 
                 imageType, sourceId, imageUrl, string.Join(", ", possiblePaths));
             
-            // Return the first path as fallback (will trigger the file not found error with full details)
-            return possiblePaths[0];
+            // Return null to indicate file not found at any location
+            return null;
         }
 
         private string GetPhysicalPath(string imageUrl)
@@ -675,7 +691,7 @@ namespace Members.Controllers
             _logger.LogWarning("Background image not found at any location for URL: {ImageUrl}. Tried paths: {Paths}", 
                 imageUrl, string.Join(", ", possiblePaths));
             
-            // Return the first path as fallback
+            // Return the first path as fallback (for error messaging)
             return possiblePaths[0];
         }
 
