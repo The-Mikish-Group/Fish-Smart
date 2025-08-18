@@ -180,6 +180,19 @@ namespace Members.Data
                 .Property(f => f.BarometricPressure)
                 .HasPrecision(6, 2);
 
+            // Configure string fields to prevent padding issues
+            builder.Entity<Catch>()
+                .Property(c => c.PhotoUrl)
+                .HasColumnType("VARCHAR(500)");
+
+            builder.Entity<CatchAlbum>()
+                .Property(a => a.CoverImageUrl)
+                .HasColumnType("VARCHAR(500)");
+
+            builder.Entity<Background>()
+                .Property(b => b.ImageUrl)
+                .HasColumnType("VARCHAR(500)");
+
             // Performance indexes for Fish-Smart
             builder.Entity<FishSpecies>()
                 .HasIndex(f => new { f.WaterType, f.Region });

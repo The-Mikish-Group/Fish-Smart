@@ -633,6 +633,8 @@ namespace Members.Controllers
 
             if (string.IsNullOrEmpty(imageUrl)) return null;
 
+            // CRITICAL: Trim all whitespace from database URLs (database field might be CHAR with padding)
+            imageUrl = imageUrl.Trim();
             var relativePath = imageUrl.TrimStart('/');
             
             // Use standard ASP.NET static file path resolution  
@@ -653,6 +655,8 @@ namespace Members.Controllers
 
         private string GetPhysicalPath(string imageUrl)
         {
+            // CRITICAL: Trim all whitespace from database URLs (database field might be CHAR with padding)
+            imageUrl = imageUrl.Trim();
             var relativePath = imageUrl.TrimStart('/');
             var physicalPath = Path.Combine(_environment.WebRootPath, relativePath);
             
