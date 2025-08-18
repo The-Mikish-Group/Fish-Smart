@@ -278,8 +278,8 @@ namespace Members.Controllers
                     return Json(new { success = false, message = "Original image not found in database" });
                 }
 
-                // Get background image path using WebRootPath for container compatibility
-                var backgroundImagePath = Path.Combine(_environment.WebRootPath, background.ImageUrl!.TrimStart('/'));
+                // Get background image path using container-compatible path resolution
+                var backgroundImagePath = GetPhysicalPath(background.ImageUrl!);
                 
                 _logger.LogDebug("Background image resolution - BackgroundId: {BackgroundId}, ImageUrl: {ImageUrl}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
                     background.Id, background.ImageUrl, backgroundImagePath, System.IO.File.Exists(backgroundImagePath));
@@ -617,14 +617,66 @@ namespace Members.Controllers
 
             if (string.IsNullOrEmpty(imageUrl)) return null;
 
-            // Convert URL to physical path using WebRootPath for container compatibility
             var relativePath = imageUrl.TrimStart('/');
-            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath);
             
-            _logger.LogDebug("Resolving image path - ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}, PhysicalPath: {PhysicalPath}, Exists: {Exists}", 
-                imageType, sourceId, imageUrl, physicalPath, System.IO.File.Exists(physicalPath));
+            // Try multiple possible paths for container compatibility
+            var possiblePaths = new[]
+            {
+                Path.Combine(_environment.WebRootPath, relativePath),           // Standard: /app/wwwroot/Images/...
+                Path.Combine(_environment.ContentRootPath, relativePath),      // Container: /app/Images/...
+                Path.Combine("/app", relativePath),                            // Direct: /app/Images/...
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath), // Legacy
+                Path.Combine(Directory.GetCurrentDirectory(), relativePath)    // Direct from working dir
+            };
+
+            foreach (var possiblePath in possiblePaths)
+            {
+                _logger.LogDebug("Checking path: {Path}, Exists: {Exists}", possiblePath, System.IO.File.Exists(possiblePath));
+                
+                if (System.IO.File.Exists(possiblePath))
+                {
+                    _logger.LogInformation("Found image at: {Path} for ImageType: {ImageType}, SourceId: {SourceId}", possiblePath, imageType, sourceId);
+                    return possiblePath;
+                }
+            }
             
-            return physicalPath;
+            _logger.LogWarning("Image not found at any location for ImageType: {ImageType}, SourceId: {SourceId}, ImageUrl: {ImageUrl}. Tried paths: {Paths}", 
+                imageType, sourceId, imageUrl, string.Join(", ", possiblePaths));
+            
+            // Return the first path as fallback (will trigger the file not found error with full details)
+            return possiblePaths[0];
+        }
+
+        private string GetPhysicalPath(string imageUrl)
+        {
+            var relativePath = imageUrl.TrimStart('/');
+            
+            // Try multiple possible paths for container compatibility
+            var possiblePaths = new[]
+            {
+                Path.Combine(_environment.WebRootPath, relativePath),           // Standard: /app/wwwroot/Images/...
+                Path.Combine(_environment.ContentRootPath, relativePath),      // Container: /app/Images/...
+                Path.Combine("/app", relativePath),                            // Direct: /app/Images/...
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath), // Legacy
+                Path.Combine(Directory.GetCurrentDirectory(), relativePath)    // Direct from working dir
+            };
+
+            foreach (var possiblePath in possiblePaths)
+            {
+                _logger.LogDebug("Checking background path: {Path}, Exists: {Exists}", possiblePath, System.IO.File.Exists(possiblePath));
+                
+                if (System.IO.File.Exists(possiblePath))
+                {
+                    _logger.LogInformation("Found background image at: {Path} for URL: {ImageUrl}", possiblePath, imageUrl);
+                    return possiblePath;
+                }
+            }
+            
+            _logger.LogWarning("Background image not found at any location for URL: {ImageUrl}. Tried paths: {Paths}", 
+                imageUrl, string.Join(", ", possiblePaths));
+            
+            // Return the first path as fallback
+            return possiblePaths[0];
         }
 
         private async Task UpdateImageUrlAsync(string imageType, int sourceId, string newImageUrl)
@@ -676,8 +728,47 @@ namespace Members.Controllers
                 // Get background info
                 var background = await _context.Backgrounds.FindAsync(backgroundId);
                 var backgroundImagePath = background?.ImageUrl != null 
-                    ? Path.Combine(_environment.WebRootPath, background.ImageUrl.TrimStart('/'))
+                    ? GetPhysicalPath(background.ImageUrl)
                     : null;
+
+                // Get source image URL for path testing
+                string? sourceImageUrl = imageType switch
+                {
+                    "AlbumCover" => await _context.CatchAlbums
+                        .Where(a => a.Id == sourceId)
+                        .Select(a => a.CoverImageUrl)
+                        .FirstOrDefaultAsync(),
+                    "CatchPhoto" => await _context.Catches
+                        .Where(c => c.Id == sourceId)
+                        .Select(c => c.PhotoUrl)
+                        .FirstOrDefaultAsync(),
+                    _ => null
+                };
+
+                // Test all possible paths for source image
+                var sourcePathTests = new List<object>();
+                if (!string.IsNullOrEmpty(sourceImageUrl))
+                {
+                    var relativePath = sourceImageUrl.TrimStart('/');
+                    var testPaths = new[]
+                    {
+                        Path.Combine(_environment.WebRootPath, relativePath),
+                        Path.Combine(_environment.ContentRootPath, relativePath),
+                        Path.Combine("/app", relativePath),
+                        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath),
+                        Path.Combine(Directory.GetCurrentDirectory(), relativePath)
+                    };
+
+                    foreach (var testPath in testPaths)
+                    {
+                        sourcePathTests.Add(new
+                        {
+                            Path = testPath,
+                            Exists = System.IO.File.Exists(testPath),
+                            DirectoryExists = Directory.Exists(Path.GetDirectoryName(testPath))
+                        });
+                    }
+                }
 
                 var debugInfo = new
                 {
@@ -691,14 +782,15 @@ namespace Members.Controllers
                     {
                         ImageType = imageType,
                         SourceId = sourceId,
+                        DatabaseUrl = sourceImageUrl,
                         ResolvedPath = sourceImagePath,
-                        Exists = !string.IsNullOrEmpty(sourceImagePath) && System.IO.File.Exists(sourceImagePath),
-                        DirectoryExists = !string.IsNullOrEmpty(sourceImagePath) && Directory.Exists(Path.GetDirectoryName(sourceImagePath))
+                        FinalExists = !string.IsNullOrEmpty(sourceImagePath) && System.IO.File.Exists(sourceImagePath),
+                        AllPathTests = sourcePathTests
                     },
                     BackgroundImage = new
                     {
                         BackgroundId = backgroundId,
-                        ImageUrl = background?.ImageUrl,
+                        DatabaseUrl = background?.ImageUrl,
                         ResolvedPath = backgroundImagePath,
                         Exists = !string.IsNullOrEmpty(backgroundImagePath) && System.IO.File.Exists(backgroundImagePath),
                         DirectoryExists = !string.IsNullOrEmpty(backgroundImagePath) && Directory.Exists(Path.GetDirectoryName(backgroundImagePath))
@@ -708,9 +800,12 @@ namespace Members.Controllers
                         WebRoot = Directory.Exists(_environment.WebRootPath) 
                             ? Directory.GetDirectories(_environment.WebRootPath).Take(10).ToArray()
                             : new string[] { "WebRoot not found" },
-                        ImagesFolder = Directory.Exists(Path.Combine(_environment.WebRootPath, "Images"))
-                            ? Directory.GetDirectories(Path.Combine(_environment.WebRootPath, "Images")).Take(10).ToArray()
-                            : new string[] { "Images folder not found" }
+                        ContentRoot = Directory.Exists(_environment.ContentRootPath)
+                            ? Directory.GetDirectories(_environment.ContentRootPath).Take(10).ToArray()
+                            : new string[] { "ContentRoot not found" },
+                        AppRoot = Directory.Exists("/app")
+                            ? Directory.GetDirectories("/app").Take(10).ToArray()
+                            : new string[] { "/app not found" }
                     }
                 };
 
