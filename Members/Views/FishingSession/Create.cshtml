@@ -55,23 +55,50 @@
                             <span asp-validation-for="LocationName" class="text-danger"></span>
                         </div>
 
-                        <!-- GPS Coordinates (Optional) -->
+                        <!-- GPS Coordinates and Weather -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label asp-for="Latitude" class="form-label">
-                                    <i class="bi bi-compass"></i> Latitude (Optional)
+                                    <i class="bi bi-compass"></i> Latitude
                                 </label>
                                 <input asp-for="Latitude" type="number" step="any" class="form-control"
-                                       placeholder="e.g., 40.7128" />
+                                       placeholder="Getting location..." readonly title="Full GPS precision will be captured" />
                                 <span asp-validation-for="Latitude" class="text-danger"></span>
+                                <small class="text-secondary">Full GPS precision captured</small>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Longitude" class="form-label">
-                                    <i class="bi bi-compass"></i> Longitude (Optional)
+                                    <i class="bi bi-compass"></i> Longitude
                                 </label>
                                 <input asp-for="Longitude" type="number" step="any" class="form-control"
-                                       placeholder="e.g., -74.0060" />
+                                       placeholder="Getting location..." readonly title="Full GPS precision will be captured" />
+                                <small class="text-secondary">Full GPS precision captured</small>
                                 <span asp-validation-for="Longitude" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Weather Information (Auto-populated) -->
+                        <div class="row mb-3" id="weatherSection" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-cloud"></i> Weather Conditions
+                                </label>
+                                <input type="text" class="form-control" id="weatherConditions" readonly
+                                       placeholder="Loading weather..." />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-thermometer"></i> Temperature
+                                </label>
+                                <input type="text" class="form-control" id="temperature" readonly
+                                       placeholder="Loading..." />
+                            </div>
+                        </div>
+
+                        <!-- Location Status -->
+                        <div class="mb-3">
+                            <div class="alert alert-info" id="locationStatus">
+                                <i class="bi bi-geo-alt"></i> Getting your location and weather data...
                             </div>
                         </div>
 
@@ -189,44 +216,124 @@
     }
 
     <script>
-        // Get current location if user allows
+        // Automatically get current location and weather on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const getLocationBtn = document.createElement('button');
-            getLocationBtn.type = 'button';
-            getLocationBtn.className = 'btn btn-info btn-sm mt-2';
-            getLocationBtn.innerHTML = '<i class="bi bi-geo-alt"></i> Get Current Location';
+            const latInput = document.getElementById('Latitude');
+            const lngInput = document.getElementById('Longitude');
+            const locationStatus = document.getElementById('locationStatus');
+            const weatherSection = document.getElementById('weatherSection');
 
-            // Add button after longitude input
-            const longitudeInput = document.getElementById('Longitude');
-            if (longitudeInput) {
-                longitudeInput.parentNode.appendChild(getLocationBtn);
+            // Auto-get location on page load with maximum accuracy settings
+            if (navigator.geolocation) {
+                console.log('DEBUG: Geolocation is supported, requesting highest accuracy location...');
+                
+                const geoOptions = {
+                    enableHighAccuracy: true,    // Request highest accuracy GPS
+                    timeout: 30000,              // Allow 30 seconds for GPS fix
+                    maximumAge: 0                // Don't use cached location
+                };
+                
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        console.log('DEBUG: Location obtained successfully');
+                        // Capture MAXIMUM precision from GPS (no rounding)
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        const altitude = position.coords.altitude;
+                        const altitudeAccuracy = position.coords.altitudeAccuracy;
+                        
+                        console.log(`DEBUG: Maximum precision coordinates: ${lat}, ${lng}`);
+                        console.log(`DEBUG: GPS accuracy: ${accuracy}m, altitude: ${altitude}m (±${altitudeAccuracy}m)`);
+                        
+                        // Update location fields
+                        latInput.value = lat;
+                        lngInput.value = lng;
+                        latInput.removeAttribute('readonly');
+                        lngInput.removeAttribute('readonly');
+                        
+                        locationStatus.innerHTML = `<i class="bi bi-check-circle text-success"></i> High-accuracy location found (±${accuracy ? Math.round(accuracy) : '?'}m)! Getting weather data...`;
+                        locationStatus.className = 'alert alert-success';
+                        
+                        console.log('DEBUG: About to call fetchWeatherData...');
+                        // Fetch weather data
+                        await fetchWeatherData(lat, lng);
+                    },
+                    function(error) {
+                        console.log(`DEBUG: Geolocation error: ${error.message} (code: ${error.code})`);
+                        
+                        let errorMessage = 'Location access denied';
+                        if (error.code === 1) {
+                            errorMessage = 'Location access denied - please allow GPS access for highest accuracy';
+                        } else if (error.code === 2) {
+                            errorMessage = 'Location unavailable - GPS signal weak';
+                        } else if (error.code === 3) {
+                            errorMessage = 'Location timeout - GPS taking too long';
+                        }
+                        
+                        locationStatus.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${errorMessage}`;
+                        locationStatus.className = 'alert alert-warning';
+                        
+                        // Make fields editable for manual entry
+                        latInput.removeAttribute('readonly');
+                        lngInput.removeAttribute('readonly');
+                        latInput.placeholder = 'e.g., 40.7128';
+                        lngInput.placeholder = 'e.g., -74.0060';
+                    },
+                    geoOptions  // Apply high accuracy settings
+                );
+            } else {
+                locationStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Geolocation not supported. You can manually enter coordinates.';
+                locationStatus.className = 'alert alert-warning';
+                
+                latInput.removeAttribute('readonly');
+                lngInput.removeAttribute('readonly');
+                latInput.placeholder = 'e.g., 40.7128';
+                lngInput.placeholder = 'e.g., -74.0060';
             }
 
-            getLocationBtn.addEventListener('click', function() {
-                if (navigator.geolocation) {
-                    getLocationBtn.disabled = true;
-                    getLocationBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Getting Location...';
-
-                    navigator.geolocation.getCurrentPosition(
-                        function(position) {
-                            document.getElementById('Latitude').value = position.coords.latitude.toFixed(6);
-                            document.getElementById('Longitude').value = position.coords.longitude.toFixed(6);
-                            getLocationBtn.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location Found!';
+            // Function to fetch weather data
+            async function fetchWeatherData(lat, lng) {
+                try {
+                    console.log(`DEBUG: Calling weather API for ${lat}, ${lng}`);
+                    const response = await fetch(`/FishingSession/GetWeather?lat=${lat}&lng=${lng}`);
+                    console.log(`DEBUG: Weather API response status: ${response.status}`);
+                    
+                    if (response.ok) {
+                        const weatherData = await response.json();
+                        console.log('DEBUG: Weather API response data:', weatherData);
+                        
+                        if (weatherData.isSuccessful) {
+                            // Show weather section and populate fields
+                            weatherSection.style.display = 'block';
+                            document.getElementById('weatherConditions').value = weatherData.weatherConditions || 'N/A';
+                            document.getElementById('temperature').value = weatherData.temperature ? 
+                                `${Math.round(weatherData.temperature)}°F` : 'N/A';
+                            
+                            locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location and weather data ready!';
+                            
+                            // Hide the status message after 3 seconds since data is loaded
                             setTimeout(() => {
-                                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt"></i> Get Current Location';
-                                getLocationBtn.disabled = false;
-                            }, 2000);
-                        },
-                        function(error) {
-                            alert('Unable to get your location. Please enter coordinates manually.');
-                            getLocationBtn.innerHTML = '<i class="bi bi-geo-alt"></i> Get Current Location';
-                            getLocationBtn.disabled = false;
+                                locationStatus.style.display = 'none';
+                            }, 3000);
+                        } else {
+                            console.log('DEBUG: Weather API returned unsuccessful:', weatherData.errorMessage);
+                            weatherSection.style.display = 'block';
+                            document.getElementById('weatherConditions').value = 'Weather data unavailable';
+                            document.getElementById('temperature').value = 'N/A';
+                            
+                            locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready! (Weather data unavailable)';
                         }
-                    );
-                } else {
-                    alert('Geolocation is not supported by this browser.');
+                    } else {
+                        const errorText = await response.text();
+                        console.log('DEBUG: Weather API call failed with status:', response.status, 'Error:', errorText);
+                        locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready! (Weather service unavailable)';
+                    }
+                } catch (error) {
+                    console.error('DEBUG: Error fetching weather:', error);
+                    locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready! (Weather fetch failed)';
                 }
-            });
+            }
         });
 
         // Auto-update datetime to current time

@@ -1,0 +1,286 @@
+@{
+    ViewData["Title"] = "Background Removal Test Results";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-graph-up"></i>
+                        Test Results
+                    </h1>
+                    <p class="text-muted mb-0">Background removal service comparison results</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i>
+                        Run New Test
+                    </a>
+                </div>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (ViewBag.TestResults != null)
+            {
+                var results = ViewBag.TestResults as List<Members.Services.BackgroundRemovalTestResult>;
+                var successfulResults = results?.Where(r => r.Success).ToList() ?? new List<Members.Services.BackgroundRemovalTestResult>();
+                var failedResults = results?.Where(r => !r.Success).ToList() ?? new List<Members.Services.BackgroundRemovalTestResult>();
+
+                <!-- Results Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="bi bi-check-circle display-4 text-success mb-2"></i>
+                                <h3 class="text-success">@successfulResults.Count</h3>
+                                <p class="card-text">Services Succeeded</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="bi bi-x-circle display-4 text-danger mb-2"></i>
+                                <h3 class="text-danger">@failedResults.Count</h3>
+                                <p class="card-text">Services Failed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="bi bi-currency-dollar display-4 text-info mb-2"></i>
+                                <h3 class="text-info">$@(successfulResults.Sum(r => r.Cost).ToString("F2"))</h3>
+                                <p class="card-text">Total Cost</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (successfulResults.Any())
+                {
+                    <!-- Successful Results -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Successful Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @foreach (var result in successfulResults.OrderBy(r => r.Cost))
+                                {
+                                    <div class="col-lg-6 mb-4">
+                                        <div class="card border-success">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0 text-success">@result.ServiceName</h6>
+                                                <span class="badge bg-success">Success</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Result Image -->
+                                                @if (!string.IsNullOrEmpty(result.ResultImagePath))
+                                                {
+                                                    <div class="text-center mb-3">
+                                                        <img src="@result.ResultImagePath" 
+                                                             alt="@result.ServiceName Result" 
+                                                             class="img-fluid rounded shadow"
+                                                             style="max-height: 200px;" />
+                                                    </div>
+                                                }
+
+                                                <!-- Performance Metrics -->
+                                                <div class="row text-center mb-3">
+                                                    <div class="col-4">
+                                                        <div class="border rounded p-2">
+                                                            <small class="text-muted d-block">Cost</small>
+                                                            <strong class="text-primary">$@result.Cost.ToString("F3")</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="border rounded p-2">
+                                                            <small class="text-muted d-block">Speed</small>
+                                                            <strong class="text-info">@result.ProcessingTime.TotalSeconds.ToString("F1")s</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="border rounded p-2">
+                                                            <small class="text-muted d-block">Quality</small>
+                                                            <strong class="text-warning">@result.QualityRating/10</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Technical Details -->
+                                                @if (result.TechnicalDetails.Any())
+                                                {
+                                                    <div class="accordion" id="accordion-@result.ServiceName.Replace(".", "")">
+                                                        <div class="accordion-item">
+                                                            <h2 class="accordion-header">
+                                                                <button class="accordion-button collapsed" type="button" 
+                                                                        data-bs-toggle="collapse" 
+                                                                        data-bs-target="#collapse-@result.ServiceName.Replace(".", "")"
+                                                                        aria-expanded="false">
+                                                                    <small>Technical Details</small>
+                                                                </button>
+                                                            </h2>
+                                                            <div id="collapse-@result.ServiceName.Replace(".", "")" 
+                                                                 class="accordion-collapse collapse"
+                                                                 data-bs-parent="#accordion-@result.ServiceName.Replace(".", "")">
+                                                                <div class="accordion-body">
+                                                                    @foreach (var detail in result.TechnicalDetails)
+                                                                    {
+                                                                        <div class="row">
+                                                                            <div class="col-6"><small class="text-muted">@detail.Key:</small></div>
+                                                                            <div class="col-6"><small>@detail.Value</small></div>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                <!-- Action Buttons -->
+                                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                                    @if (!string.IsNullOrEmpty(result.ResultImagePath))
+                                                    {
+                                                        <a href="@result.ResultImagePath" 
+                                                           class="btn btn-outline-primary btn-sm" 
+                                                           target="_blank">
+                                                            <i class="bi bi-download"></i>
+                                                            Download
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (failedResults.Any())
+                {
+                    <!-- Failed Results -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-x-circle-fill"></i>
+                                Failed Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @foreach (var result in failedResults)
+                            {
+                                <div class="alert alert-danger">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@result.ServiceName</strong>
+                                            <p class="mb-0 mt-1">@result.Message</p>
+                                        </div>
+                                        <span class="badge bg-danger">Failed</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (ViewBag.ComparisonReport != null)
+                {
+                    <!-- Detailed Report -->
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-text"></i>
+                                Detailed Comparison Report
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded" style="font-size: 0.9em; white-space: pre-wrap;">@ViewBag.ComparisonReport</pre>
+                            
+                            <!-- Recommendations Section -->
+                            @if (successfulResults.Count >= 2)
+                            {
+                                var cheapest = successfulResults.OrderBy(r => r.Cost).First();
+                                var fastest = successfulResults.OrderBy(r => r.ProcessingTime).First();
+                                
+                                <div class="mt-3">
+                                    <h6 class="text-info">🎯 Quick Recommendations:</h6>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="bi bi-currency-dollar text-success"></i>
+                                            <strong>Most Cost Effective:</strong> @cheapest.ServiceName at $@cheapest.Cost.ToString("F3") per image
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-speedometer2 text-primary"></i>
+                                            <strong>Fastest Processing:</strong> @fastest.ServiceName at @fastest.ProcessingTime.TotalSeconds.ToString("F1") seconds
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-eye text-warning"></i>
+                                            <strong>Quality Assessment:</strong> Visual inspection of result images recommended
+                                        </li>
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- No Results Available -->
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h3 class="text-muted mt-3">No Test Results Available</h3>
+                    <p class="text-muted">Upload an image to start testing background removal services.</p>
+                    <a asp-action="Index" class="btn btn-primary mt-3">
+                        <i class="bi bi-cloud-upload"></i>
+                        Start Testing
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+pre {
+    max-height: 400px;
+    overflow-y: auto;
+}
+</style>

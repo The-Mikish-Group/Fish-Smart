@@ -6,6 +6,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is "Fish-Smart" - an ASP.NET Core .NET 9 MVC web application with Identity for the Oaks-Village.com HOA (Homeowners Association). The application features a comprehensive Accounts Receivable system with reporting capabilities, user management, document management, and image galleries.
 
+## 🚀 RECENT MAJOR FEATURE: Premium Background Removal System (August 2024)
+
+### Current Status: ✅ PRODUCTION READY 
+**Premium background removal with multiple API services is fully implemented and working.**
+
+#### What's Working:
+- **3 Background Removal Methods Available:**
+  - **Standard (Free)**: AI/ONNX models or color-based detection 
+  - **Remove.bg ($0.50/image)**: Professional API with 5 free/month
+  - **Clipdrop ($0.50/image)**: Stability AI API with free credits available
+
+#### Recent Session Progress (Aug 18, 2024):
+1. ✅ **Fixed UI/UX Issues**: Method selection now at top of modal, no scrolling needed
+2. ✅ **Fixed Confusing Dialog**: Warning modal now shows correct service info based on selection
+3. ✅ **Added Clipdrop Support**: Third premium service option for testing comparison 
+4. ✅ **Backend Integration**: All 3 methods properly routed in ImageViewerController
+5. ✅ **Quality Confirmed**: Premium services producing much better results than AI method
+
+#### Key Implementation Details:
+- **UI Location**: Method selection in `Views/Shared/_BackgroundSelectorModal.cshtml` at top of modal
+- **API Integration**: `Controllers/ImageViewerController.cs` handles `removebg`, `clipdrop`, `ai` methods
+- **Billing System**: Integrated with existing A/R system, auto-invoicing for overages
+- **Service Classes**: `ProductionBackgroundRemovalService.cs` (Remove.bg), `ClipdropService.cs`
+- **Database**: `BackgroundRemovalUsage` table tracks usage and billing
+
+#### Next Session Tasks:
+- **Continue Testing**: User has Remove.bg (5 free/month) + Clipdrop (100 free credits) to compare
+- **Potential Refinements**: Monitor for any edge cases or user feedback
+- **Performance Monitoring**: Check if billing/usage tracking working correctly
+
+#### Important Notes:
+- **User Status**: Has Premium role, can access all methods
+- **API Keys**: Both Remove.bg and Clipdrop configured and working
+- **Quality**: Premium services significantly better than Standard AI method
+- **UI Flow**: Background button → Method selection at top → Select background → Confirmation dialog → Processing
+
 ## Build and Development Commands
 
 ### Building the Application

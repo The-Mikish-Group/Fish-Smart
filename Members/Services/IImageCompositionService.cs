@@ -62,6 +62,18 @@ namespace Members.Services
         /// <param name="imagePath">Path to the original image</param>
         /// <returns>Watermarked image as byte array</returns>
         Task<byte[]?> AddWatermarkToImageAsync(string imagePath);
+
+        /// <summary>
+        /// Composites a transparent subject image (from Remove.bg) with a background
+        /// </summary>
+        /// <param name="transparentSubjectPath">Path to transparent subject image</param>
+        /// <param name="backgroundImagePath">Path to background image</param>
+        /// <param name="outputPath">Path where result should be saved</param>
+        /// <returns>Success status and message</returns>
+        Task<(bool Success, string Message)> CompositeTransparentImageWithBackgroundAsync(
+            string transparentSubjectPath,
+            string backgroundImagePath, 
+            string outputPath);
     }
 
     public class CompositionOptions

@@ -88,6 +88,21 @@ builder.Services.AddScoped<IImageCompositionService, ImageCompositionService>();
 // Register the Model Download Service
 builder.Services.AddHttpClient<IModelDownloadService, ModelDownloadService>();
 
+// Register Background Removal Services
+builder.Services.AddHttpClient<RemoveBgService>();
+builder.Services.AddHttpClient<ClipdropService>();
+builder.Services.AddHttpClient<EraseBgService>();
+builder.Services.AddScoped<BackgroundRemovalTestingService>();
+builder.Services.AddScoped<IBackgroundRemovalBillingService, BackgroundRemovalBillingService>();
+builder.Services.AddScoped<IProductionBackgroundRemovalService, ProductionBackgroundRemovalService>();
+
+// Register Weather Services with timeout configuration
+builder.Services.AddHttpClient<IWeatherService, OpenWeatherMapService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30); // Set 30-second timeout for weather requests
+});
+builder.Services.AddScoped<ICatchWeatherService, CatchWeatherService>();
+
 // Apply filters globally to both MVC and Razor Pages
 builder.Services.Configure<MvcOptions>(options =>
 {
@@ -131,7 +146,7 @@ app.MapRazorPages()
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = ["Admin", "Member", "Manager"];
+    string[] roles = ["Admin", "Member", "Manager", "Premium"];
     foreach (var roleName in roles)
     {
         var roleExist = await roleManager.RoleExistsAsync(roleName);

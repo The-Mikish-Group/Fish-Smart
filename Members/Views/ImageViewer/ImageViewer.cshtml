@@ -10,9 +10,9 @@
     <meta http-equiv="Expires" content="0" />
 }
 
-<div class="container-fluid p-0" style="margin-top: 6rem; height: calc(100vh - 6rem);">
+<div class="container-fluid p-0" style="margin-top: 1rem; height: calc(100vh - 6rem);">
     <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-light bg-dark position-static w-100" style="z-index: 1020;">
+    <nav class="navbar navbar-light position-static w-100" style="z-index: 1020;">
         <div class="container-fluid">
             <!-- Left side: Back button and title -->
             <div class="d-flex align-items-center">
@@ -460,13 +460,14 @@ function updateBackgroundModal(backgrounds) {
     });
 }
 
-async function replaceImageBackground(backgroundId, backgroundUrl) {
+async function replaceImageBackground(backgroundId, backgroundUrl, removalMethod = 'ai') {
     try {
         console.log('Starting background replacement with:', {
             imageType: '@Model.ImageType',
             sourceId: @Model.SourceId,
             backgroundId: backgroundId,
-            backgroundUrl: backgroundUrl
+            backgroundUrl: backgroundUrl,
+            removalMethod: removalMethod
         });
 
         const response = await fetch('/ImageViewer/ReplaceBackground', {
@@ -478,7 +479,8 @@ async function replaceImageBackground(backgroundId, backgroundUrl) {
             body: JSON.stringify({
                 imageType: '@Model.ImageType',
                 sourceId: @Model.SourceId,
-                backgroundId: backgroundId
+                backgroundId: backgroundId,
+                removalMethod: removalMethod
             })
         });
 
@@ -530,29 +532,64 @@ function onBackgroundReplaced(newImageUrl) {
         const timestamp = new Date().getTime();
         const imageUrl = '@Model.ImageUrl';
         
-        // Force hard refresh with cache headers
-        img.onload = function() {
-            console.log('Image reloaded successfully');
-        };
+        // Detect mobile browser for additional cache-busting
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        img.onerror = function() {
-            console.error('Error reloading image, trying again...');
-            setTimeout(() => {
-                img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=true';
-            }, 1000);
-        };
+        // Clear cached image first (mobile browsers are very aggressive with caching)
+        if (isMobile) {
+            // Additional mobile cache-busting techniques
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                console.log('Mobile cache-busting image preloaded');
+                updateMainImage();
+            };
+            tempImg.onerror = function() {
+                console.warn('Mobile cache-busting preload failed, proceeding anyway');
+                updateMainImage();
+            };
+            // Force download new image to cache
+            tempImg.src = imageUrl + '?v=' + timestamp + '&mobile=true&nocache=' + Math.random();
+        } else {
+            updateMainImage();
+        }
         
-        // Set new source with cache-busting
-        img.src = imageUrl + '?v=' + timestamp + '&cache=false';
-        
-        // Additional refresh attempts to ensure the image loads
-        setTimeout(() => {
-            img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=1';
-        }, 1000);
-        
-        setTimeout(() => {
-            img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=2';
-        }, 2000);
+        function updateMainImage() {
+            // Force hard refresh with cache headers
+            img.onload = function() {
+                console.log('Image reloaded successfully');
+                // Mobile browsers: force additional refreshes
+                if (isMobile) {
+                    setTimeout(() => {
+                        console.log('Mobile: Additional cache refresh');
+                        img.src = imageUrl + '?v=' + new Date().getTime() + '&mobile=refresh';
+                    }, 500);
+                }
+            };
+            
+            img.onerror = function() {
+                console.error('Error reloading image, trying again...');
+                setTimeout(() => {
+                    img.src = imageUrl + '?v=' + new Date().getTime() + '&refresh=true&retry=1';
+                }, 1000);
+            };
+            
+            // Set new source with enhanced cache-busting
+            const cacheBuster = isMobile 
+                ? `?v=${timestamp}&mobile=true&cache=false&random=${Math.random()}`
+                : `?v=${timestamp}&cache=false`;
+            img.src = imageUrl + cacheBuster;
+            
+            // Additional refresh attempts to ensure the image loads (more aggressive on mobile)
+            const refreshIntervals = isMobile ? [500, 1000, 2000, 3000] : [1000, 2000];
+            refreshIntervals.forEach((delay, index) => {
+                setTimeout(() => {
+                    const refreshBuster = isMobile 
+                        ? `?v=${new Date().getTime()}&mobile=refresh&attempt=${index + 1}&random=${Math.random()}`
+                        : `?v=${new Date().getTime()}&refresh=${index + 1}`;
+                    img.src = imageUrl + refreshBuster;
+                }, delay);
+            });
+        }
     }
     
     // Show undo button

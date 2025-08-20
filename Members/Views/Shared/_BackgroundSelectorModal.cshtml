@@ -12,6 +12,50 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
+                <!-- Method Selection and Action Buttons - Always at Top -->
+                <div class="bg-primary text-white p-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-2 text-white"><i class="bi bi-gear-fill me-2"></i>Background Removal Method</h6>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="removalMethod" id="methodStandard" value="ai" checked onchange="updateMethodInfo()">
+                                    <label class="form-check-label fw-bold text-white" for="methodStandard">
+                                        <i class="bi bi-cpu-fill me-1"></i>Standard (Free)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="removalMethod" id="methodRemoveBg" value="removebg" onchange="updateMethodInfo()">
+                                    <label class="form-check-label fw-bold text-white" for="methodRemoveBg">
+                                        <i class="bi bi-star-fill me-1 text-warning"></i>Remove.bg ($0.50/image)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="removalMethod" id="methodClipdrop" value="clipdrop" onchange="updateMethodInfo()">
+                                    <label class="form-check-label fw-bold text-white" for="methodClipdrop">
+                                        <i class="bi bi-star-fill me-1 text-info"></i>Clipdrop ($0.50/image)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <!-- Selected Background and Apply Button -->
+                            <div id="selectedBackgroundInfo" style="display: none;">
+                                <small class="text-white-50 d-block mb-2">
+                                    Selected: <span id="selectedBackgroundName" class="fw-bold text-white"></span>
+                                </small>
+                            </div>
+                            <button type="button" id="applyBackgroundBtn" class="btn btn-success btn-lg" onclick="applySelectedBackground()" disabled>
+                                <i class="bi bi-check"></i>
+                                Apply Background
+                            </button>
+                        </div>
+                    </div>
+                    <div id="methodInfoAlert" class="alert alert-info mt-3 mb-0" style="display: none;">
+                        <small id="methodInfoText"></small>
+                    </div>
+                </div>
+
                 <!-- Filter Controls -->
                 <div class="bg-light p-3 border-bottom">
                     <div class="row g-3">
@@ -132,23 +176,7 @@
             </div>
             
             <div class="modal-footer">
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <!-- Selected Background Info -->
-                    <div id="selectedBackgroundInfo" style="display: none;">
-                        <small class="text-muted">
-                            Selected: <span id="selectedBackgroundName" class="fw-bold"></span>
-                        </small>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" id="applyBackgroundBtn" class="btn btn-primary" onclick="applySelectedBackground()" disabled>
-                            <i class="bi bi-check"></i>
-                            Apply Background
-                        </button>
-                    </div>
-                </div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
@@ -195,6 +223,22 @@
 let selectedBackgroundId = null;
 let selectedBackgroundName = '';
 let selectedBackgroundUrl = '';
+
+function updateMethodInfo() {
+    const selectedMethod = document.querySelector('input[name="removalMethod"]:checked').value;
+    const infoAlert = document.getElementById('methodInfoAlert');
+    const infoText = document.getElementById('methodInfoText');
+    
+    if (selectedMethod === 'removebg') {
+        infoAlert.style.display = 'block';
+        infoText.innerHTML = '<i class="bi bi-info-circle me-1"></i><strong>Remove.bg:</strong> Professional-quality background removal API. You have 5 free images per month, then $0.50 per image.';
+    } else if (selectedMethod === 'clipdrop') {
+        infoAlert.style.display = 'block';
+        infoText.innerHTML = '<i class="bi bi-info-circle me-1"></i><strong>Clipdrop:</strong> High-quality background removal by Stability AI. You have free credits available, then $0.50 per image.';
+    } else {
+        infoAlert.style.display = 'none';
+    }
+}
 
 function filterBackgrounds() {
     const categoryFilter = document.getElementById('categoryFilter').value;
@@ -276,23 +320,29 @@ function applySelectedBackground() {
 }
 
 function processBackgroundReplacement() {
+    // Get selected removal method
+    const selectedMethod = document.querySelector('input[name="removalMethod"]:checked').value;
     
     // Show processing indicator
     const applyBtn = document.getElementById('applyBackgroundBtn');
     const originalText = applyBtn.innerHTML;
-    applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    const processingText = selectedMethod === 'premium' ? 
+        '<span class="spinner-border spinner-border-sm me-2"></span>Processing (Premium)...' :
+        '<span class="spinner-border spinner-border-sm me-2"></span>Processing (Standard)...';
+    applyBtn.innerHTML = processingText;
     applyBtn.disabled = true;
     
-    // Call the background replacement function
-    replaceImageBackground(selectedBackgroundId, selectedBackgroundUrl)
+    // Call the background replacement function with method parameter
+    replaceImageBackground(selectedBackgroundId, selectedBackgroundUrl, selectedMethod)
         .then(result => {
             if (result.success) {
                 // Close modal and refresh image
                 const modal = bootstrap.Modal.getInstance(document.getElementById('backgroundSelectorModal'));
                 modal.hide();
                 
-                // Show success message
-                showNotification('Background replaced successfully!', 'success');
+                // Show success message with method info
+                const methodText = selectedMethod === 'premium' ? ' (Premium Quality)' : ' (Standard)';
+                showNotification('Background replaced successfully!' + methodText, 'success');
                 
                 // Reload the image (this will be implemented in the main ImageViewer page)
                 if (typeof onBackgroundReplaced === 'function') {
@@ -315,28 +365,48 @@ function processBackgroundReplacement() {
 }
 
 async function showBackgroundWarningModal(onConfirm) {
-    // Check if AI model is available
-    let isAIAvailable = false;
-    try {
-        const response = await fetch('/ImageViewer/CheckAIModelStatus');
-        const result = await response.json();
-        isAIAvailable = result.isAvailable;
-    } catch (error) {
-        console.error('Error checking AI model status:', error);
+    const selectedMethod = document.querySelector('input[name="removalMethod"]:checked').value;
+    
+    let message, methodTitle, statusClass, statusIcon, methodInfo;
+    
+    if (selectedMethod === 'removebg') {
+        methodTitle = ' (Remove.bg Premium)';
+        statusClass = 'success';
+        statusIcon = 'check-circle-fill';
+        methodInfo = '<div class="alert alert-success mb-3"><strong>✅ Remove.bg API:</strong> Professional-quality background removal with AI precision. Using your Remove.bg credits.</div>';
+    } else if (selectedMethod === 'clipdrop') {
+        methodTitle = ' (Clipdrop Premium)';
+        statusClass = 'success';
+        statusIcon = 'check-circle-fill';
+        methodInfo = '<div class="alert alert-success mb-3"><strong>✅ Clipdrop API:</strong> High-quality background removal by Stability AI. Using your Clipdrop credits.</div>';
+    } else {
+        // Standard AI method - check if local AI model is available
+        let isAIAvailable = false;
+        try {
+            const response = await fetch('/ImageViewer/CheckAIModelStatus');
+            const result = await response.json();
+            isAIAvailable = result.isAvailable;
+        } catch (error) {
+            console.error('Error checking AI model status:', error);
+        }
+        
+        methodTitle = isAIAvailable ? ' (AI Enhanced)' : ' (Basic Mode)';
+        statusClass = isAIAvailable ? 'success' : 'warning';
+        statusIcon = isAIAvailable ? 'check-circle-fill' : 'exclamation-triangle-fill';
+        methodInfo = isAIAvailable ? 
+            '<div class="alert alert-success mb-3"><strong>✅ AI Model Active:</strong> Using U2-Net for professional-quality background removal with precise edge detection.</div>' :
+            '<div class="alert alert-warning mb-3"><strong>⚠️ Basic Mode:</strong> Using color detection. Go to <strong>Fish-Smart Admin → AI Models</strong> to download U2-Net for better results.</div>';
     }
 
     // Use the global modal system if available, otherwise create our own
     if (typeof window.showConfirmModal === 'function') {
-        const message = `
+        message = `
             <div class="mb-3">
-                <h6 class="text-${isAIAvailable ? 'success' : 'warning'}">
-                    <i class="bi bi-${isAIAvailable ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>
-                    Background Replacement ${isAIAvailable ? 'Ready' : 'Quality'}
+                <h6 class="text-${statusClass}">
+                    <i class="bi bi-${statusIcon}"></i>
+                    Background Replacement Ready
                 </h6>
-                ${isAIAvailable ? 
-                    '<div class="alert alert-success mb-3"><strong>✅ AI Model Active:</strong> Using U2-Net for professional-quality background removal with precise edge detection.</div>' :
-                    '<div class="alert alert-warning mb-3"><strong>⚠️ Basic Mode:</strong> Using color detection. Go to <strong>Fish-Smart Admin → AI Models</strong> to download U2-Net for better results.</div>'
-                }
+                ${methodInfo}
                 <div class="alert alert-info mb-3">
                     <strong>Process:</strong> Your original image will be backed up automatically, and you can undo changes if needed.
                 </div>
@@ -358,7 +428,7 @@ async function showBackgroundWarningModal(onConfirm) {
         `;
         
         window.showConfirmModal(message, onConfirm, {
-            title: `Background Replacement${isAIAvailable ? ' (AI Enhanced)' : ' (Basic Mode)'}`,
+            title: `Background Replacement${methodTitle}`,
             confirmText: 'Continue',
             dangerous: false
         });
@@ -403,6 +473,10 @@ document.getElementById('backgroundSelectorModal').addEventListener('shown.bs.mo
     selectedBackgroundUrl = '';
     document.getElementById('selectedBackgroundInfo').style.display = 'none';
     document.getElementById('applyBackgroundBtn').disabled = true;
+    
+    // Reset method selection to Standard (default)
+    document.getElementById('methodStandard').checked = true;
+    updateMethodInfo();
     
     // Remove any previous selections
     document.querySelectorAll('.background-card').forEach(card => {

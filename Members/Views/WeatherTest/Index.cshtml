@@ -1,0 +1,251 @@
+@{
+    ViewData["Title"] = "Weather API Test Page";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-primary">
+                    <i class="bi bi-cloud-sun"></i>
+                    Weather API Test Page
+                </h1>
+                <p class="text-white mb-0">Debug and test weather service functionality</p>
+            </div>
+
+            <!-- Manual Coordinate Testing -->
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-geo-alt"></i> Manual Coordinate Test
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="TestCoordinates">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Latitude</label>
+                                <input type="number" name="latitude" class="form-control" 
+                                       step="any" value="39.003750" placeholder="e.g., 39.003750" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Longitude</label>
+                                <input type="number" name="longitude" class="form-control" 
+                                       step="any" value="-89.106022" placeholder="e.g., -89.106022" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cloud-download"></i> Test Weather Service
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Test Results -->
+            @if (ViewBag.TestResult != null || ViewBag.TestError != null)
+            {
+                <div class="card mb-4 shadow">
+                    <div class="card-header @(ViewBag.TestError != null ? "bg-danger" : "bg-success") text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-@(ViewBag.TestError != null ? "exclamation-triangle" : "check-circle")"></i>
+                            Test Results - @ViewBag.TestCoordinates at @ViewBag.TestTime
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (ViewBag.TestError != null)
+                        {
+                            <div class="alert alert-danger">
+                                <strong>Error:</strong> @ViewBag.TestError
+                            </div>
+                        }
+                        else if (ViewBag.TestResult != null)
+                        {
+                            var weather = ViewBag.TestResult as Members.Services.WeatherData;
+                            if (weather?.IsSuccessful == true)
+                            {
+                                <div class="alert alert-success">
+                                    <strong>Success!</strong> Weather data retrieved successfully.
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <tr><th>Weather Conditions</th><td>@weather.WeatherConditions</td></tr>
+                                        <tr><th>Description</th><td>@weather.Description</td></tr>
+                                        <tr><th>Temperature</th><td>@weather.Temperature.ToString("F1")°F</td></tr>
+                                        <tr><th>Feels Like</th><td>@weather.FeelsLike?.ToString("F1")°F</td></tr>
+                                        <tr><th>Wind Direction</th><td>@weather.WindDirection</td></tr>
+                                        <tr><th>Wind Speed</th><td>@weather.WindSpeed.ToString("F1") mph</td></tr>
+                                        <tr><th>Barometric Pressure</th><td>@weather.BarometricPressure?.ToString("F2") inHg</td></tr>
+                                        <tr><th>Humidity</th><td>@weather.Humidity%</td></tr>
+                                        <tr><th>Visibility</th><td>@weather.Visibility?.ToString("F1") miles</td></tr>
+                                        <tr><th>Request Time</th><td>@weather.RequestTime</td></tr>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <strong>Service Response:</strong> Weather service returned unsuccessful.
+                                    <br><strong>Error Message:</strong> @weather?.ErrorMessage
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Live AJAX Test -->
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning"></i> Live AJAX Test
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Test Latitude</label>
+                            <input type="number" id="testLat" class="form-control" 
+                                   step="any" value="39.003750" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Test Longitude</label>
+                            <input type="number" id="testLng" class="form-control" 
+                                   step="any" value="-89.106022" />
+                        </div>
+                    </div>
+                    <button type="button" id="testAjaxBtn" class="btn btn-info">
+                        <i class="bi bi-cloud-arrow-down"></i> Test AJAX Call
+                    </button>
+                    <button type="button" id="getLocationBtn" class="btn btn-success ms-2">
+                        <i class="bi bi-geo-alt"></i> Get My Location & Test
+                    </button>
+                </div>
+            </div>
+
+            <!-- AJAX Results -->
+            <div class="card mb-4 shadow" id="ajaxResults" style="display: none;">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-code"></i> AJAX Response
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <pre id="ajaxOutput" class="bg-light p-3 rounded"></pre>
+                </div>
+            </div>
+
+            <!-- Console Log Display -->
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-terminal"></i> Console Debug Log
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="bg-dark text-light p-3 rounded" id="consoleLog" style="font-family: monospace; height: 200px; overflow-y: auto;">
+                        Ready for testing...
+                    </div>
+                    <button type="button" id="clearLogBtn" class="btn btn-sm btn-outline-secondary mt-2">
+                        Clear Log
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Custom console logging for debugging
+        const consoleLog = document.getElementById('consoleLog');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addLogEntry(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'text-danger' : type === 'warn' ? 'text-warning' : 'text-light';
+            consoleLog.innerHTML += `<div class="${color}">[${timestamp}] ${message}</div>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLogEntry(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLogEntry(args.join(' '), 'error');
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Weather Test Page loaded');
+            
+            // Test AJAX call
+            document.getElementById('testAjaxBtn').addEventListener('click', async function() {
+                const lat = document.getElementById('testLat').value;
+                const lng = document.getElementById('testLng').value;
+                
+                console.log(`Testing AJAX call with coordinates: ${lat}, ${lng}`);
+                
+                try {
+                    const response = await fetch(`/WeatherTest/GetWeatherTest?lat=${lat}&lng=${lng}`);
+                    console.log(`AJAX Response status: ${response.status}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('AJAX Response data received');
+                        
+                        document.getElementById('ajaxResults').style.display = 'block';
+                        document.getElementById('ajaxOutput').textContent = JSON.stringify(data, null, 2);
+                        
+                        if (data.isSuccessful) {
+                            console.log(`Weather success: ${data.weatherConditions}, ${data.temperature}°F`);
+                        } else {
+                            console.log(`Weather failed: ${data.errorMessage}`);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.error(`AJAX failed with status ${response.status}: ${errorText}`);
+                    }
+                } catch (error) {
+                    console.error(`AJAX exception: ${error.message}`);
+                }
+            });
+
+            // Get current location and test
+            document.getElementById('getLocationBtn').addEventListener('click', function() {
+                if (navigator.geolocation) {
+                    console.log('Requesting current location...');
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            const lat = position.coords.latitude.toFixed(6);
+                            const lng = position.coords.longitude.toFixed(6);
+                            console.log(`Location obtained: ${lat}, ${lng}`);
+                            
+                            document.getElementById('testLat').value = lat;
+                            document.getElementById('testLng').value = lng;
+                            
+                            // Automatically test with current location
+                            document.getElementById('testAjaxBtn').click();
+                        },
+                        function(error) {
+                            console.error(`Geolocation error: ${error.message}`);
+                        }
+                    );
+                } else {
+                    console.error('Geolocation not supported');
+                }
+            });
+
+            // Clear log
+            document.getElementById('clearLogBtn').addEventListener('click', function() {
+                consoleLog.innerHTML = 'Log cleared...';
+            });
+        });
+    </script>
+}

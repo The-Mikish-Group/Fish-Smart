@@ -14,6 +14,7 @@ namespace Members.Controllers
         UserManager<IdentityUser> userManager,
         IImageCompositionService imageCompositionService,
         ISegmentationService segmentationService,
+        IProductionBackgroundRemovalService productionBackgroundRemovalService,
         IWebHostEnvironment environment,
         ILogger<ImageViewerController> logger) : Controller
     {
@@ -21,6 +22,7 @@ namespace Members.Controllers
         private readonly UserManager<IdentityUser> _userManager = userManager;
         private readonly IImageCompositionService _imageCompositionService = imageCompositionService;
         private readonly ISegmentationService _segmentationService = segmentationService;
+        private readonly IProductionBackgroundRemovalService _productionBackgroundRemovalService = productionBackgroundRemovalService;
         private readonly IWebHostEnvironment _environment = environment;
         private readonly ILogger<ImageViewerController> _logger = logger;
 
@@ -335,15 +337,106 @@ namespace Members.Controllers
                     return Json(new { success = false, message = "Failed to create backup before processing" });
                 }
 
-                // Generate temporary output path to avoid overwriting original during processing
-                var tempFileName = $"{fileName}_temp_processed{extension}";
-                var tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, tempFileName);
+                // Choose processing method based on request
+                bool useRemoveBg = request.RemovalMethod == "removebg";
+                bool useClipdrop = request.RemovalMethod == "clipdrop";
+                string tempOutputPath = "";
+                bool processingSuccess = false;
+                string processingMessage = "";
 
-                // Perform background replacement to temporary file
-                var result = await _imageCompositionService.ReplaceBackgroundAsync(
-                    originalImagePath, backgroundImagePath, tempOutputPath);
+                if (useRemoveBg)
+                {
+                    // Use professional Remove.bg service
+                    var result = await _productionBackgroundRemovalService.ProcessBackgroundRemovalAsync(userId!, originalImagePath);
+                    var success = result.success;
+                    var processedImage = result.processedImage;
+                    var message = result.message;
+                    
+                    if (success && processedImage != null)
+                    {
+                        // Remove.bg gives us the subject with transparent background, now we need to composite it with new background
+                        tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, $"{fileName}_removebg_temp{extension}");
+                        await System.IO.File.WriteAllBytesAsync(tempOutputPath, processedImage);
+                        
+                        // Now composite the transparent subject with the new background
+                        var finalOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, $"{fileName}_final_temp{extension}");
+                        var (Success, Message) = await _imageCompositionService.CompositeTransparentImageWithBackgroundAsync(
+                            tempOutputPath, backgroundImagePath, finalOutputPath);
+                        
+                        if (Success)
+                        {
+                            tempOutputPath = finalOutputPath;
+                            processingSuccess = true;
+                            processingMessage = $"Background replaced successfully using Remove.bg! {message}";
+                        }
+                        else
+                        {
+                            processingSuccess = false;
+                            processingMessage = $"Remove.bg worked but compositing failed: {Message}";
+                        }
+                    }
+                    else
+                    {
+                        processingSuccess = false;
+                        processingMessage = message;
+                    }
+                }
+                else if (useClipdrop)
+                {
+                    // Use Clipdrop service for testing
+                    var clipdropService = HttpContext.RequestServices.GetRequiredService<ClipdropService>();
+                    var clipdropResult = await clipdropService.RemoveBackgroundAsync(originalImagePath);
+                    
+                    if (clipdropResult.Success && clipdropResult.ProcessedImageBytes != null)
+                    {
+                        // Clipdrop gives us the subject with transparent background, now we need to composite it with new background
+                        tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, $"{fileName}_clipdrop_temp{extension}");
+                        await System.IO.File.WriteAllBytesAsync(tempOutputPath, clipdropResult.ProcessedImageBytes);
+                        
+                        // Now composite the transparent subject with the new background
+                        var finalOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, $"{fileName}_final_temp{extension}");
+                        var (Success, Message) = await _imageCompositionService.CompositeTransparentImageWithBackgroundAsync(
+                            tempOutputPath, backgroundImagePath, finalOutputPath);
+                        
+                        if (Success)
+                        {
+                            tempOutputPath = finalOutputPath;
+                            processingSuccess = true;
+                            processingMessage = $"Background replaced successfully using Clipdrop! {clipdropResult.Message}";
+                        }
+                        else
+                        {
+                            processingSuccess = false;
+                            processingMessage = $"Clipdrop worked but compositing failed: {Message}";
+                        }
+                    }
+                    else
+                    {
+                        processingSuccess = false;
+                        processingMessage = clipdropResult.Message;
+                    }
+                }
+                else
+                {
+                    // Use existing AI/color-based method (free)
+                    tempOutputPath = Path.Combine(Path.GetDirectoryName(originalImagePath)!, $"{fileName}_ai_temp{extension}");
+                    var result = await _imageCompositionService.ReplaceBackgroundAsync(originalImagePath, backgroundImagePath, tempOutputPath);
+                    var Success = result.Success;
+                    var Message = result.Message;
+                    
+                    if (Success)
+                    {
+                        processingSuccess = true;
+                        processingMessage = $"Background replaced successfully using AI method! {Message}";
+                    }
+                    else
+                    {
+                        processingSuccess = false;
+                        processingMessage = Message;
+                    }
+                }
 
-                if (result.Success)
+                if (processingSuccess)
                 {
                     try
                     {
@@ -358,8 +451,9 @@ namespace Members.Controllers
                             // No need to update database URL since we kept the same path
                             return Json(new { 
                                 success = true, 
-                                message = "Background replaced successfully",
-                                newImageUrl = GetImageUrlFromPath(originalImagePath)
+                                message = processingMessage,
+                                newImageUrl = GetImageUrlFromPath(originalImagePath),
+                                method = useRemoveBg ? "premium" : "ai"
                             });
                         }
                         else
@@ -380,7 +474,7 @@ namespace Members.Controllers
                     {
                         try { System.IO.File.Delete(tempOutputPath); } catch { }
                     }
-                    return Json(new { success = false, message = result.Message });
+                    return Json(new { success = false, message = processingMessage });
                 }
             }
             catch (Exception ex)
@@ -392,7 +486,7 @@ namespace Members.Controllers
                     success = false, 
                     message = $"Error processing image: {ex.Message}",
                     errorType = ex.GetType().Name,
-                    stackTrace = ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace.Length))
+                    stackTrace = ex.StackTrace?[..Math.Min(500, ex.StackTrace.Length)]
                 });
             }
         }
@@ -519,7 +613,7 @@ namespace Members.Controllers
             try
             {
                 var isAvailable = _segmentationService?.IsAISegmentationAvailable() ?? false;
-                return Json(new { isAvailable = isAvailable });
+                return Json(new { isAvailable });
             }
             catch (Exception)
             {
@@ -581,7 +675,7 @@ namespace Members.Controllers
             }
         }
 
-        private Task DeletePhysicalFile(string imageUrl)
+        private static Task DeletePhysicalFile(string imageUrl)
         {
             try
             {
@@ -698,7 +792,7 @@ namespace Members.Controllers
             }
         }
 
-        private string GetImageUrlFromPath(string physicalPath)
+        private static string GetImageUrlFromPath(string physicalPath)
         {
             try
             {
@@ -794,13 +888,13 @@ namespace Members.Controllers
                     {
                         WebRoot = Directory.Exists(_environment.WebRootPath) 
                             ? Directory.GetDirectories(_environment.WebRootPath).Take(10).ToArray()
-                            : new string[] { "WebRoot not found" },
+                            : ["WebRoot not found"],
                         ContentRoot = Directory.Exists(_environment.ContentRootPath)
                             ? Directory.GetDirectories(_environment.ContentRootPath).Take(10).ToArray()
-                            : new string[] { "ContentRoot not found" },
+                            : ["ContentRoot not found"],
                         AppRoot = Directory.Exists("/app")
                             ? Directory.GetDirectories("/app").Take(10).ToArray()
-                            : new string[] { "/app not found" }
+                            : ["/app not found"]
                     }
                 };
 
@@ -835,11 +929,11 @@ namespace Members.Controllers
                         {
                             c.Id,
                             c.PhotoUrl,
-                            c.Species.CommonName,
+                            CommonName = c.Species != null ? c.Species.CommonName : "Unknown",
                             c.Size,
                             c.CatchTime,
-                            SessionId = c.SessionId,
-                            UserId = c.Session.UserId
+                            c.SessionId,
+                            UserId = c.Session != null ? c.Session.UserId : string.Empty
                         })
                         .FirstOrDefaultAsync();
 
@@ -887,7 +981,7 @@ namespace Members.Controllers
                 return Json(new
                 {
                     Error = ex.Message,
-                    StackTrace = ex.StackTrace
+                    ex.StackTrace
                 });
             }
         }
@@ -903,7 +997,7 @@ namespace Members.Controllers
         public string? Description { get; set; }
         public string ReturnUrl { get; set; } = string.Empty;
         public bool CanEdit { get; set; }
-        public Dictionary<string, string> Metadata { get; set; } = new();
+        public Dictionary<string, string> Metadata { get; set; } = [];
     }
 
     // Request models for AJAX endpoints
@@ -912,6 +1006,7 @@ namespace Members.Controllers
         public string ImageType { get; set; } = string.Empty;
         public int SourceId { get; set; }
         public int BackgroundId { get; set; }
+        public string RemovalMethod { get; set; } = "ai"; // "ai" (current system), "removebg" (Remove.bg), or "clipdrop" (Clipdrop)
     }
 
     public class ValidateImageRequest

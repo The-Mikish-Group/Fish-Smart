@@ -8,349 +8,331 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="text-primary">
-                        <i class="bi bi-journal-text"></i>
-                        Fishing Session Details
-                    </h1>
-                    <p class="text-muted mb-0">@Model.SessionDate.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")</p>
-                </div>
-                <div>
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i>
-                        Back to Sessions
+            <div class="text-center mb-4">
+                <h1 class="text-primary">
+                    <i class="bi bi-journal-text"></i>
+                    Fishing Session Details
+                </h1>
+                <p class="text-white mb-0">@Model.SessionDate.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mb-4">
+                <div class="btn-group" role="group">
+                    <a asp-action="Index" class="btn btn-sm btn-secondary rounded-2 shadow me-2" title="Back to Sessions">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-sm btn-success rounded-2 shadow me-1" title="Add Catch">
+                        <i class="bi bi-plus-circle"></i> Add Catch
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning rounded-2 shadow me-1" title="Edit Session">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a asp-action="EndSession" asp-route-id="@Model.Id" class="btn btn-sm btn-info rounded-2 shadow me-1" title="End Session">
+                        <i class="bi bi-stop-circle"></i> End Session
                     </a>
                 </div>
             </div>
 
-            <div class="row">
-                <!-- Main Session Info -->
-                <div class="col-md-8">
-                    <!-- Session Information Card -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-info-circle"></i>
-                                Session Information
-                            </h5>
+            <!-- Session Information Card -->
+            <div class="card mx-1 mb-4 mt-1 p-1 shadow">
+                <div class="d-flex justify-content-between align-items-center mb-3 ms-2">
+                    <h5 class="text-black my-2">
+                        <i class="bi bi-journal-text"></i> 
+                        Session Information
+                        @if (ViewBag.Catches != null)
+                        {
+                            var catches = (List<Members.Models.Catch>)ViewBag.Catches;
+                            <span class="badge bg-success ms-2">@catches.Count catches</span>
+                        }
+                    </h5>
+                </div>
+                
+                <!-- Vertical Layout for Session Info -->
+                <div class="px-2">
+                    <!-- Basic Info -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Date & Time:</strong> @Model.SessionDate.ToString("MMM dd, yyyy 'at' h:mm tt")
                         </div>
-                        <div class="card-body">
-                            <!-- Basic Info -->
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>Date & Time:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @Model.SessionDate.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>Water Type:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @switch (Model.WaterType)
-                                    {
-                                        case "Fresh":
-                                            <span class="badge bg-info">
-                                                <i class="bi bi-droplet"></i> Freshwater
-                                            </span>
-                                            break;
-                                        case "Salt":
-                                            <span class="badge bg-primary">
-                                                <i class="bi bi-water"></i> Saltwater
-                                            </span>
-                                            break;
-                                        default:
-                                            <span class="badge bg-secondary">@Model.WaterType</span>
-                                            break;
-                                    }
-                                </div>
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(Model.LocationName))
+                        <div class="col-md-6">
+                            <strong>Water Type:</strong>
+                            @switch (Model.WaterType)
                             {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4">
-                                        <strong>Location:</strong>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <i class="bi bi-geo-alt text-danger"></i>
-                                        @Model.LocationName
-                                    </div>
-                                </div>
-                            }
-
-                            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4">
-                                        <strong>GPS Coordinates:</strong>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <small class="text-muted">
-                                            @Model.Latitude.Value.ToString("F6"), @Model.Longitude.Value.ToString("F6")
-                                            <a href="https://www.google.com/maps?q=@Model.Latitude.Value,@Model.Longitude.Value" 
-                                               target="_blank" class="btn btn-sm btn-primary ms-2">
-                                                <i class="bi bi-map"></i> View on Map
-                                            </a>
-                                        </small>
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- Equipment -->
-                            @if (Model.RodReelSetup != null)
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4">
-                                        <strong>Rod & Reel:</strong>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        @Model.RodReelSetup.Name (@Model.RodReelSetup.Type)
-                                        @if (!string.IsNullOrEmpty(Model.RodReelSetup.Brand))
-                                        {
-                                            <small class="text-muted">- @Model.RodReelSetup.Brand</small>
-                                        }
-                                    </div>
-                                </div>
-                            }
-
-                            @if (Model.PrimaryBaitLure != null)
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4">
-                                        <strong>Primary Bait/Lure:</strong>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        @Model.PrimaryBaitLure.Name (@Model.PrimaryBaitLure.Type)
-                                        @if (!string.IsNullOrEmpty(Model.PrimaryBaitLure.Brand))
-                                        {
-                                            <small class="text-muted">- @Model.PrimaryBaitLure.Brand</small>
-                                        }
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- Session Notes -->
-                            @if (!string.IsNullOrEmpty(Model.Notes))
-                            {
-                                <hr>
-                                <h6 class="text-muted">
-                                    <i class="bi bi-chat-square-text"></i>
-                                    Session Notes
-                                </h6>
-                                <div class="bg-light p-3 rounded">
-                                    <p class="mb-0">@Model.Notes</p>
-                                </div>
+                                case "Fresh":
+                                    <span class="badge bg-success"><i class="bi bi-droplet"></i> Freshwater</span>
+                                    break;
+                                case "Salt":
+                                    <span class="badge bg-primary"><i class="bi bi-water"></i> Saltwater</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.WaterType</span>
+                                    break;
                             }
                         </div>
                     </div>
 
-                    <!-- Environmental Data Card (Premium Features) -->
-                    @if (!string.IsNullOrEmpty(Model.WeatherConditions) || !string.IsNullOrEmpty(Model.TideConditions) || !string.IsNullOrEmpty(Model.MoonPhase))
-                    {
-                        <div class="card shadow mb-4 border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-star-fill"></i>
-                                    Environmental Data (Premium)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                @if (!string.IsNullOrEmpty(Model.WeatherConditions))
-                                {
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4">
-                                            <strong>Weather:</strong>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            @Model.WeatherConditions
-                                            @if (Model.Temperature.HasValue)
-                                            {
-                                                <span class="badge bg-info ms-2">@Model.Temperature.Value°F</span>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-
-                                @if (!string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue)
-                                {
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4">
-                                            <strong>Wind:</strong>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            @if (!string.IsNullOrEmpty(Model.WindDirection))
-                                            {
-                                                @Model.WindDirection
-                                            }
-                                            @if (Model.WindSpeed.HasValue)
-                                            {
-                                                <span class="badge bg-secondary ms-2">@Model.WindSpeed.Value mph</span>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-
-                                @if (!string.IsNullOrEmpty(Model.TideConditions))
-                                {
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4">
-                                            <strong>Tides:</strong>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            @Model.TideConditions
-                                        </div>
-                                    </div>
-                                }
-
-                                @if (!string.IsNullOrEmpty(Model.MoonPhase))
-                                {
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4">
-                                            <strong>Moon Phase:</strong>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            @Model.MoonPhase
-                                        </div>
-                                    </div>
-                                }
-
-                                @if (Model.BarometricPressure.HasValue)
-                                {
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4">
-                                            <strong>Pressure:</strong>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            @Model.BarometricPressure.Value inHg
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                <!-- Sidebar -->
-                <div class="col-md-4">
-                    <!-- Quick Stats Card -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-bar-chart-fill"></i>
-                                Session Summary
-                            </h5>
-                        </div>
-                        <div class="card-body text-center">
-                            @if (ViewBag.Catches != null)
+                    <!-- Location -->
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <strong>Location:</strong>
+                            @if (!string.IsNullOrEmpty(Model.LocationName))
                             {
-                                var catches = (List<Members.Models.Catch>)ViewBag.Catches;
-                                <div class="row">
-                                    <div class="col-12">
-                                        <h2 class="text-success mb-0">@catches.Count</h2>
-                                        <small class="text-muted">Fish Caught</small>
-                                    </div>
-                                </div>
-                                
-                                @if (catches.Any())
+                                <i class="bi bi-geo-alt text-danger"></i> @Model.LocationName
+                                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
                                 {
-                                    <hr>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <strong>@catches.Select(c => c.Species?.CommonName).Distinct().Count()</strong>
-                                            <br><small class="text-muted">Species</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <strong>@(catches.Any(c => c.Size > 0) ? catches.Where(c => c.Size > 0).Max(c => c.Size).ToString("F1") + "\"" : "N/A")</strong>
-                                            <br><small class="text-muted">Largest</small>
-                                        </div>
-                                    </div>
+                                    <small class="text-secondary ms-2">
+                                        (@Model.Latitude.Value.ToString("F4"), @Model.Longitude.Value.ToString("F4"))
+                                        <a href="https://www.google.com/maps/@@(@Model.Latitude.Value),@(@Model.Longitude.Value),50m/data=!3m1!1e3" 
+                                           target="_blank" class="btn btn-sm btn-primary ms-2">
+                                            <i class="bi bi-map"></i> Map
+                                        </a>
+                                    </small>
                                 }
                             }
                             else
                             {
-                                <h2 class="text-muted mb-0">0</h2>
-                                <small class="text-muted">Fish Caught</small>
+                                <span class="text-secondary">No location specified</span>
                             }
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="card shadow">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">
-                                <i class="bi bi-gear"></i>
-                                Actions
-                            </h6>
+                    <!-- Equipment -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Rod & Reel:</strong>
+                            @if (Model.RodReelSetup != null)
+                            {
+                                <text>@Model.RodReelSetup.Name (@Model.RodReelSetup.Type)</text>
+                                @if (!string.IsNullOrEmpty(Model.RodReelSetup.Brand))
+                                {
+                                    <small class="text-secondary"> - @Model.RodReelSetup.Brand</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not specified</span>
+                            }
                         </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-success">
-                                    <i class="bi bi-plus-circle"></i>
-                                    Add Catch
-                                </a>
-                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                                    <i class="bi bi-pencil"></i>
-                                    Edit Session
-                                </a>
-                                <a asp-action="EndSession" asp-route-id="@Model.Id" class="btn btn-info">
-                                    <i class="bi bi-stop-circle"></i>
-                                    End Session
-                                </a>
-                                <hr>
-                                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
-                                    <i class="bi bi-trash"></i>
-                                    Delete Session
-                                </a>
-                            </div>
+                        <div class="col-md-6">
+                            <strong>Primary Bait/Lure:</strong>
+                            @if (Model.PrimaryBaitLure != null)
+                            {
+                                <text>@Model.PrimaryBaitLure.Name (@Model.PrimaryBaitLure.Type)</text>
+                                @if (!string.IsNullOrEmpty(Model.PrimaryBaitLure.Brand))
+                                {
+                                    <small class="text-secondary"> - @Model.PrimaryBaitLure.Brand</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not specified</span>
+                            }
                         </div>
                     </div>
+
+                    <!-- Weather -->
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <strong>Weather:</strong>
+                            @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || !string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue || Model.BarometricPressure.HasValue)
+                            {
+                                <div class="d-flex flex-wrap gap-1 align-items-center mt-1">
+                                    @if (!string.IsNullOrEmpty(Model.WeatherConditions))
+                                    {
+                                        <span class="badge bg-light text-dark">@Model.WeatherConditions</span>
+                                    }
+                                    @if (Model.Temperature.HasValue)
+                                    {
+                                        <span class="badge bg-info">@Model.Temperature.Value.ToString("F0")°F</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">Wind: @Model.WindDirection @(Model.WindSpeed.HasValue ? $"{Model.WindSpeed.Value:F0} mph" : "")</span>
+                                    }
+                                    @if (Model.BarometricPressure.HasValue)
+                                    {
+                                        <span class="badge bg-warning text-dark">@Model.BarometricPressure.Value.ToString("F1") inHg</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.TideConditions))
+                                    {
+                                        <span class="badge bg-info">Tide: @Model.TideConditions</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.MoonPhase))
+                                    {
+                                        <span class="badge bg-dark">Moon: @Model.MoonPhase</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-secondary"><i class="bi bi-cloud-slash"></i> No weather data available</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Session Summary -->
+                    @if (ViewBag.Catches != null)
+                    {
+                        var catches = (List<Members.Models.Catch>)ViewBag.Catches;
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Session Summary:</strong>
+                                <div class="d-flex flex-wrap gap-1 align-items-center mt-1">
+                                    <span class="badge bg-success">@catches.Count Fish Caught</span>
+                                    @if (catches.Any())
+                                    {
+                                        <span class="badge bg-info">@catches.Select(c => c.Species?.CommonName).Distinct().Count() Species</span>
+                                        @if (catches.Any(c => c.Size > 0))
+                                        {
+                                            <span class="badge bg-warning text-dark">Largest: @catches.Where(c => c.Size > 0).Max(c => c.Size).ToString("F1")"</span>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Notes -->
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Notes:</strong>
+                                <div class="bg-light p-2 rounded mt-1">
+                                    <small>@Model.Notes</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 
-            <!-- Catches List -->
+            <!-- Catches Table -->
             @if (ViewBag.Catches != null)
             {
                 var catches = (List<Members.Models.Catch>)ViewBag.Catches;
                 if (catches.Any())
                 {
-                    <div class="card shadow mt-4">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-collection"></i>
+                    <div class="card mx-1 mb-4 mt-1 p-1 shadow">
+                        <div class="d-flex justify-content-between align-items-center mb-0 ms-2">
+                            <h5 class="text-black my-2">
+                                <i class="bi bi-collection"></i> 
                                 Catches from this Session (@catches.Count)
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                @foreach (var fishCatch in catches)
-                                {
-                                    <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="card h-100 border-info">
-                                            <div class="card-body">
-                                                <h6 class="card-title">@fishCatch.Species?.CommonName</h6>
-                                                <p class="card-text mb-1">
-                                                    <strong>Size:</strong> @fishCatch.Size.ToString("F1")"
-                                                    @if (fishCatch.Weight.HasValue)
-                                                    {
-                                                        <br><strong>Weight:</strong> @fishCatch.Weight.Value.ToString("F1") <text>lbs</text>
-                                                    }
-                                                </p>
+
+                        <!-- Catches Table -->
+                        <div class="table-responsive">
+                            <table class="w-100 mb-0" id="catchesTable">
+                                <thead>
+                                    <tr>
+                                        <th class="text-nowrap">Time</th>
+                                        <th class="text-nowrap">Species</th>
+                                        <th class="text-nowrap text-center">Length</th>
+                                        <th class="text-nowrap text-center">Weight</th>
+                                        <th class="text-nowrap">Weather</th>
+                                        <th class="text-nowrap text-center">View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var fishCatch in catches)
+                                    {
+                                        <tr class="@(i % 2 == 0 ? "row-even" : "row-odd") catch-row" data-catch-id="@fishCatch.Id" style="cursor: pointer;">
+                                            <!-- Time -->
+                                            <td class="text-nowrap py-2 ps-2">
                                                 @if (fishCatch.CatchTime.HasValue)
                                                 {
-                                                    <small class="text-muted">
-                                                        Caught at @fishCatch.CatchTime.Value.ToString("h:mm tt")
-                                                    </small>
+                                                    <div>@fishCatch.CatchTime.Value.ToString("h:mm tt")</div>
+                                                    <small class="text-secondary">@fishCatch.CatchTime.Value.ToString("MMM dd")</small>
                                                 }
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+                                                else
+                                                {
+                                                    <span class="text-secondary">Unknown</span>
+                                                }
+                                            </td>
+
+                                            <!-- Species -->
+                                            <td class="text-nowrap py-2">
+                                                <div class="fw-bold">@(fishCatch.Species?.CommonName ?? "Unknown")</div>
+                                                @if (!string.IsNullOrEmpty(fishCatch.Species?.ScientificName))
+                                                {
+                                                    <small class="text-secondary">@fishCatch.Species.ScientificName</small>
+                                                }
+                                            </td>
+
+                                            <!-- Length -->
+                                            <td class="text-nowrap text-center py-2">
+                                                <span class="badge bg-info">@fishCatch.Size.ToString("F1")"</span>
+                                            </td>
+
+                                            <!-- Weight -->
+                                            <td class="text-nowrap text-center py-2">
+                                                @if (fishCatch.Weight.HasValue)
+                                                {
+                                                    <span class="badge bg-success">@fishCatch.Weight.Value.ToString("F1") lbs</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-secondary">-</span>
+                                                }
+                                            </td>
+
+                                            <!-- Weather -->
+                                            <td class="text-nowrap py-2">
+                                                @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || Model.BarometricPressure.HasValue || !string.IsNullOrEmpty(Model.TideConditions))
+                                                {
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        @if (!string.IsNullOrEmpty(Model.WeatherConditions))
+                                                        {
+                                                            <small class="badge bg-light text-dark">@Model.WeatherConditions</small>
+                                                        }
+                                                        @if (Model.Temperature.HasValue)
+                                                        {
+                                                            <small class="badge bg-info">@Model.Temperature.Value.ToString("F0")°F</small>
+                                                        }
+                                                        @if (Model.BarometricPressure.HasValue)
+                                                        {
+                                                            <small class="badge bg-warning text-dark">@Model.BarometricPressure.Value.ToString("F1") inHg</small>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(Model.TideConditions))
+                                                        {
+                                                            <small class="badge bg-info">Tide: @Model.TideConditions</small>
+                                                        }
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-secondary">No data</small>
+                                                }
+                                            </td>
+
+                                            <!-- View Button -->
+                                            <td class="text-nowrap text-center py-2">
+                                                <a href="#" class="btn btn-sm btn-info view-catch-btn" data-catch-id="@fishCatch.Id" title="View Catch Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        i++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card mx-1 mb-4 mt-1 p-1 shadow">
+                        <div class="text-center py-4">
+                            <i class="bi bi-collection text-secondary display-4"></i>
+                            <p class="text-secondary mt-2">No catches logged for this session yet.</p>
+                            <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Log Your First Catch
+                            </a>
                         </div>
                     </div>
                 }
@@ -358,3 +340,54 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle clickable catch rows
+            const catchRows = document.querySelectorAll('.catch-row');
+            
+            catchRows.forEach(function(row) {
+                row.addEventListener('click', function(e) {
+                    // Don't navigate if clicking on the view button directly
+                    if (e.target.closest('.view-catch-btn')) {
+                        return;
+                    }
+                    
+                    const catchId = this.dataset.catchId;
+                    if (catchId) {
+                        // Navigate to catch details - adjust URL as needed
+                        window.location.href = `/Catch/Details/${catchId}`;
+                    }
+                });
+                
+                // Add hover effect
+                row.addEventListener('mouseenter', function() {
+                    if (!this.querySelector('.view-catch-btn:hover')) {
+                        this.style.backgroundColor = 'var(--bs-primary-bg-subtle, #cff4fc)';
+                    }
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+            
+            // Handle view catch buttons
+            const viewButtons = document.querySelectorAll('.view-catch-btn');
+            
+            viewButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const catchId = this.dataset.catchId;
+                    if (catchId) {
+                        // Navigate to catch details - adjust URL as needed
+                        window.location.href = `/Catch/Details/${catchId}`;
+                    }
+                });
+            });
+        });
+    </script>
+}

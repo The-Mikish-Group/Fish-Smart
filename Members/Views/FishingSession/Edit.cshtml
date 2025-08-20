@@ -14,7 +14,7 @@
                         <i class="bi bi-pencil-square"></i>
                         Edit Fishing Session
                     </h1>
-                    <p class="text-muted mb-0">Update your fishing session details</p>
+                    <p class="text-white mb-0">Update your fishing session details</p>
                 </div>
                 <div>
                     <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
@@ -207,10 +207,16 @@
 
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i>
-                                Cancel
-                            </a>
+                            <div>
+                                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary me-2">
+                                    <i class="bi bi-x-circle"></i>
+                                    Cancel
+                                </a>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteSessionModal">
+                                    <i class="bi bi-trash"></i>
+                                    Delete Session
+                                </button>
+                            </div>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle"></i>
                                 Save Changes
@@ -218,6 +224,52 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteSessionModal" tabindex="-1" aria-labelledby="deleteSessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteSessionModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Delete Fishing Session
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle-fill text-warning display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-2">Are you sure you want to delete this fishing session?</h6>
+                        <p class="mb-2">This action will permanently delete:</p>
+                        <ul class="mb-3">
+                            <li>The fishing session record</li>
+                            <li>All associated catch records</li>
+                            <li>Any photos uploaded for this session</li>
+                            <li>All environmental and weather data</li>
+                        </ul>
+                        <div class="alert alert-warning d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small><strong>This action cannot be undone!</strong></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                    <i class="bi bi-trash"></i>
+                    Yes, Delete Session
+                </a>
             </div>
         </div>
     </div>

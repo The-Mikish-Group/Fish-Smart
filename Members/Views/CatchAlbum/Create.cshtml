@@ -62,9 +62,11 @@
 
                         <!-- Privacy Setting -->
                         <div class="mb-4">
-                            <div class="form-check">
-                                <input asp-for="IsPublic" class="form-check-input" type="checkbox" />
-                                <label asp-for="IsPublic" class="form-check-label">
+                            <div class="form-check" style="min-height: 1.5rem;">
+                                <input asp-for="IsPublic" class="form-check-input" type="checkbox" id="isPublicCheckbox" 
+                                       style="transform: scale(1.2); margin-top: 0.125rem;" />
+                                <label asp-for="IsPublic" class="form-check-label" for="isPublicCheckbox" 
+                                       style="cursor: pointer; padding-left: 0.5rem; line-height: 1.5;">
                                     <i class="bi bi-globe"></i> Make this album public
                                 </label>
                                 <div class="form-text">Public albums can be viewed by other Fish-Smart users (currently disabled)</div>

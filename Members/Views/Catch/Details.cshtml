@@ -1,0 +1,262 @@
+@model Members.Models.Catch
+
+@{
+    ViewData["Title"] = "Catch Details";
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header with Navigation -->
+            <div class="text-center mb-4">
+                <h1 class="text-info">
+                    <i class="bi bi-fish"></i>
+                    Catch Details
+                </h1>
+                @if (Model.Species != null)
+                {
+                    <p class="mb-0">
+                        <strong>@Model.Species.CommonName</strong>
+                        @if (!string.IsNullOrEmpty(Model.Species.ScientificName))
+                        {
+                            <text> (@Model.Species.ScientificName)</text>
+                        }
+                    </p>
+                }
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="text-center mb-4">
+                <div class="btn-group" role="group">
+                    @if (!string.IsNullOrEmpty(returnUrl))
+                    {
+                        <a href="@returnUrl" class="btn btn-sm btn-secondary rounded-2 shadow me-2" title="Back">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                    }
+                    else if (Model.Session != null)
+                    {
+                        <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-sm btn-secondary rounded-2 shadow me-2" title="Back to Session">
+                            <i class="bi bi-arrow-left"></i> Back to Session
+                        </a>
+                    }
+                    
+                    <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="btn btn-sm btn-warning rounded-2 shadow me-1" title="Edit Catch">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    
+                    @if (!string.IsNullOrEmpty(Model.PhotoUrl))
+                    {
+                        <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                           class="btn btn-sm btn-primary rounded-2 shadow me-1" title="Change Photo">
+                            <i class="bi bi-camera"></i> Photo
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Catch Photo (if exists) -->
+            @if (!string.IsNullOrEmpty(Model.PhotoUrl))
+            {
+                <div class="card mb-4 shadow">
+                    <div class="card-body text-center p-2">
+                        <img src="@Model.PhotoUrl" alt="@Model.Species?.CommonName" 
+                             class="img-fluid rounded shadow" style="max-height: 400px;" />
+                    </div>
+                </div>
+            }
+
+            <!-- Catch Information Card -->
+            <div class="card mx-1 mb-4 mt-1 p-1 shadow">
+                <div class="d-flex justify-content-between align-items-center mb-3 ms-2">
+                    <h5 class="text-black my-2">
+                        <i class="bi bi-info-circle"></i> 
+                        Catch Information
+                    </h5>
+                </div>
+                
+                <!-- Catch Details -->
+                <div class="px-2">
+                    <!-- Basic Info -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Species:</strong> 
+                            @if (Model.Species != null)
+                            {
+                                <text>@Model.Species.CommonName</text>
+                                @if (!string.IsNullOrEmpty(Model.Species.ScientificName))
+                                {
+                                    <br><small class="text-secondary">@Model.Species.ScientificName</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Unknown species</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Catch Time:</strong>
+                            @if (Model.CatchTime.HasValue)
+                            {
+                                <text>@Model.CatchTime.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</text>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not recorded</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Size & Weight -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Length:</strong> <span class="badge bg-info">@Model.Size.ToString("F1") inches</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Weight:</strong>
+                            @if (Model.Weight.HasValue)
+                            {
+                                <span class="badge bg-success">@Model.Weight.Value.ToString("F1") lbs</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not recorded</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Session Info -->
+                    @if (Model.Session != null)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Fishing Session:</strong>
+                                <div class="mt-1">
+                                    <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="text-decoration-none">
+                                        <i class="bi bi-geo-alt text-danger"></i> @(Model.Session.LocationName ?? "Unknown Location")
+                                    </a>
+                                    <small class="text-secondary ms-2">
+                                        @Model.Session.SessionDate.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                        • @Model.Session.WaterType Water
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Photo Status -->
+                    @if (string.IsNullOrEmpty(Model.PhotoUrl))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <div class="alert alert-info d-flex align-items-center">
+                                    <i class="bi bi-camera me-2"></i>
+                                    <div>
+                                        <strong>No photo yet</strong> - 
+                                        <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                                           class="text-decoration-none">
+                                            Add a photo of this catch
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Album Associations -->
+                    @if (Model.AlbumCatches != null && Model.AlbumCatches.Any())
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Featured in Albums:</strong>
+                                <div class="mt-1">
+                                    @foreach (var albumCatch in Model.AlbumCatches)
+                                    {
+                                        @if (albumCatch.Album != null)
+                                        {
+                                            <a asp-controller="CatchAlbum" asp-action="Details" asp-route-id="@albumCatch.Album.Id" 
+                                               class="badge bg-primary text-decoration-none me-1">
+                                                <i class="bi bi-collection"></i> @albumCatch.Album.Name
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Created Date -->
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <small class="text-secondary">
+                                <strong>Logged:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mx-1 mb-4 mt-1 p-1 shadow border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-success">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (string.IsNullOrEmpty(Model.PhotoUrl))
+                        {
+                            <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                               class="btn btn-sm btn-success">
+                                <i class="bi bi-camera"></i> Add Photo
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-camera"></i> Change Photo
+                            </a>
+                        }
+                        
+                        <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" 
+                           class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i> Edit Details
+                        </a>
+                        
+                        @if (Model.Session != null)
+                        {
+                            <a asp-controller="FishingSession" asp-action="AddCatch" asp-route-sessionId="@Model.SessionId" 
+                               class="btn btn-sm btn-info">
+                                <i class="bi bi-plus-circle"></i> Log Another Catch
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card mx-1 mb-4 mt-1 p-1 shadow border-danger">
+                <div class="card-body">
+                    <h6 class="card-title text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Danger Zone
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-0">Delete this catch permanently</p>
+                            <small class="text-muted">This action cannot be undone</small>
+                        </div>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" asp-route-returnUrl="@returnUrl" 
+                           class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

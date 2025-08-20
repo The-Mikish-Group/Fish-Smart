@@ -22,6 +22,100 @@
             <!-- Sessions List -->
             @if (Model.Any())
             {
+                <!-- Sessions Table -->
+                <div class="card mx-1 mb-4 mt-1 p-1 shadow">
+                    <div class="d-flex justify-content-between align-items-center mb-0 ms-2">
+                        <h5 class="text-black my-2"><i class="bi bi-list"></i> Fishing Sessions</h5>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="w-100 mb-0" id="mainSessionsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-eye"></i></th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Water Type</th>
+                                    <th>Catches</th>
+                                    <th>Weather</th>
+                                    <th class="text-center pe-2">Add Catch</th>
+                                    <th class="text-center pe-2">Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int i = 0;
+                                }
+                                @foreach (var session in Model)
+                                {
+                                    <tr class="@((i++) % 2 == 0 ? "row-even" : "row-odd")">
+                                        <td class="text-nowrap py-2 pe-2">
+                                            <a asp-action="Details" asp-route-id="@session.Id" title="View Session Details">
+                                                <i class="bi bi-eye text-primary"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-nowrap py-2">
+                                            <div class="fw-bold">@session.SessionDate.ToString("MMM dd, yyyy")</div>
+                                            <small class="text-secondary">@session.SessionDate.ToString("h:mm tt")</small>
+                                        </td>
+                                        <td class="py-2">
+                                            @if (!string.IsNullOrEmpty(session.LocationName))
+                                            {
+                                                <div>@session.LocationName</div>
+                                                @if (session.Latitude.HasValue && session.Longitude.HasValue)
+                                                {
+                                                    <small class="text-secondary">
+                                                        <i class="bi bi-geo-alt"></i> 
+                                                        @session.Latitude.Value.ToString("F4"), @session.Longitude.Value.ToString("F4")
+                                                    </small>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">No location</span>
+                                            }
+                                        </td>
+                                        <td class="text-nowrap py-2">
+                                            <span class="badge @(session.WaterType == "Salt" ? "bg-primary" : "bg-success")">
+                                                <i class="bi bi-@(session.WaterType == "Salt" ? "water" : "droplet")"></i>
+                                                @session.WaterType
+                                            </span>
+                                        </td>
+                                        <td class="text-nowrap py-2">
+                                            <span class="fw-bold">@session.Catches.Count</span>
+                                            <small class="text-secondary"> fish</small>
+                                        </td>
+                                        <td class="py-2">
+                                            @if (!string.IsNullOrEmpty(session.WeatherConditions))
+                                            {
+                                                <div>@session.WeatherConditions</div>
+                                                @if (session.Temperature.HasValue)
+                                                {
+                                                    <small class="text-secondary">@session.Temperature.Value.ToString("F0")°F</small>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">No data</span>
+                                            }
+                                        </td>
+                                        <td class="text-nowrap py-2 pe-2 text-center">
+                                            <a asp-action="AddCatch" asp-route-sessionId="@session.Id" title="Add Catch">
+                                                <i class="bi bi-plus-circle text-success"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-nowrap py-2 pe-2 text-center">
+                                            <a asp-action="Edit" asp-route-id="@session.Id" title="Edit Session">
+                                                <i class="bi bi-pencil text-success"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Summary Stats -->
                 <div class="row mb-4">
                     <div class="col-md-3 col-6">
@@ -58,96 +152,6 @@
                     </div>
                 </div>
 
-                <!-- Sessions Cards -->
-                <div class="row">
-                    @foreach (var session in Model)
-                    {
-                        <div class="col-lg-6 col-xl-4 mb-4">
-                            <div class="card session-card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">
-                                        @session.LocationName
-                                        @if (string.IsNullOrEmpty(session.LocationName))
-                                        {
-                                            <span class="text-white">Fishing Session</span>
-                                        }
-                                    </h6>
-                                    <span class="badge bg-@(session.WaterType == "Salt" ? "primary" : "success")">
-                                        @session.WaterType
-                                    </span>
-                                </div>
-
-                                <div class="card-body">
-                                    <!-- Date and Time -->
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="bi bi-calendar3 text-white me-2"></i>
-                                        <div>
-                                            <div class="fw-bold">@session.SessionDate.ToString("MMMM dd, yyyy")</div>
-                                            <small class="text-white">@session.SessionDate.ToString("h:mm tt")</small>
-                                        </div>
-                                    </div>
-
-                                    <!-- Location -->
-                                    @if (session.Latitude.HasValue && session.Longitude.HasValue)
-                                    {
-                                        <div class="d-flex align-items-center mb-3">
-                                            <i class="bi bi-geo-alt text-white me-2"></i>
-                                            <small class="text-white">
-                                                @session.Latitude.Value.ToString("F4"), @session.Longitude.Value.ToString("F4")
-                                            </small>
-                                        </div>
-                                    }
-
-                                    <!-- Equipment -->
-                                    @if (session.RodReelSetupId.HasValue)
-                                    {
-                                        <div class="d-flex align-items-center mb-2">
-                                            <i class="bi bi-tools text-white me-2"></i>
-                                            <small class="text-white">Equipment Selected</small>
-                                        </div>
-                                    }
-
-                                    <!-- Weather Info (if available) -->
-                                    @if (!string.IsNullOrEmpty(session.WeatherConditions))
-                                    {
-                                        <div class="d-flex align-items-center mb-2">
-                                            <i class="bi bi-cloud-sun text-white me-2"></i>
-                                            <small class="text-white">@session.WeatherConditions</small>
-                                        </div>
-                                    }
-
-                                    <!-- Notes Preview -->
-                                    @if (!string.IsNullOrEmpty(session.Notes))
-                                    {
-                                        <div class="mt-3">
-                                            <small class="text-white">
-                                                <i class="bi bi-chat-square-text me-1"></i>
-                                                @(session.Notes.Length > 60 ? session.Notes.Substring(0, 60) + "..." : session.Notes)
-                                            </small>
-                                        </div>
-                                    }
-                                </div>
-
-                                <div class="card-footer bg-transparent">
-                                    <div class="btn-group w-100" role="group">
-                                        <a asp-action="Details" asp-route-id="@session.Id"
-                                           class="btn btn-primary btn-sm">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                        <a asp-action="AddCatch" asp-route-sessionId="@session.Id"
-                                           class="btn btn-success btn-sm">
-                                            <i class="bi bi-plus"></i> Add Catch
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@session.Id"
-                                           class="btn btn-secondary btn-sm">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
             }
             else
             {
@@ -180,7 +184,7 @@
                 <strong class="me-auto">Success</strong>
                 <button type="button" class="btn-close btn-close" data-bs-dismiss="toast"></button>
             </div>
-            <div class="toast-body">
+            <div class="toast-body" style="background-color: var(--bs-success-bg-subtle, #d1e7dd); color: var(--bs-success-text-emphasis, #0a3622);">
                 @TempData["Success"]
             </div>
         </div>

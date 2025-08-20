@@ -6,7 +6,7 @@
     var fishSpecies = (List<Members.Models.FishSpecies>)ViewBag.FishSpecies;
 }
 
-<div class="container mt-4">
+<div class="container my-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             
@@ -16,13 +16,46 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-0">
-                                <i class="bi bi-journal-check"></i> Active Session: @session.LocationName
+                                <i class="bi bi-journal-check"></i> Active Session:
                             </h5>
                             <small>@session.SessionDate.ToString("MMMM dd, yyyy 'at' h:mm tt")</small>
                         </div>
                         <span class="badge bg-light text-dark">
                             @session.WaterType Water
                         </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Location & Weather -->
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-geo-alt"></i> Current Location & Weather
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Location</label>
+                            <div class="d-flex align-items-center">
+                                <span id="currentLocation">Getting location...</span>
+                                <button type="button" id="mapButton" class="btn btn-sm btn-primary ms-2" style="display: none;">
+                                    <i class="bi bi-map"></i> View on Map
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Current Weather</label>
+                            <div id="currentWeather">
+                                <span class="text-muted">Loading weather...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Message -->
+                    <div class="alert alert-info" id="locationWeatherStatus">
+                        <i class="bi bi-geo-alt"></i> Getting your current location and weather conditions...
                     </div>
                 </div>
             </div>
@@ -42,14 +75,27 @@
                             <label asp-for="FishSpeciesId" class="form-label">
                                 <i class="bi bi-collection"></i> Fish Species *
                             </label>
-                            <select asp-for="FishSpeciesId" class="form-select" required>
+                            
+                            <!-- Species Filter Input -->
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="speciesFilter" class="form-control" 
+                                       placeholder="Type to filter species (e.g., 'bass', 'trout', 'catfish')..." 
+                                       autocomplete="off">
+                                <button type="button" id="clearSpeciesFilter" class="btn btn-outline-secondary" style="display: none;">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            
+                            <select asp-for="FishSpeciesId" class="form-select" required id="fishSpeciesSelect">
                                 <option value="">Select the fish species you caught...</option>
                                 @foreach (var fish in fishSpecies)
                                 {
                                     <option value="@fish.Id" 
                                             data-min-size="@fish.MinSize" 
                                             data-max-size="@fish.MaxSize"
-                                            data-regulations="@fish.RegulationNotes">
+                                            data-regulations="@fish.RegulationNotes"
+                                            data-search-text="@fish.CommonName @fish.ScientificName">
                                         @fish.CommonName
                                         @if (!string.IsNullOrEmpty(fish.ScientificName))
                                         {
@@ -59,6 +105,11 @@
                                 }
                             </select>
                             <span asp-validation-for="FishSpeciesId" class="text-danger"></span>
+                            
+                            <!-- Filter Status -->
+                            <div id="filterStatus" class="form-text text-muted mt-1" style="display: none;">
+                                <i class="bi bi-info-circle"></i> <span id="filteredCount">0</span> species match your search
+                            </div>
                             
                             <!-- Fish Info Display -->
                             <div id="fishInfo" class="mt-2 d-none">
@@ -125,7 +176,7 @@
                     <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Catch Logging Tips</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row gy-3">
                         <div class="col-md-6">
                             <ul class="list-unstyled mb-md-0">
                                 <li class="mb-2">
@@ -138,7 +189,7 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 ">
                             <ul class="list-unstyled mb-0">
                                 <li class="mb-2">
                                     <i class="bi bi-check-circle text-success me-2"></i>
@@ -166,7 +217,7 @@
                 <strong class="me-auto">Success</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
-            <div class="toast-body">
+            <div class="toast-body" style="background-color: var(--bs-success-bg-subtle, #d1e7dd); color: var(--bs-success-text-emphasis, #0a3622);">
                 @TempData["Success"]
             </div>
         </div>
@@ -178,11 +229,25 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const fishSelect = document.getElementById('FishSpeciesId');
+            const fishSelect = document.getElementById('fishSpeciesSelect');
             const fishInfo = document.getElementById('fishInfo');
             const sizeRange = document.getElementById('sizeRange');
             const regulations = document.getElementById('regulations');
             const sizeInput = document.getElementById('Size');
+            
+            // Species Filter Elements
+            const speciesFilter = document.getElementById('speciesFilter');
+            const clearSpeciesFilter = document.getElementById('clearSpeciesFilter');
+            const filterStatus = document.getElementById('filterStatus');
+            const filteredCount = document.getElementById('filteredCount');
+            
+            // Location and Weather Elements
+            const currentLocation = document.getElementById('currentLocation');
+            const currentWeather = document.getElementById('currentWeather');
+            const mapButton = document.getElementById('mapButton');
+            const locationWeatherStatus = document.getElementById('locationWeatherStatus');
+            let currentLat = null;
+            let currentLng = null;
             
             // Auto-set catch time to current time
             const catchTimeInput = document.getElementById('CatchTime');
@@ -190,6 +255,269 @@
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                 catchTimeInput.value = now.toISOString().slice(0, 16);
+            }
+            
+            // Species Filter Functionality
+            let allOptions = Array.from(fishSelect.options).slice(1); // Skip the first placeholder option
+            
+            function filterSpecies() {
+                const filterText = speciesFilter.value.toLowerCase().trim();
+                
+                if (filterText === '') {
+                    // Show all options
+                    showAllOptions();
+                    clearSpeciesFilter.style.display = 'none';
+                    filterStatus.style.display = 'none';
+                    return;
+                }
+                
+                // Clear current options (except placeholder)
+                while (fishSelect.options.length > 1) {
+                    fishSelect.removeChild(fishSelect.options[1]);
+                }
+                
+                // Filter and add matching options
+                let matchCount = 0;
+                allOptions.forEach(function(option) {
+                    const searchText = option.getAttribute('data-search-text') || option.textContent;
+                    if (searchText.toLowerCase().includes(filterText)) {
+                        fishSelect.appendChild(option.cloneNode(true));
+                        matchCount++;
+                    }
+                });
+                
+                // Update UI
+                clearSpeciesFilter.style.display = 'inline-block';
+                filterStatus.style.display = 'block';
+                filteredCount.textContent = matchCount;
+                
+                // Auto-select if only one match
+                if (matchCount === 1) {
+                    fishSelect.selectedIndex = 1;
+                    fishSelect.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            function showAllOptions() {
+                // Clear current options (except placeholder)
+                while (fishSelect.options.length > 1) {
+                    fishSelect.removeChild(fishSelect.options[1]);
+                }
+                
+                // Add all options back
+                allOptions.forEach(function(option) {
+                    fishSelect.appendChild(option.cloneNode(true));
+                });
+            }
+            
+            function clearFilter() {
+                speciesFilter.value = '';
+                showAllOptions();
+                clearSpeciesFilter.style.display = 'none';
+                filterStatus.style.display = 'none';
+                speciesFilter.focus();
+            }
+            
+            // Event listeners for species filter
+            speciesFilter.addEventListener('input', function() {
+                filterSpecies();
+            });
+            
+            clearSpeciesFilter.addEventListener('click', function() {
+                clearFilter();
+            });
+            
+            // Clear filter when species is manually selected
+            fishSelect.addEventListener('change', function() {
+                if (this.value && speciesFilter.value) {
+                    // Don't clear the filter automatically, let user decide
+                }
+            });
+            
+            // Get current location and weather for catch logging with maximum accuracy
+            if (navigator.geolocation) {
+                console.log('DEBUG: Starting geolocation request');
+                
+                const geoOptions = {
+                    enableHighAccuracy: true,    // Request highest accuracy GPS
+                    timeout: 15000,              // Reduce to 15 seconds for GPS fix (was 30 seconds)
+                    maximumAge: 60000            // Allow 1-minute cached location (was 0)
+                };
+                
+                // Add a backup timeout in case geolocation hangs without calling error callback
+                const geoTimeoutId = setTimeout(() => {
+                    console.log('DEBUG: Geolocation backup timeout triggered after 20 seconds');
+                    currentLocation.textContent = 'Location timeout';
+                    currentWeather.innerHTML = '<span class="text-muted">Weather unavailable</span>';
+                    locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Location request timed out - GPS may be unavailable';
+                    locationWeatherStatus.className = 'alert alert-warning';
+                }, 20000); // 20 second backup timeout
+                
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        clearTimeout(geoTimeoutId); // Clear backup timeout
+                        
+                        // Capture MAXIMUM GPS precision (no rounding for storage)
+                        currentLat = position.coords.latitude;
+                        currentLng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        
+                        console.log('DEBUG: High-accuracy catch location: ' + currentLat + ', ' + currentLng + ' (±' + accuracy + 'm)');
+                        
+                        // Update location display with readable precision
+                        currentLocation.textContent = currentLat.toFixed(6) + ', ' + currentLng.toFixed(6) + ' (±' + (accuracy ? Math.round(accuracy) : '?') + 'm)';
+                        
+                        // Show map button
+                        mapButton.style.display = 'inline-block';
+                        mapButton.addEventListener('click', function() {
+                            var mapUrl = 'https://www.google.com/maps/' + '@@' + currentLat + ',' + currentLng + ',50m/data=!3m1!1e3';
+                            window.open(mapUrl, '_blank');
+                        });
+                        
+                        locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> High-accuracy location found (±' + (accuracy ? Math.round(accuracy) : '?') + 'm)! Getting current weather...';
+                        locationWeatherStatus.className = 'alert alert-success';
+                        
+                        // Fetch current weather
+                        await fetchCurrentWeather(currentLat, currentLng);
+                    },
+                    function(error) {
+                        clearTimeout(geoTimeoutId); // Clear backup timeout
+                        
+                        console.error('DEBUG: High-accuracy geolocation error: ' + error.message + ' (code: ' + error.code + ')');
+                        
+                        // Try fallback with lower accuracy if high accuracy fails
+                        if (error.code === 2 || error.code === 3) { // Position unavailable or timeout
+                            console.log('DEBUG: Trying fallback geolocation with lower accuracy');
+                            
+                            locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> High-accuracy GPS failed, trying standard GPS...';
+                            locationWeatherStatus.className = 'alert alert-warning';
+                            
+                            const fallbackOptions = {
+                                enableHighAccuracy: false,  // Use network/wifi location
+                                timeout: 10000,             // 10 second timeout for fallback
+                                maximumAge: 300000          // Accept 5-minute cached location
+                            };
+                            
+                            navigator.geolocation.getCurrentPosition(
+                                async function(position) {
+                                    currentLat = position.coords.latitude;
+                                    currentLng = position.coords.longitude;
+                                    const accuracy = position.coords.accuracy;
+                                    
+                                    console.log('DEBUG: Fallback location found: ' + currentLat + ', ' + currentLng + ' (±' + accuracy + 'm)');
+                                    
+                                    currentLocation.textContent = currentLat.toFixed(4) + ', ' + currentLng.toFixed(4) + ' (±' + (accuracy ? Math.round(accuracy) : '?') + 'm, network-based)';
+                                    
+                                    mapButton.style.display = 'inline-block';
+                                    mapButton.addEventListener('click', function() {
+                                        var mapUrl = 'https://www.google.com/maps/' + '@@' + currentLat + ',' + currentLng + ',50m/data=!3m1!1e3';
+                                        window.open(mapUrl, '_blank');
+                                    });
+                                    
+                                    locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Network-based location found! Getting current weather...';
+                                    locationWeatherStatus.className = 'alert alert-info';
+                                    
+                                    await fetchCurrentWeather(currentLat, currentLng);
+                                },
+                                function(fallbackError) {
+                                    console.error('DEBUG: Fallback geolocation also failed: ' + fallbackError.message + ' (code: ' + fallbackError.code + ')');
+                                    
+                                    let errorMessage = 'Location access denied';
+                                    if (fallbackError.code === 1) {
+                                        errorMessage = 'Location access denied - please allow location access in browser settings';
+                                    } else if (fallbackError.code === 2) {
+                                        errorMessage = 'Location completely unavailable - no GPS or network location';
+                                    } else if (fallbackError.code === 3) {
+                                        errorMessage = 'All location methods timed out';
+                                    }
+                                    currentLocation.textContent = 'Location unavailable';
+                                    currentWeather.innerHTML = '<span class="text-muted">Weather unavailable</span>';
+                                    locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + errorMessage;
+                                    locationWeatherStatus.className = 'alert alert-danger';
+                                },
+                                fallbackOptions
+                            );
+                        } else {
+                            // For permission denied, don't try fallback
+                            let errorMessage = 'Location access denied - please allow location access for weather data';
+                            currentLocation.textContent = 'Location unavailable';
+                            currentWeather.innerHTML = '<span class="text-muted">Weather unavailable</span>';
+                            locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + errorMessage;
+                            locationWeatherStatus.className = 'alert alert-warning';
+                        }
+                    },
+                    geoOptions  // Apply high accuracy settings
+                );
+            } else {
+                console.log('DEBUG: Geolocation not supported by browser');
+                currentLocation.textContent = 'Geolocation not supported';
+                currentWeather.innerHTML = '<span class="text-muted">Weather unavailable</span>';
+                locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Geolocation not supported';
+                locationWeatherStatus.className = 'alert alert-warning';
+            }
+            
+            // Function to fetch current weather for catch logging
+            async function fetchCurrentWeather(lat, lng) {
+                try {
+                    console.log('DEBUG: Starting weather fetch for coordinates:', lat, lng);
+                    
+                    // Add timeout to the fetch request to prevent hanging
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => {
+                        console.log('DEBUG: Weather fetch timeout after 10 seconds');
+                        controller.abort();
+                    }, 10000); // 10 second timeout
+                    
+                    const response = await fetch(`/FishingSession/GetWeather?lat=${lat}&lng=${lng}`, {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    console.log('DEBUG: Weather fetch response received, status:', response.status);
+                    
+                    if (response.ok) {
+                        const weatherData = await response.json();
+                        console.log('DEBUG: Weather data parsed:', weatherData);
+                        
+                        if (weatherData.isSuccessful) {
+                            let weatherDisplay = '<div class="d-flex flex-wrap gap-2 align-items-center">';
+                            weatherDisplay += '<span>' + weatherData.weatherConditions + '</span>';
+                            weatherDisplay += '<span class="badge bg-info">' + Math.round(weatherData.temperature) + '°F</span>';
+                            if (weatherData.windDirection && weatherData.windSpeed) {
+                                weatherDisplay += '<span class="badge bg-secondary">Wind: ' + weatherData.windDirection + ' ' + Math.round(weatherData.windSpeed) + ' mph</span>';
+                            }
+                            weatherDisplay += '</div>';
+                            currentWeather.innerHTML = weatherDisplay;
+                            
+                            locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Current location and weather ready!';
+                            
+                            // Auto-hide status after 3 seconds
+                            setTimeout(() => {
+                                locationWeatherStatus.style.display = 'none';
+                            }, 3000);
+                        } else {
+                            console.log('DEBUG: Weather service returned unsuccessful:', weatherData.errorMessage);
+                            currentWeather.innerHTML = '<span class="text-muted">Weather data unavailable</span>';
+                            locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready (Weather unavailable)';
+                        }
+                    } else {
+                        console.log('DEBUG: Weather fetch response not ok:', response.status, response.statusText);
+                        currentWeather.innerHTML = '<span class="text-muted">Weather service unavailable</span>';
+                        locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready (Weather service unavailable)';
+                    }
+                } catch (error) {
+                    console.error('DEBUG: Weather fetch error:', error);
+                    
+                    if (error.name === 'AbortError') {
+                        console.log('DEBUG: Weather fetch was aborted due to timeout');
+                        currentWeather.innerHTML = '<span class="text-muted">Weather fetch timeout</span>';
+                        locationWeatherStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Location ready (Weather timed out)';
+                    } else {
+                        console.error('Error fetching weather:', error);
+                        currentWeather.innerHTML = '<span class="text-muted">Weather fetch failed</span>';
+                        locationWeatherStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready (Weather fetch failed)';
+                    }
+                }
             }
             
             // Show fish information when species is selected
@@ -243,7 +571,6 @@
             animation: slideIn 0.3s ease-out;
         }
         
-        /* Keyframe animation for toast */
         @@keyframes slideIn {
             from { transform: translateX(100%); }
             to { transform: translateX(0); }

@@ -23,6 +23,9 @@ namespace Members.Data
         public DbSet<AdminTaskInstance> AdminTaskInstances { get; set; }
         public DbSet<TaskStatusMessage> TaskStatusMessages { get; set; }
 
+        // Background Removal Usage Tracking
+        public DbSet<BackgroundRemovalUsage> BackgroundRemovalUsage { get; set; }
+
         // Fish-Smart DbSets
         public DbSet<SmartCatchProfile> SmartCatchProfiles { get; set; }
         public DbSet<FishSpecies> FishSpecies { get; set; }
@@ -73,6 +76,28 @@ namespace Members.Data
                     .WithMany()
                     .HasForeignKey(ca => ca.InvoiceID)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure BackgroundRemovalUsage relationships and indexes
+            builder.Entity<BackgroundRemovalUsage>(entity =>
+            {
+                entity.HasOne(bru => bru.User)
+                    .WithMany()
+                    .HasForeignKey(bru => bru.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(bru => bru.Invoice)
+                    .WithMany()
+                    .HasForeignKey(bru => bru.InvoiceId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Index for efficient monthly usage queries
+                entity.HasIndex(bru => new { bru.UserId, bru.UsageYear, bru.UsageMonth })
+                    .HasDatabaseName("IX_BackgroundRemovalUsage_UserMonthYear");
+
+                // Index for billing queries
+                entity.HasIndex(bru => new { bru.HasBeenInvoiced, bru.IsWithinFreeLimit })
+                    .HasDatabaseName("IX_BackgroundRemovalUsage_Billing");
             });
 
             // Configure Task System relationships
@@ -157,6 +182,19 @@ namespace Members.Data
             builder.Entity<Catch>()
                 .Property(c => c.Weight)
                 .HasPrecision(5, 2);
+
+            // Configure weather data precision for Catch
+            builder.Entity<Catch>()
+                .Property(c => c.Temperature)
+                .HasPrecision(5, 2);
+
+            builder.Entity<Catch>()
+                .Property(c => c.WindSpeed)
+                .HasPrecision(5, 2);
+
+            builder.Entity<Catch>()
+                .Property(c => c.BarometricPressure)
+                .HasPrecision(7, 2);
 
             // Configure location precision
             builder.Entity<FishingSession>()

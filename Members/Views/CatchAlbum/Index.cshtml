@@ -38,11 +38,10 @@
                              style="min-height: 200px; background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); overflow: hidden;">
                             @if (!string.IsNullOrEmpty(album.CoverImageUrl))
                             {
-                                <a asp-controller="ImageViewer" asp-action="AlbumCover" asp-route-id="@album.Id" 
-                                   asp-route-returnUrl="@Url.Action("Index")" class="d-block w-100">
+                                <a asp-action="Details" asp-route-id="@album.Id" class="d-block w-100">
                                     <img src="@album.CoverImageUrl" alt="@album.Name" 
                                          style="width: 100%; height: auto; display: block; cursor: pointer;" 
-                                         title="Click to view full size and edit" />
+                                         title="Click to view album" />
                                 </a>
                             }
                             else

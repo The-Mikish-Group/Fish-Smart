@@ -1,0 +1,283 @@
+@page
+@model Members.Areas.Admin.Pages.Reporting.BackgroundRemovalRegisterReportModel
+@{
+    ViewData["Title"] = "Background Removal Register Report";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Top Button placed here -->
+<button class="btn btn-sm px-1 py-0" onclick="topFunction()" id="top-button" title="Go to top">Top</button>
+
+<!-- Container -->
+<div class="my-4 px-1">
+
+    <!-- Title -->    
+    <div class="text-center">
+        <h2 class="text-black text-center">@ViewData["Title"]</h2>            
+    </div>   
+
+    <!-- Form for Input fields and Buttons -->
+    <form method="get" class="mb-3">
+        <div class="row align-items-end gx-2 gy-3 mx-0 p-0">
+
+            <!-- Start Date -->
+            <div class="col-md-3 px-0 me-2">
+                <label for="StartDate" class="ms-2 mb-0 form-label">Start Date:</label>
+                <input asp-for="StartDate" type="date" class="form-control shadow" id="StartDate" name="StartDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <!-- End Date -->
+            <div class="col-md-3 px-0 me-2">
+                <label for="EndDate" class="ms-2 mb-0 form-label">End Date:</label>
+                <input asp-for="EndDate" type="date" class="form-control shadow" id="EndDate" name="EndDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <!-- Run Report Button -->
+            <div class="col-md-auto px-0">
+                <button type="submit" class="btn btn-success rounded-2 ms-2 px-2 shadow"><i class="bi bi-funnel-fill"></i> Run Report</button>
+            </div>
+
+            @if (Model.ReportData.Any())
+            {
+                <!-- Export to CSV Button (Only show if there is report data) -->
+                <div class="col-md-auto px-0">
+                    <button type="button" class="btn btn-success rounded-2 ms-2 px-2 shadow"
+                            data-bs-toggle="modal" data-bs-target="#exportBackgroundRemovalRegisterConfirmModal">
+                        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export to CSV
+                    </button>
+                </div>
+
+                <!-- Print Button (Only show if there is report data) -->
+                <div class="col-md-auto px-0">
+                    <button type="button" class="btn btn-success rounded-2 ms-2 px-2 shadow" id="printReportButton">
+                        <i class="bi bi-printer-fill"></i> Print
+                    </button>
+                </div>
+            }
+        </div>
+    </form>
+
+    <!-- Export Confirmation Modal -->
+    <div class="modal fade" id="exportBackgroundRemovalRegisterConfirmModal" tabindex="-1" aria-labelledby="exportBackgroundRemovalRegisterConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+
+            <!-- Modal Content -->
+            <div class="modal-content bg-Card-Modal">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportBackgroundRemovalRegisterConfirmModalLabel">Confirm Export</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    Are you sure you want to export the Background Removal Register to CSV?
+                    The report will be generated for background removal usage in the period:
+                    <strong>@Model.StartDate.ToString("yyyy-MM-dd")</strong> to <strong>@Model.EndDate.ToString("yyyy-MM-dd")</strong>.
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-2 shadow" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmExportBackgroundRemovalRegisterBtn" class="btn btn-success rounded-2 shadow"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Confirm Export</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @if (Model.ReportData.Any())
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h4>@Model.Totals.TotalUsageCount</h4>
+                        <p class="mb-0">Total Usage</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h4>@Model.Totals.FreeUsageCount</h4>
+                        <p class="mb-0">Free Usage</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h4>@Model.Totals.BillableUsageCount</h4>
+                        <p class="mb-0">Billable Usage</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h4>@Model.Totals.TotalChargedAmount.ToString("C")</h4>
+                        <p class="mb-0">Total Charged</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive rounded shadow">
+            <table class="table-striped table-hover table-bordered bg-Card-Stripe mb-0 table">
+                <thead class="bg-white text-black">
+                    <tr>
+                        <th>Usage ID</th>
+                        <th>Customer</th>
+                        <th>Usage Date</th>
+                        <th>Service</th>
+                        <th class="text-end">API Cost</th>
+                        <th class="text-end">Charged</th>
+                        <th>Type</th>
+                        <th>Invoice</th>
+                        <th>Status</th>
+                        <th class="text-end">Paid</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ReportData)
+                    {
+                        <tr class="@(item.IsWithinFreeLimit ? "table-success" : "")">
+                            <td>@Html.DisplayFor(modelItem => item.UsageId)</td>
+                            <td>@Html.DisplayFor(modelItem => item.CustomerName)</td>
+                            <td>@item.UsageDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@Html.DisplayFor(modelItem => item.ServiceUsed)</td>
+                            <td class="text-end">@item.ApiCost.ToString("C3")</td>
+                            <td class="text-end">@item.ChargeAmount.ToString("C")</td>
+                            <td>
+                                @if (item.IsWithinFreeLimit)
+                                {
+                                    <span class="badge bg-success">Free</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Billable</span>
+                                }
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => item.InvoiceId)</td>
+                            <td>@Html.DisplayFor(modelItem => item.InvoiceStatus)</td>
+                            <td class="text-end">@item.AmountPaidOnInvoice.ToString("C")</td>
+                            <td>@Html.DisplayFor(modelItem => item.Notes)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="fw-bold bg-white">
+                    <tr>
+                        <td colspan="4" class="text-end">Totals:</td>
+                        <td class="text-end">@Model.Totals.TotalApiCosts.ToString("C3")</td>
+                        <td class="text-end">@Model.Totals.TotalChargedAmount.ToString("C")</td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end">Total Invoiced:</td>
+                        <td class="text-end" colspan="2">@Model.Totals.TotalInvoicedAmount.ToString("C")</td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end">Total Paid:</td>
+                        <td class="text-end" colspan="2">@Model.Totals.TotalPaidAmount.ToString("C")</td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end">Total Outstanding:</td>
+                        <td class="text-end" colspan="2">@Model.Totals.TotalOutstandingAmount.ToString("C")</td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+    else if (Request.Query.ContainsKey("StartDate") || Request.Query.ContainsKey("EndDate"))
+    {
+        <div class="alert alert-info shadow" role="alert">
+            No background removal usage data found for the selected period: @Model.StartDate.ToString("yyyy-MM-dd") to @Model.EndDate.ToString("yyyy-MM-dd").
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info shadow" role="alert">
+            Please select a date range and run the report to view background removal usage and billing data.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Export to CSV Button Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var exportButton = document.getElementById('confirmExportBackgroundRemovalRegisterBtn');
+            if (exportButton) {
+                exportButton.addEventListener('click', function() {
+                    var currentPagePath = window.location.pathname;
+                    var handlerQuery = 'handler=ExportToCsv';
+                    var baseUrl = currentPagePath + '?' + handlerQuery;
+
+                    var startDateValue = '@Model.StartDate.ToString("yyyy-MM-dd")';
+                    var endDateValue = '@Model.EndDate.ToString("yyyy-MM-dd")';
+                    var targetUrl = baseUrl + '&StartDate=' + encodeURIComponent(startDateValue) + '&EndDate=' + encodeURIComponent(endDateValue);
+
+                    console.log('JS Export (BackgroundRemovalRegister): Navigating to URL: ' + targetUrl);
+                    window.location.href = targetUrl;
+
+                    setTimeout(function() {
+                        var modalElement = document.getElementById('exportBackgroundRemovalRegisterConfirmModal');
+                        if (modalElement) {
+                            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+                            if (modalInstance) {
+                                modalInstance.hide();
+                            }
+                        }
+                    }, 500); // 500ms delay
+                });
+            }
+        });
+    </script>
+
+    <!-- Print Button Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var printButton = document.getElementById('printReportButton');
+            if (printButton) {
+                printButton.addEventListener('click', function () {
+                    window.print();
+                });
+            }
+        });
+    </script>
+
+    <!-- Top Button Script -->
+    <script>
+
+        //Get the button
+        var mybutton = document.getElementById("top-button");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function () { scrollFunction() };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 320 || document.documentElement.scrollTop > 320) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        // When the user clicks on the button, scroll to the top of the document
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+    </script>
+}

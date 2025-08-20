@@ -157,7 +157,6 @@
   <ItemGroup>
     <Folder Include="Areas\Admin\Pages\Reporting\" />
     <Folder Include="wwwroot\Galleries\" />
-    <Folder Include="wwwroot\Images\Fishx\" />
     <Folder Include="wwwroot\Images\PageImages\" />
   </ItemGroup>
 </Project>

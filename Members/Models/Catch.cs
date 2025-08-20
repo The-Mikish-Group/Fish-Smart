@@ -46,6 +46,26 @@ namespace Members.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        // Weather Data (captured at time of catch)
+        [StringLength(200)]
+        public string? WeatherConditions { get; set; } // "Clear", "Clouds", "Rain", etc.
+
+        public decimal? Temperature { get; set; } // Temperature in Fahrenheit
+
+        [StringLength(50)]
+        public string? WindDirection { get; set; } // "N", "NE", "E", etc.
+
+        public decimal? WindSpeed { get; set; } // Wind speed in mph
+
+        public decimal? BarometricPressure { get; set; } // Pressure in hPa
+
+        public int? Humidity { get; set; } // Humidity percentage
+
+        [StringLength(500)]
+        public string? WeatherDescription { get; set; } // Full weather description
+
+        public DateTime? WeatherCapturedAt { get; set; } // When weather was captured
+
         // Navigation properties
         [ForeignKey("SessionId")]
         public virtual FishingSession? Session { get; set; }

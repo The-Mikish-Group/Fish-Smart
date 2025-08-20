@@ -17,7 +17,8 @@ namespace Members.Models
         Dues,
         Fine,
         LateFee,
-        MiscCharge
+        MiscCharge,
+        BackgroundRemoval
     }
     public class Invoice
     {

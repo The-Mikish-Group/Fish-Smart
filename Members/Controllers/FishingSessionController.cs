@@ -1,5 +1,6 @@
 ﻿using Members.Data;
 using Members.Models;
+using Members.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager) : Controller
+    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWeatherService weatherService) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly IWeatherService _weatherService = weatherService;
 
         // GET: FishingSession
         public async Task<IActionResult> Index()
@@ -20,6 +22,7 @@ namespace Members.Controllers
             if (userId == null) return RedirectToAction("Login", "Account");
 
             var sessions = await _context.FishingSessions
+                .Include(s => s.Catches)
                 .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.SessionDate)
                 .ToListAsync();
@@ -96,13 +99,51 @@ namespace Members.Controllers
             }
             session.CreatedAt = DateTime.Now;
 
+            // Capture weather data for the session
+            if (session.Latitude.HasValue && session.Longitude.HasValue)
+            {
+                try
+                {
+                    Console.WriteLine($"DEBUG: Attempting to fetch weather for {session.Latitude.Value}, {session.Longitude.Value}");
+                    
+                    var weatherData = await _weatherService.GetCurrentWeatherAsync(
+                        session.Latitude.Value, 
+                        session.Longitude.Value);
+                    
+                    Console.WriteLine($"DEBUG: Weather service returned: IsSuccessful={weatherData?.IsSuccessful}, Error={weatherData?.ErrorMessage}");
+                    
+                    if (weatherData != null && weatherData.IsSuccessful)
+                    {
+                        session.WeatherConditions = weatherData.WeatherConditions;
+                        session.Temperature = weatherData.Temperature;
+                        session.WindDirection = weatherData.WindDirection;
+                        session.WindSpeed = weatherData.WindSpeed;
+                        session.BarometricPressure = weatherData.BarometricPressure;
+                        
+                        Console.WriteLine($"DEBUG: Weather data captured - Conditions: {weatherData.WeatherConditions}, Temp: {weatherData.Temperature}°F");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"DEBUG: Weather capture failed - {weatherData?.ErrorMessage}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DEBUG: Weather capture exception - {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"DEBUG: No GPS coordinates - Lat: {session.Latitude}, Lng: {session.Longitude}");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.FishingSessions.Add(session);
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] = "Fishing session started! Time to catch some fish!";
-                return RedirectToAction("AddCatch", new { sessionId = session.Id });
+                TempData["Success"] = "Fishing session started! Use 'Add Catch' button when you actually catch a fish.";
+                return RedirectToAction("Index");
             }
 
             await LoadDropdownData();
@@ -289,6 +330,40 @@ namespace Members.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // AJAX endpoint for weather data
+        [HttpGet]
+        public async Task<IActionResult> GetWeather(double lat, double lng)
+        {
+            try
+            {
+                Console.WriteLine($"AJAX: GetWeather called with lat={lat}, lng={lng}");
+                
+                var weatherData = await _weatherService.GetCurrentWeatherAsync((decimal)lat, (decimal)lng);
+                
+                Console.WriteLine($"AJAX: Weather service returned: IsSuccessful={weatherData?.IsSuccessful}, Error={weatherData?.ErrorMessage}");
+                
+                return Json(new
+                {
+                    isSuccessful = weatherData?.IsSuccessful ?? false,
+                    weatherConditions = weatherData?.WeatherConditions,
+                    temperature = weatherData?.Temperature,
+                    windDirection = weatherData?.WindDirection,
+                    windSpeed = weatherData?.WindSpeed,
+                    barometricPressure = weatherData?.BarometricPressure,
+                    errorMessage = weatherData?.ErrorMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AJAX: GetWeather exception - {ex.Message}");
+                return Json(new
+                {
+                    isSuccessful = false,
+                    errorMessage = ex.Message
+                });
+            }
         }
 
         // Helper methods

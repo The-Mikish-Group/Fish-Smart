@@ -86,7 +86,7 @@ namespace Members.Services
                 
                 if (fileInfo.Length < 50 * 1024 * 1024) // Less than 50MB is suspicious
                 {
-                    _logger.LogWarning("Model file seems too small ({Size} MB). Expected ~170MB for U2-Net. File may be incomplete.", fileInfo.Length / (1024.0 * 1024.0));
+                    _logger.LogInformation("Using compact model file ({Size} MB). For best quality, consider using full U2-Net model (~170MB).", fileInfo.Length / (1024.0 * 1024.0));
                     // Continue anyway to try loading
                 }
 

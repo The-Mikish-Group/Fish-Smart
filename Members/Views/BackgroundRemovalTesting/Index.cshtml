@@ -1,0 +1,182 @@
+@{
+    ViewData["Title"] = "Background Removal API Testing";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary">
+                        <i class="bi bi-cpu-fill"></i>
+                        Background Removal API Testing
+                    </h1>
+                    <p class="text-muted mb-0">Compare different background removal services to find the best quality and value</p>
+                </div>
+                <div>
+                    <a asp-action="Results" class="btn btn-outline-secondary">
+                        <i class="bi bi-graph-up"></i>
+                        View Last Results
+                    </a>
+                </div>
+            </div>
+
+            <!-- Service Status Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title text-success mb-1">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        Remove.bg
+                                    </h5>
+                                    <p class="card-text small text-muted mb-0">
+                                        Professional quality • $0.20/image • 50 free/month
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title text-info mb-1">
+                                        <i class="bi bi-lightning-fill"></i>
+                                        Clipdrop
+                                    </h5>
+                                    <p class="card-text small text-muted mb-0">
+                                        Fast processing • $0.09/image • 100 free credits
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-info">Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Test Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i>
+                        Upload Test Image
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="TestServices" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="testImage" class="form-label">
+                                <strong>Select Image for Testing</strong>
+                            </label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="testImage" 
+                                   name="testImage" 
+                                   accept="image/*" 
+                                   required>
+                            <div class="form-text">
+                                Upload an image to test background removal quality across all services. 
+                                Supported formats: JPG, PNG, GIF. Max size: 5MB.
+                            </div>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div class="mb-3" id="imagePreview" style="display: none;">
+                            <label class="form-label">Preview:</label>
+                            <div class="border rounded p-3 text-center bg-light">
+                                <img id="previewImg" src="" alt="Preview" style="max-width: 300px; max-height: 200px;" />
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-play-circle"></i>
+                                Test All Services
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information Cards -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-speedometer2 display-4 text-primary mb-3"></i>
+                            <h5 class="card-title">Performance Testing</h5>
+                            <p class="card-text small">
+                                Compare processing speed and response times across different services.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-currency-dollar display-4 text-success mb-3"></i>
+                            <h5 class="card-title">Cost Analysis</h5>
+                            <p class="card-text small">
+                                Detailed breakdown of per-image costs and monthly usage projections.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-eye display-4 text-warning mb-3"></i>
+                            <h5 class="card-title">Quality Comparison</h5>
+                            <p class="card-text small">
+                                Side-by-side visual comparison of background removal quality.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Notice -->
+            <div class="alert alert-warning mt-4">
+                <h6 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Testing Notice
+                </h6>
+                <ul class="mb-0">
+                    <li><strong>API Usage:</strong> Testing will consume credits from your free tier allocations</li>
+                    <li><strong>Remove.bg:</strong> Uses 1 of your 50 free monthly images</li>
+                    <li><strong>Clipdrop:</strong> Uses 1 of your 100 free credits</li>
+                    <li><strong>Results:</strong> All test results are saved for comparison and analysis</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('testImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+});
+</script>

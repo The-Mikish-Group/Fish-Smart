@@ -93,7 +93,7 @@
 
                 @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Admin") || User.IsInRole("Manager")))
                 {
-                    @* <partial name="_PartialAccountsReceivable" /> *@
+                    <partial name="_PartialAccountsReceivable" />
 
                     <!-- Management Dropdown -->
                     <li class="nav-item dropdown pt-0 me-1">

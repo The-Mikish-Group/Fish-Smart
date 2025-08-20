@@ -6,7 +6,8 @@
       "Bash(dotnet build:*)",
       "Bash(move:*)",
       "Bash(ren:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

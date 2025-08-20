@@ -99,19 +99,11 @@ namespace Members.Services
                 // Create composite image by copying background
                 using var compositeImage = backgroundImage.Clone();
                 
-                // Simple overlay - copy subject pixels over background
-                // This is a basic implementation - can be enhanced with proper alpha blending
-                for (int y = 0; y < Math.Min(subjectImage.Height, compositeImage.Height); y++)
-                {
-                    for (int x = 0; x < Math.Min(subjectImage.Width, compositeImage.Width); x++)
-                    {
-                        var subjectPixel = subjectImage[x, y];
-                        if (subjectPixel.A > 0) // If subject pixel is not transparent
-                        {
-                            compositeImage[x, y] = subjectPixel;
-                        }
-                    }
-                }
+                // Enhanced overlay with edge blending and feathering
+                await BlendImagesWithSmoothEdges(subjectImage, compositeImage);
+                
+                // Apply post-processing to improve integration
+                await ApplyPostProcessingEffects(compositeImage);
 
                 // Add watermark if specified
                 if (!string.IsNullOrEmpty(options.WatermarkText))
@@ -222,6 +214,90 @@ namespace Members.Services
                     Message = $"Error validating image: {ex.Message}"
                 };
             }
+        }
+
+        private async Task BlendImagesWithSmoothEdges(Image<Rgba32> subjectImage, Image<Rgba32> backgroundImage)
+        {
+            await Task.Run(() =>
+            {
+                const int featherRadius = 3; // Pixels to blur at edges
+                
+                for (int y = 0; y < Math.Min(subjectImage.Height, backgroundImage.Height); y++)
+                {
+                    for (int x = 0; x < Math.Min(subjectImage.Width, backgroundImage.Width); x++)
+                    {
+                        var subjectPixel = subjectImage[x, y];
+                        
+                        if (subjectPixel.A > 0) // Subject pixel exists
+                        {
+                            // Calculate edge smoothing factor
+                            float blendFactor = CalculateEdgeBlendFactor(subjectImage, x, y, featherRadius);
+                            
+                            if (blendFactor >= 0.95f) // Solid interior
+                            {
+                                backgroundImage[x, y] = subjectPixel;
+                            }
+                            else if (blendFactor > 0.05f) // Edge area - blend
+                            {
+                                var backgroundPixel = backgroundImage[x, y];
+                                
+                                // Alpha blend the pixels
+                                var blendedPixel = new Rgba32(
+                                    (byte)(subjectPixel.R * blendFactor + backgroundPixel.R * (1 - blendFactor)),
+                                    (byte)(subjectPixel.G * blendFactor + backgroundPixel.G * (1 - blendFactor)),
+                                    (byte)(subjectPixel.B * blendFactor + backgroundPixel.B * (1 - blendFactor)),
+                                    255
+                                );
+                                
+                                backgroundImage[x, y] = blendedPixel;
+                            }
+                            // If blendFactor <= 0.05f, leave background pixel unchanged (very edge/noise)
+                        }
+                    }
+                }
+            });
+        }
+
+        private float CalculateEdgeBlendFactor(Image<Rgba32> image, int centerX, int centerY, int radius)
+        {
+            int totalPixels = 0;
+            int solidPixels = 0;
+            
+            // Sample pixels in a radius around the center point
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    int x = centerX + dx;
+                    int y = centerY + dy;
+                    
+                    if (x >= 0 && x < image.Width && y >= 0 && y < image.Height)
+                    {
+                        totalPixels++;
+                        if (image[x, y].A > 128) // Consider semi-transparent as solid
+                        {
+                            solidPixels++;
+                        }
+                    }
+                }
+            }
+            
+            return totalPixels > 0 ? (float)solidPixels / totalPixels : 0f;
+        }
+
+        private async Task ApplyPostProcessingEffects(Image<Rgba32> image)
+        {
+            await Task.Run(() =>
+            {
+                // Apply subtle blur to entire image to help blend edges
+                image.Mutate(x => x.GaussianBlur(0.5f));
+                
+                // Slight saturation boost to make the composite look more natural
+                image.Mutate(x => x.Saturate(1.1f));
+                
+                // Subtle contrast adjustment
+                image.Mutate(x => x.Contrast(1.05f));
+            });
         }
 
         private async Task BlendImagesWithAdvancedMasking(
@@ -432,6 +508,53 @@ namespace Members.Services
             // TODO: Implement with ONNX model
             await Task.Delay(100); // Simulate processing time
             return true; // For now, assume all images have subjects
+        }
+
+        public async Task<(bool Success, string Message)> CompositeTransparentImageWithBackgroundAsync(
+            string transparentSubjectPath, string backgroundImagePath, string outputPath)
+        {
+            try
+            {
+                // Validate inputs
+                if (!System.IO.File.Exists(transparentSubjectPath) || !System.IO.File.Exists(backgroundImagePath))
+                {
+                    return (false, "Source images not found");
+                }
+
+                _logger.LogInformation("Compositing transparent subject with background: {Subject} + {Background} -> {Output}", 
+                    transparentSubjectPath, backgroundImagePath, outputPath);
+
+                using var subjectImage = await Image.LoadAsync<Rgba32>(transparentSubjectPath);
+                using var backgroundImage = await Image.LoadAsync<Rgba32>(backgroundImagePath);
+                
+                // Resize background to match subject dimensions
+                backgroundImage.Mutate(x => x.Resize(subjectImage.Width, subjectImage.Height));
+                
+                // Create output image starting with background
+                using var outputImage = backgroundImage.Clone();
+                
+                // Composite the transparent subject on top
+                outputImage.Mutate(x => x.DrawImage(subjectImage, PixelColorBlendingMode.Normal, 1.0f));
+                
+                // Ensure output directory exists
+                var outputDir = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+                
+                // Save the result
+                await outputImage.SaveAsJpegAsync(outputPath);
+                
+                _logger.LogInformation("Successfully composited transparent image with background: {OutputPath}", outputPath);
+                return (true, "Background composited successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to composite transparent image with background: {Subject} + {Background}", 
+                    transparentSubjectPath, backgroundImagePath);
+                return (false, $"Compositing failed: {ex.Message}");
+            }
         }
     }
 }
