@@ -25,9 +25,16 @@ namespace Members.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        // Session-tied album properties
+        public int? FishingSessionId { get; set; }
+        public bool IsSessionAlbum { get; set; } = false;
+
         // Navigation properties
         [ForeignKey("UserId")]
         public virtual IdentityUser? User { get; set; }
+
+        [ForeignKey("FishingSessionId")]
+        public virtual FishingSession? FishingSession { get; set; }
 
         public virtual ICollection<AlbumCatches> AlbumCatches { get; set; } = new List<AlbumCatches>();
     }

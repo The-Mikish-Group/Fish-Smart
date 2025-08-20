@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace Members.Controllers
 {
@@ -344,6 +345,70 @@ namespace Members.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: AJAX endpoint for toggling settings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleSetting([FromBody] ToggleSettingRequest request)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return Json(new { success = false, message = "User not authenticated" });
+
+            try
+            {
+                var profile = await _context.SmartCatchProfiles
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (profile == null)
+                {
+                    return Json(new { success = false, message = "Profile not found" });
+                }
+
+                // Update the appropriate setting
+                switch (request.Setting.ToLower())
+                {
+                    case "watermark":
+                        profile.WatermarkEnabled = request.Enabled;
+                        break;
+                    case "voice":
+                        if (profile.SubscriptionType == "Premium")
+                        {
+                            profile.VoiceActivationEnabled = request.Enabled;
+                        }
+                        else
+                        {
+                            return Json(new { success = false, message = "Premium subscription required for voice features" });
+                        }
+                        break;
+                    case "autolocation":
+                        if (profile.SubscriptionType == "Premium")
+                        {
+                            profile.AutoLocationEnabled = request.Enabled;
+                        }
+                        else
+                        {
+                            return Json(new { success = false, message = "Premium subscription required for auto location features" });
+                        }
+                        break;
+                    default:
+                        return Json(new { success = false, message = "Invalid setting" });
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Setting updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error updating setting: {ex.Message}" });
+            }
+        }
+
+        // Request model for toggle setting
+        public class ToggleSettingRequest
+        {
+            public string Setting { get; set; } = string.Empty;
+            public bool Enabled { get; set; }
         }
     }
 }

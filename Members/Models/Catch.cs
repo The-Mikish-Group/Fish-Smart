@@ -22,6 +22,13 @@ namespace Members.Models
 
         public DateTime? CatchTime { get; set; }
 
+        // Fishing Equipment Used
+        [StringLength(200)]
+        public string? RigUsed { get; set; }  // e.g., "Carolina rig", "Drop shot", "Texas rig"
+
+        [StringLength(200)] 
+        public string? LureUsed { get; set; } // e.g., "Green plastic worm", "Spinnerbait", "Crankbait"
+
         // Catch Photo
         [StringLength(500)]
         public string? PhotoUrl { get; set; }

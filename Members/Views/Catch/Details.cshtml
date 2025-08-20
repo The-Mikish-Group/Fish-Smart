@@ -127,6 +127,51 @@
                         </div>
                     </div>
 
+                    <!-- Fishing Equipment Used -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Rig Used:</strong>
+                            @if (!string.IsNullOrEmpty(Model.RigUsed))
+                            {
+                                <span class="badge border border-primary text-primary bg-light">@Model.RigUsed</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not recorded</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Lure/Bait Used:</strong>
+                            @if (!string.IsNullOrEmpty(Model.LureUsed))
+                            {
+                                <span class="badge border border-warning text-dark bg-light">@Model.LureUsed</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not recorded</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Location Info -->
+                    @if (Model.Session != null)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Location:</strong>
+                                <div class="mt-1">
+                                    <i class="bi bi-geo-alt text-danger"></i> @(Model.Session.LocationName ?? "Unknown Location")
+                                    @if (Model.Session.Latitude.HasValue && Model.Session.Longitude.HasValue)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#mapModal">
+                                            <i class="bi bi-map"></i> View Map
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <!-- Session Info -->
                     @if (Model.Session != null)
                     {
@@ -135,10 +180,9 @@
                                 <strong>Fishing Session:</strong>
                                 <div class="mt-1">
                                     <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="text-decoration-none">
-                                        <i class="bi bi-geo-alt text-danger"></i> @(Model.Session.LocationName ?? "Unknown Location")
+                                        <i class="bi bi-journal-text text-info"></i> @Model.Session.SessionDate.ToString("MMM dd, yyyy 'at' h:mm tt")
                                     </a>
                                     <small class="text-secondary ms-2">
-                                        @Model.Session.SessionDate.ToString("MMM dd, yyyy 'at' h:mm tt")
                                         • @Model.Session.WaterType Water
                                     </small>
                                 </div>
@@ -179,7 +223,7 @@
                                         {
                                             <a asp-controller="CatchAlbum" asp-action="Details" asp-route-id="@albumCatch.Album.Id" 
                                                class="badge bg-primary text-decoration-none me-1">
-                                                <i class="bi bi-collection"></i> @albumCatch.Album.Name
+                                                <i class="bi bi-collection"></i> @albumCatch.Album!.Name
                                             </a>
                                         }
                                     }
@@ -188,14 +232,6 @@
                         </div>
                     }
 
-                    <!-- Created Date -->
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <small class="text-secondary">
-                                <strong>Logged:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
-                            </small>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -205,35 +241,39 @@
                     <h6 class="card-title text-success">
                         <i class="bi bi-lightning"></i> Quick Actions
                     </h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @if (string.IsNullOrEmpty(Model.PhotoUrl))
-                        {
-                            <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
-                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
-                               class="btn btn-sm btn-success">
-                                <i class="bi bi-camera"></i> Add Photo
+                    <div class="row g-3">
+                        <div class="col-6">
+                            @if (string.IsNullOrEmpty(Model.PhotoUrl))
+                            {
+                                <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                                   asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                                   class="btn btn-success w-100 py-2">
+                                    <i class="bi bi-camera"></i> Add Photo
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
+                                   asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                                   class="btn btn-primary w-100 py-2">
+                                    <i class="bi bi-camera"></i> Photo
+                                </a>
+                            }
+                        </div>
+                        <div class="col-6">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" 
+                               class="btn btn-warning w-100 py-2">
+                                <i class="bi bi-pencil"></i> Edit
                             </a>
-                        }
-                        else
+                        </div>
+                        @if (Model.Session != null && !Model.Session.IsCompleted)
                         {
-                            <a asp-controller="CatchPhoto" asp-action="Upload" asp-route-id="@Model.Id" 
-                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
-                               class="btn btn-sm btn-primary">
-                                <i class="bi bi-camera"></i> Change Photo
-                            </a>
-                        }
-                        
-                        <a asp-action="Edit" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" 
-                           class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil"></i> Edit Details
-                        </a>
-                        
-                        @if (Model.Session != null)
-                        {
-                            <a asp-controller="FishingSession" asp-action="AddCatch" asp-route-sessionId="@Model.SessionId" 
-                               class="btn btn-sm btn-info">
-                                <i class="bi bi-plus-circle"></i> Log Another Catch
-                            </a>
+                            <div class="col-12">
+                                <a asp-controller="FishingSession" asp-action="AddCatch" asp-route-sessionId="@Model.SessionId" 
+                                   class="btn btn-info w-100 py-2">
+                                    <i class="bi bi-plus-circle"></i> Log Another Catch
+                                </a>
+                            </div>
                         }
                     </div>
                 </div>
@@ -260,3 +300,46 @@
         </div>
     </div>
 </div>
+
+<!-- Map Modal -->
+@if (Model.Session != null && Model.Session.Latitude.HasValue && Model.Session.Longitude.HasValue)
+{
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">
+                        <i class="bi bi-geo-alt text-danger"></i> 
+                        @(Model.Session.LocationName ?? "Fishing Location")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div style="height: 400px; width: 100%;">
+                        <iframe 
+                            src="https://www.openstreetmap.org/export/embed.html?bbox=@(Model.Session.Longitude.Value-0.01m),@(Model.Session.Latitude.Value-0.01m),@(Model.Session.Longitude.Value+0.01m),@(Model.Session.Latitude.Value+0.01m)&layer=mapnik&marker=@Model.Session.Latitude.Value,@Model.Session.Longitude.Value"
+                            width="100%" 
+                            height="400" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="me-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-geo"></i> 
+                            @Model.Session.Latitude.Value.ToString("F6"), @Model.Session.Longitude.Value.ToString("F6")
+                        </small>
+                    </div>
+                    <a href="https://www.google.com/maps/@@(@Model.Session.Latitude.Value),@(@Model.Session.Longitude.Value),15z" 
+                       target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Open in Google Maps
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -103,6 +103,9 @@ builder.Services.AddHttpClient<IWeatherService, OpenWeatherMapService>(client =>
 });
 builder.Services.AddScoped<ICatchWeatherService, CatchWeatherService>();
 
+// Register Session Album Service
+builder.Services.AddScoped<ISessionAlbumService, SessionAlbumService>();
+
 // Apply filters globally to both MVC and Razor Pages
 builder.Services.Configure<MvcOptions>(options =>
 {

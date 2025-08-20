@@ -10,33 +10,29 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="text-warning">
-                        <i class="bi bi-pencil-square"></i>
-                        Edit Catch
-                    </h1>
-                    <p class="text-muted mb-0">
-                        From session: <strong>@session?.LocationName</strong> 
-                        (@session?.SessionDate.ToString("MMM dd, yyyy"))
-                    </p>
-                </div>
-                <div>
-                    @if (!string.IsNullOrEmpty(returnUrl))
-                    {
-                        <a href="@returnUrl" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i>
-                            Back
-                        </a>
-                    }
-                    else
-                    {
-                        <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i>
-                            Back to Session
-                        </a>
-                    }
-                </div>
+            <div class="text-center mb-4">
+                <h1 class="text-warning mb-2">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit Catch
+                </h1>
+                <p class="text-muted mb-3">
+                    From session: <strong>@session?.LocationName</strong> 
+                    (@session?.SessionDate.ToString("MMM dd, yyyy"))
+                </p>
+                @if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    <a href="@returnUrl" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="FishingSession" asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Session
+                    </a>
+                }
             </div>
 
             <!-- Current Photo (if exists) -->
@@ -127,6 +123,28 @@
                             <input asp-for="CatchTime" type="datetime-local" class="form-control" />
                             <span asp-validation-for="CatchTime" class="text-danger"></span>
                             <div class="form-text">When was this fish caught during the session?</div>
+                        </div>
+
+                        <!-- Fishing Equipment -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="RigUsed" class="form-label">
+                                    <i class="bi bi-diagram-3"></i> Rig Used <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input asp-for="RigUsed" class="form-control" 
+                                       placeholder="e.g., Carolina rig, Drop shot, Texas rig..." 
+                                       maxlength="200" />
+                                <span asp-validation-for="RigUsed" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LureUsed" class="form-label">
+                                    <i class="bi bi-record-circle"></i> Lure/Bait Used <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input asp-for="LureUsed" class="form-control" 
+                                       placeholder="e.g., Green plastic worm, Spinnerbait, Live minnow..." 
+                                       maxlength="200" />
+                                <span asp-validation-for="LureUsed" class="text-danger"></span>
+                            </div>
                         </div>
 
                         <!-- Action Buttons -->

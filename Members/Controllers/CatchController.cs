@@ -55,7 +55,7 @@ namespace Members.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SessionId,FishSpeciesId,Size,Weight,CatchTime")] Catch catchEntry, string? returnUrl = null)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,SessionId,FishSpeciesId,Size,Weight,CatchTime,RigUsed,LureUsed")] Catch catchEntry, string? returnUrl = null)
         {
             if (id != catchEntry.Id) return NotFound();
 

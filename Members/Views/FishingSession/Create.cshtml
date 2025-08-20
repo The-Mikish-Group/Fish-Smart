@@ -48,11 +48,15 @@
                         <!-- Location -->
                         <div class="mb-3">
                             <label asp-for="LocationName" class="form-label">
-                                <i class="bi bi-geo-alt"></i> Location Name
+                                <i class="bi bi-geo-alt"></i> Location (Album Name)
                             </label>
                             <input asp-for="LocationName" class="form-control"
-                                   placeholder="e.g., Lake Smith, Jones Pier, etc." />
+                                   placeholder="e.g., Lake Smith, Jones Pier, etc. (This will be your album name)" />
                             <span asp-validation-for="LocationName" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle text-info"></i> 
+                                This location name will be used as your fishing album name
+                            </div>
                         </div>
 
                         <!-- GPS Coordinates and Weather -->

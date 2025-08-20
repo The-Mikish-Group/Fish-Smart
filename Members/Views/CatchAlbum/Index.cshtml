@@ -6,23 +6,16 @@
 
 <div class="container my-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="text-success">
-                <i class="bi bi-collection-fill"></i>
-                My Catch Albums
-            </h1>
-            <p class="text-light mb-0">
-                Organize and showcase your fishing achievements
-                <span class="badge bg-info ms-2">@Model.Count albums</span>
-            </p>
-        </div>
-        <div>
-            <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i>
-                Create New Album
-            </a>
-        </div>
+    <div class="text-center mb-4">
+        <h1 class="text-success mb-2">
+            <i class="bi bi-collection-fill"></i>
+            My Catch Albums
+        </h1>
+        <p class="text-light mb-3">
+            Your fishing session albums - automatically created when you start fishing sessions
+            <span class="badge bg-info ms-2">@Model.Count albums</span>
+        </p>
+        <!-- Manual album creation hidden - albums auto-created with sessions -->
     </div>
 
     @if (Model.Any())
@@ -106,14 +99,23 @@
                                         <i class="bi bi-camera"></i> Add Photo
                                     </a>
                                 }
-                                <div class="d-flex gap-2">
-                                    <a asp-action="Edit" asp-route-id="@album.Id" class="btn btn-warning btn-sm flex-fill">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@album.Id" class="btn btn-danger btn-sm flex-fill">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </a>
-                                </div>
+                                @if (!album.IsSessionAlbum)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit" asp-route-id="@album.Id" class="btn btn-warning btn-sm flex-fill">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@album.Id" class="btn btn-danger btn-sm flex-fill">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> Session albums are managed through fishing sessions
+                                    </small>
+                                }
                             </div>
                         </div>
                     </div>

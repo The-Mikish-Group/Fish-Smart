@@ -117,17 +117,17 @@ The application uses Entity Framework with the following key entities:
 The application relies heavily on environment variables for sensitive configuration:
 
 ### Required Environment Variables
-- `DB_SERVER_SMARTCATCH` - Database server
-- `DB_USER_SMARTCATCH` - Database username  
-- `DB_PASSWORD_SMARTCATCH` - Database password
-- `DB_NAME_SMARTCATCH` - Database name
-- `ADMIN_EMAIL_SMARTCATCH` - Default admin email
-- `ADMIN_PASSWORD_SMARTCATCH` - Default admin password
+- `DB_SERVER_FISH_SMART` - Database server
+- `DB_USER_FISH_SMART` - Database username  
+- `DB_PASSWORD_FISH_SMART` - Database password
+- `DB_NAME_FISH_SMART` - Database name
+- `ADMIN_EMAIL_FISH_SMART` - Default admin email
+- `ADMIN_PASSWORD_FISH_SMART` - Default admin password
 - `SYNCFUSION_KEY` - Syncfusion license key
-- `DEFAULT_CITY_SMARTCATCH` - Default city for admin user
-- `DEFAULT_STATE_SMARTCATCH` - Default state for admin user
-- `DEFAULT_ZIPCODE_SMARTCATCH` - Default zip code for admin user
-- `DEFAULT_NAME_SMARTCATCH` - Default organization name
+- `DEFAULT_CITY_FISH_SMART` - Default city for admin user
+- `DEFAULT_STATE_FISH_SMART` - Default state for admin user
+- `DEFAULT_ZIPCODE_FISH_SMART` - Default zip code for admin user
+- `DEFAULT_NAME_FISH_SMART` - Default organization name
 
 ### Configuration Files
 - `appsettings.json` - Base configuration (uses LocalDB by default)

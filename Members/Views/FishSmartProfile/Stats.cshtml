@@ -9,63 +9,34 @@
         <div class="col-12">
 
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2>📊 Fishing Statistics</h2>
-                    <p class="mb-0">Your Fish-Smart fishing analytics and insights</p>
-                </div>
+            <div class="text-center mb-4">
+                <h2 class="text-white mb-2">
+                    📊 Fishing Statistics
+                </h2>
+                <p class="text-white mb-3">Your Fish-Smart fishing analytics and insights</p>
                 <a asp-action="Index" class="btn btn-primary">
                     <i class="bi bi-arrow-left"></i> Back to Profile
                 </a>
             </div>
 
-            <!-- Summary Stats Cards -->
-            <div class="row mb-5">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card stats-card border-primary h-100">
-                        <div class="card-body text-center">
-                            <div class="stats-icon text-primary mb-3">
-                                <i class="bi bi-journal-check" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h3 class="text-primary mb-1">@Model.TotalSessions</h3>
-                            <p class="text-muted mb-0">Total Sessions</p>
-                        </div>
+            <!-- Ultra Compact Summary Stats -->
+            <div class="stats-summary-bar mb-3 p-2 rounded" style="background-color: rgba(248, 249, 250, 0.8); border: 1px solid #dee2e6;">
+                <div class="row g-2 text-center">
+                    <div class="col-6 col-md-3">
+                        <span class="stat-inline text-primary fw-bold">@Model.TotalSessions</span>
+                        <small class="d-block text-muted"><i class="bi bi-journal-check"></i> Sessions</small>
                     </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card stats-card border-success h-100">
-                        <div class="card-body text-center">
-                            <div class="stats-icon text-success mb-3">
-                                <i class="bi bi-fish" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h3 class="text-success mb-1">@Model.TotalCatches</h3>
-                            <p class="text-muted mb-0">Total Catches</p>
-                        </div>
+                    <div class="col-6 col-md-3">
+                        <span class="stat-inline text-success fw-bold">@Model.TotalCatches</span>
+                        <small class="d-block text-muted"><i class="bi bi-fish"></i> Catches</small>
                     </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card stats-card border-info h-100">
-                        <div class="card-body text-center">
-                            <div class="stats-icon text-info mb-3">
-                                <i class="bi bi-collection" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h3 class="text-info mb-1">@Model.UniqueSpecies</h3>
-                            <p class="text-muted mb-0">Unique Species</p>
-                        </div>
+                    <div class="col-6 col-md-3">
+                        <span class="stat-inline text-info fw-bold">@Model.UniqueSpecies</span>
+                        <small class="d-block text-muted"><i class="bi bi-collection"></i> Species</small>
                     </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card stats-card border-warning h-100">
-                        <div class="card-body text-center">
-                            <div class="stats-icon text-warning mb-3">
-                                <i class="bi bi-share" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h3 class="text-warning mb-1">@Model.SharedCatches</h3>
-                            <p class="text-muted mb-0">Shared Catches</p>
-                        </div>
+                    <div class="col-6 col-md-3">
+                        <span class="stat-inline text-warning fw-bold">@Model.SharedCatches</span>
+                        <small class="d-block text-muted"><i class="bi bi-share"></i> Shared</small>
                     </div>
                 </div>
             </div>
@@ -288,19 +259,6 @@
 </div>
 
 <style>
-    .stats-card {
-        transition: transform 0.2s ease-in-out;
-        border-width: 2px;
-    }
-
-        .stats-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-        }
-
-    .stats-icon {
-        opacity: 0.8;
-    }
 
     .progress {
         border-radius: 10px;

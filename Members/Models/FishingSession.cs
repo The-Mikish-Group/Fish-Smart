@@ -59,6 +59,10 @@ namespace Members.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        // Session Status
+        public bool IsCompleted { get; set; } = false;
+        public DateTime? CompletedAt { get; set; }
+
         // Navigation properties
         [ForeignKey("UserId")]
         public virtual IdentityUser? User { get; set; }
@@ -70,5 +74,8 @@ namespace Members.Models
         public virtual BaitsLures? PrimaryBaitLure { get; set; }
 
         public virtual ICollection<Catch> Catches { get; set; } = new List<Catch>();
+
+        // Relationship to automatically created album
+        public virtual CatchAlbum? SessionAlbum { get; set; }
     }
 }

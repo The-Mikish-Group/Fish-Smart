@@ -644,29 +644,33 @@ namespace Members.Controllers
                     return NotFound("Image not found");
                 }
 
-                // Check if user is premium
+                // Check user profile and watermark setting
                 var userProfile = await _context.SmartCatchProfiles
                     .FirstOrDefaultAsync(p => p.UserId == userId);
                 var isPremiumUser = userProfile?.SubscriptionType == "Premium";
+                var watermarkEnabled = userProfile?.WatermarkEnabled ?? true; // Default to true if no profile
 
-                if (isPremiumUser)
+                if (watermarkEnabled)
                 {
-                    // Premium users get the original image
-                    var imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
-                    var fileName = $"{imageType}_{sourceId}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
-                    return File(imageBytes, "image/jpeg", fileName);
-                }
-                else
-                {
-                    // Non-premium users get watermarked image
+                    // Apply watermark when enabled (regardless of subscription level)
                     var watermarkedImageBytes = await _imageCompositionService.AddWatermarkToImageAsync(imagePath);
                     if (watermarkedImageBytes == null)
                     {
-                        return StatusCode(500, "Error processing image for download");
+                        // Fallback to original image if watermarking fails
+                        var originalBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+                        var fallbackFileName = $"{imageType}_{sourceId}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                        return File(originalBytes, "image/jpeg", fallbackFileName);
                     }
                     
-                    var fileName = $"{imageType}_{sourceId}_watermarked_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
-                    return File(watermarkedImageBytes, "image/jpeg", fileName);
+                    var watermarkedFileName = $"{imageType}_{sourceId}_watermarked_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                    return File(watermarkedImageBytes, "image/jpeg", watermarkedFileName);
+                }
+                else
+                {
+                    // No watermark - return original image
+                    var imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+                    var fileName = $"{imageType}_{sourceId}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                    return File(imageBytes, "image/jpeg", fileName);
                 }
             }
             catch (Exception ex)
@@ -863,8 +867,8 @@ namespace Members.Controllers
                 {
                     Environment = new
                     {
-                        WebRootPath = _environment.WebRootPath,
-                        ContentRootPath = _environment.ContentRootPath,
+                        _environment.WebRootPath,
+                        _environment.ContentRootPath,
                         CurrentDirectory = Directory.GetCurrentDirectory()
                     },
                     SourceImage = new

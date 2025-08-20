@@ -9,11 +9,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWeatherService weatherService) : Controller
+    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWeatherService weatherService, ISessionAlbumService sessionAlbumService) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly UserManager<IdentityUser> _userManager = userManager;
         private readonly IWeatherService _weatherService = weatherService;
+        private readonly ISessionAlbumService _sessionAlbumService = sessionAlbumService;
 
         // GET: FishingSession
         public async Task<IActionResult> Index()
@@ -142,7 +143,19 @@ namespace Members.Controllers
                 _context.FishingSessions.Add(session);
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] = "Fishing session started! Use 'Add Catch' button when you actually catch a fish.";
+                // Automatically create an album for this session
+                try
+                {
+                    await _sessionAlbumService.CreateSessionAlbumAsync(session);
+                    TempData["Success"] = "Fishing session and album created! Ready to log your catches.";
+                }
+                catch (Exception ex)
+                {
+                    // Log the error but don't fail the session creation
+                    Console.WriteLine($"Failed to create session album: {ex.Message}");
+                    TempData["Success"] = "Fishing session started! Ready to log your catches.";
+                }
+
                 return RedirectToAction("Index");
             }
 
@@ -211,6 +224,13 @@ namespace Members.Controllers
                 .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
 
             if (session == null) return NotFound();
+            
+            // Prevent adding catches to completed sessions
+            if (session.IsCompleted)
+            {
+                TempData["Error"] = "Cannot add catches to a completed session.";
+                return RedirectToAction("Details", new { id = sessionId });
+            }
 
             // Create new catch for this session
             var newCatch = new Catch
@@ -232,13 +252,20 @@ namespace Members.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddCatch([Bind("SessionId,FishSpeciesId,Size,Weight,CatchTime")] Catch catchEntry)
+        public async Task<IActionResult> AddCatch([Bind("SessionId,FishSpeciesId,Size,Weight,CatchTime,RigUsed,LureUsed")] Catch catchEntry)
         {
             var userId = _userManager.GetUserId(User);
             var session = await _context.FishingSessions
                 .FirstOrDefaultAsync(s => s.Id == catchEntry.SessionId && s.UserId == userId);
 
             if (session == null) return NotFound();
+            
+            // Prevent adding catches to completed sessions
+            if (session.IsCompleted)
+            {
+                TempData["Error"] = "Cannot add catches to a completed session.";
+                return RedirectToAction("Details", new { id = catchEntry.SessionId });
+            }
 
             catchEntry.CreatedAt = DateTime.Now;
 
@@ -247,8 +274,19 @@ namespace Members.Controllers
                 _context.Catches.Add(catchEntry);
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] = "Catch logged successfully!";
-                return RedirectToAction("AddCatch", new { sessionId = catchEntry.SessionId });
+                // Automatically add catch to session album
+                try
+                {
+                    await _sessionAlbumService.AddCatchToSessionAlbumAsync(catchEntry);
+                    TempData["Success"] = "Catch logged and added to session album!";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Failed to add catch to session album: {ex.Message}");
+                    TempData["Success"] = "Catch logged successfully!";
+                }
+
+                return RedirectToAction("Details", new { id = catchEntry.SessionId });
             }
 
             // Reload dropdown data on error
@@ -293,7 +331,12 @@ namespace Members.Controllers
 
             if (session == null) return NotFound();
 
-            // Session is already saved, just redirect with success message
+            // Mark session as completed
+            session.IsCompleted = true;
+            session.CompletedAt = DateTime.Now;
+            
+            await _context.SaveChangesAsync();
+            
             TempData["Success"] = "Fishing session completed! Great job out there!";
             return RedirectToAction(nameof(Details), new { id = id });
         }
@@ -311,6 +354,14 @@ namespace Members.Controllers
 
             if (session == null) return NotFound();
 
+            // Load catches for the delete confirmation view
+            var catches = await _context.Catches
+                .Include(c => c.Species)
+                .Where(c => c.SessionId == id)
+                .OrderBy(c => c.CatchTime ?? c.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Catches = catches;
             return View(session);
         }
 
@@ -320,13 +371,47 @@ namespace Members.Controllers
         {
             var userId = _userManager.GetUserId(User);
             var session = await _context.FishingSessions
+                .Include(s => s.Catches)
                 .FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
 
             if (session != null)
             {
-                _context.FishingSessions.Remove(session);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Fishing session deleted.";
+                try
+                {
+                    // Step 1: Delete the associated session album and its relationships first
+                    await _sessionAlbumService.DeleteSessionAlbumAsync(id);
+                    
+                    // Step 2: Manually delete all catches to avoid cascade conflicts
+                    if (session.Catches.Any())
+                    {
+                        foreach (var catchRecord in session.Catches)
+                        {
+                            // Remove any remaining album-catch relationships for this catch
+                            var remainingAlbumCatches = await _context.AlbumCatches
+                                .Where(ac => ac.CatchId == catchRecord.Id)
+                                .ToListAsync();
+                            
+                            if (remainingAlbumCatches.Any())
+                            {
+                                _context.AlbumCatches.RemoveRange(remainingAlbumCatches);
+                            }
+                        }
+                        
+                        // Remove catches
+                        _context.Catches.RemoveRange(session.Catches);
+                    }
+                    
+                    // Step 3: Remove the session
+                    _context.FishingSessions.Remove(session);
+                    
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Fishing session and album deleted.";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deleting session: {ex.Message}");
+                    TempData["Error"] = "Failed to delete session. Please try again.";
+                }
             }
 
             return RedirectToAction(nameof(Index));

@@ -121,32 +121,68 @@
                                 </div>
                             </div>
 
-                            <!-- Catches List -->
+                            <!-- Catches Table -->
                             <h6 class="mb-3">Catches Detail:</h6>
-                            <div class="row">
-                                @foreach (var fishCatch in catches.OrderByDescending(c => c.CatchTime ?? c.CreatedAt))
-                                {
-                                    <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="card h-100 border-info">
-                                            <div class="card-body">
-                                                <h6 class="card-title">@fishCatch.Species?.CommonName</h6>
-                                                <p class="card-text mb-1">
-                                                    <strong>Size:</strong> @fishCatch.Size.ToString("F1")"
+                            <div class="table-responsive">
+                                <table class="w-100 mb-0" id="endSessionCatchesTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-nowrap">Time</th>
+                                            <th class="text-nowrap">Species</th>
+                                            <th class="text-nowrap text-center">Length</th>
+                                            <th class="text-nowrap text-center">Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int i = 0;
+                                        }
+                                        @foreach (var fishCatch in catches.OrderByDescending(c => c.CatchTime ?? c.CreatedAt))
+                                        {
+                                            <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                                                <!-- Time -->
+                                                <td class="text-nowrap py-2 ps-2">
+                                                    @if (fishCatch.CatchTime.HasValue)
+                                                    {
+                                                        <div>@fishCatch.CatchTime.Value.ToString("h:mm tt")</div>
+                                                        <small class="text-secondary">@fishCatch.CatchTime.Value.ToString("MMM dd")</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-secondary">Unknown</span>
+                                                    }
+                                                </td>
+
+                                                <!-- Species -->
+                                                <td class="text-nowrap py-2">
+                                                    <div class="fw-bold">@(fishCatch.Species?.CommonName ?? "Unknown")</div>
+                                                    @if (!string.IsNullOrEmpty(fishCatch.Species?.ScientificName))
+                                                    {
+                                                        <small class="text-secondary">@fishCatch.Species.ScientificName</small>
+                                                    }
+                                                </td>
+
+                                                <!-- Length -->
+                                                <td class="text-nowrap text-center py-2">
+                                                    <span class="badge bg-info">@fishCatch.Size.ToString("F1")"</span>
+                                                </td>
+
+                                                <!-- Weight -->
+                                                <td class="text-nowrap text-center py-2">
                                                     @if (fishCatch.Weight.HasValue)
                                                     {
-                                                        <br><strong>Weight:</strong> @fishCatch.Weight.Value.ToString("F1") <text>lbs</text>
+                                                        <span class="badge bg-success">@fishCatch.Weight.Value.ToString("F1") lbs</span>
                                                     }
-                                                </p>
-                                                @if (fishCatch.CatchTime.HasValue)
-                                                {
-                                                    <small class="text-muted">
-                                                        @fishCatch.CatchTime.Value.ToString("h:mm tt")
-                                                    </small>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
+                                                    else
+                                                    {
+                                                        <span class="text-secondary">-</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                            i++;
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                         }
                         else

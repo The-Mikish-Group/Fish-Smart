@@ -22,15 +22,21 @@
                     <a asp-action="Index" class="btn btn-sm btn-secondary rounded-2 shadow me-2" title="Back to Sessions">
                         <i class="bi bi-arrow-left"></i> Back
                     </a>
-                    <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-sm btn-success rounded-2 shadow me-1" title="Add Catch">
-                        <i class="bi bi-plus-circle"></i> Add Catch
-                    </a>
+                    @if (!Model.IsCompleted)
+                    {
+                        <a asp-action="AddCatch" asp-route-sessionId="@Model.Id" class="btn btn-sm btn-success rounded-2 shadow me-1" title="Add Catch">
+                            <i class="bi bi-plus-circle"></i> Add Catch
+                        </a>
+                    }
                     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning rounded-2 shadow me-1" title="Edit Session">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
-                    <a asp-action="EndSession" asp-route-id="@Model.Id" class="btn btn-sm btn-info rounded-2 shadow me-1" title="End Session">
-                        <i class="bi bi-stop-circle"></i> End Session
-                    </a>
+                    @if (!Model.IsCompleted)
+                    {
+                        <a asp-action="EndSession" asp-route-id="@Model.Id" class="btn btn-sm btn-info rounded-2 shadow me-1" title="End Session">
+                            <i class="bi bi-stop-circle"></i> End Session
+                        </a>
+                    }
                 </div>
             </div>
 
@@ -46,6 +52,24 @@
                             <span class="badge bg-success ms-2">@catches.Count catches</span>
                         }
                     </h5>
+                    <div>
+                        @if (Model.IsCompleted)
+                        {
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-check-circle"></i> Completed
+                            </span>
+                            @if (Model.CompletedAt.HasValue)
+                            {
+                                <br><small class="text-muted">@Model.CompletedAt.Value.ToString("MMM dd 'at' h:mm tt")</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                <i class="bi bi-record-circle"></i> Active
+                            </span>
+                        }
+                    </div>
                 </div>
                 
                 <!-- Vertical Layout for Session Info -->
@@ -81,13 +105,9 @@
                                 <i class="bi bi-geo-alt text-danger"></i> @Model.LocationName
                                 @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
                                 {
-                                    <small class="text-secondary ms-2">
-                                        (@Model.Latitude.Value.ToString("F4"), @Model.Longitude.Value.ToString("F4"))
-                                        <a href="https://www.google.com/maps/@@(@Model.Latitude.Value),@(@Model.Longitude.Value),50m/data=!3m1!1e3" 
-                                           target="_blank" class="btn btn-sm btn-primary ms-2">
-                                            <i class="bi bi-map"></i> Map
-                                        </a>
-                                    </small>
+                                    <button type="button" class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#mapModal">
+                                        <i class="bi bi-map"></i> View Map
+                                    </button>
                                 }
                             }
                             else
@@ -231,6 +251,8 @@
                                         <th class="text-nowrap">Species</th>
                                         <th class="text-nowrap text-center">Length</th>
                                         <th class="text-nowrap text-center">Weight</th>
+                                        <th class="text-nowrap">Rig</th>
+                                        <th class="text-nowrap">Lure/Bait</th>
                                         <th class="text-nowrap">Weather</th>
                                         <th class="text-nowrap text-center">View</th>
                                     </tr>
@@ -274,6 +296,30 @@
                                                 @if (fishCatch.Weight.HasValue)
                                                 {
                                                     <span class="badge bg-success">@fishCatch.Weight.Value.ToString("F1") lbs</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-secondary">-</span>
+                                                }
+                                            </td>
+
+                                            <!-- Rig Used -->
+                                            <td class="text-nowrap py-2">
+                                                @if (!string.IsNullOrEmpty(fishCatch.RigUsed))
+                                                {
+                                                    <span class="badge border border-primary text-primary bg-light">@fishCatch.RigUsed</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-secondary">-</span>
+                                                }
+                                            </td>
+
+                                            <!-- Lure/Bait Used -->
+                                            <td class="text-nowrap py-2">
+                                                @if (!string.IsNullOrEmpty(fishCatch.LureUsed))
+                                                {
+                                                    <span class="badge border border-warning text-dark bg-light">@fishCatch.LureUsed</span>
                                                 }
                                                 else
                                                 {
@@ -390,4 +436,47 @@
             });
         });
     </script>
+}
+
+<!-- Map Modal -->
+@if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+{
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">
+                        <i class="bi bi-geo-alt text-danger"></i> 
+                        @(Model.LocationName ?? "Fishing Location")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div style="height: 400px; width: 100%;">
+                        <iframe 
+                            src="https://www.openstreetmap.org/export/embed.html?bbox=@(Model.Longitude.Value-0.01m),@(Model.Latitude.Value-0.01m),@(Model.Longitude.Value+0.01m),@(Model.Latitude.Value+0.01m)&layer=mapnik&marker=@Model.Latitude.Value,@Model.Longitude.Value"
+                            width="100%" 
+                            height="400" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="me-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-geo"></i> 
+                            @Model.Latitude.Value.ToString("F6"), @Model.Longitude.Value.ToString("F6")
+                        </small>
+                    </div>
+                    <a href="https://www.google.com/maps/@@(@Model.Latitude.Value),@(@Model.Longitude.Value),15z" 
+                       target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Open in Google Maps
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }

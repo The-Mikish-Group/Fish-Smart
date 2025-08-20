@@ -9,11 +9,9 @@
         <div class="col-12">
 
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2>🎣 My Fishing Sessions</h2>
-                    <p class="text-white mb-0">Track your fishing adventures and catches</p>
-                </div>
+            <div class="text-center mb-4">
+                <h2 class="text-white mb-2">🎣 My Fishing Sessions</h2>
+                <p class="text-white mb-3">Track your fishing adventures and catches</p>
                 <a asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Start New Session
                 </a>
@@ -32,14 +30,15 @@
                         <table class="w-100 mb-0" id="mainSessionsTable">
                             <thead>
                                 <tr>
-                                    <th><i class="bi bi-eye"></i></th>
-                                    <th>Date & Time</th>
-                                    <th>Location</th>
-                                    <th>Water Type</th>
-                                    <th>Catches</th>
-                                    <th>Weather</th>
-                                    <th class="text-center pe-2">Add Catch</th>
-                                    <th class="text-center pe-2">Edit</th>
+                                    <th class="text-nowrap"><i class="bi bi-eye"></i></th>
+                                    <th class="text-nowrap">Date & Time</th>
+                                    <th class="text-nowrap">Location</th>
+                                    <th class="text-nowrap">Water Type</th>
+                                    <th class="text-nowrap">Status</th>
+                                    <th class="text-nowrap">Catches</th>
+                                    <th class="text-nowrap">Weather</th>
+                                    <th class="text-nowrap text-center pe-2">Add Catch</th>
+                                    <th class="text-nowrap text-center pe-2">Edit</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -58,7 +57,7 @@
                                             <div class="fw-bold">@session.SessionDate.ToString("MMM dd, yyyy")</div>
                                             <small class="text-secondary">@session.SessionDate.ToString("h:mm tt")</small>
                                         </td>
-                                        <td class="py-2">
+                                        <td class="text-nowrap py-2">
                                             @if (!string.IsNullOrEmpty(session.LocationName))
                                             {
                                                 <div>@session.LocationName</div>
@@ -82,10 +81,24 @@
                                             </span>
                                         </td>
                                         <td class="text-nowrap py-2">
+                                            @if (session.IsCompleted)
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-check-circle"></i> Completed
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-record-circle"></i> Active
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-nowrap py-2">
                                             <span class="fw-bold">@session.Catches.Count</span>
                                             <small class="text-secondary"> fish</small>
                                         </td>
-                                        <td class="py-2">
+                                        <td class="text-nowrap py-2">
                                             @if (!string.IsNullOrEmpty(session.WeatherConditions))
                                             {
                                                 <div>@session.WeatherConditions</div>
@@ -100,9 +113,16 @@
                                             }
                                         </td>
                                         <td class="text-nowrap py-2 pe-2 text-center">
-                                            <a asp-action="AddCatch" asp-route-sessionId="@session.Id" title="Add Catch">
-                                                <i class="bi bi-plus-circle text-success"></i>
-                                            </a>
+                                            @if (!session.IsCompleted)
+                                            {
+                                                <a asp-action="AddCatch" asp-route-sessionId="@session.Id" title="Add Catch">
+                                                    <i class="bi bi-plus-circle text-success"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-plus-circle text-muted" title="Session completed"></i>
+                                            }
                                         </td>
                                         <td class="text-nowrap py-2 pe-2 text-center">
                                             <a asp-action="Edit" asp-route-id="@session.Id" title="Edit Session">
@@ -178,11 +198,11 @@
 @if (TempData["Success"] != null)
 {
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
-        <div class="toast show" role="alert">
+        <div class="toast show" role="alert" id="successToast" data-bs-autohide="true" data-bs-delay="4000">
             <div class="toast-header bg-success text-white">
                 <i class="bi bi-check-circle me-2"></i>
                 <strong class="me-auto">Success</strong>
-                <button type="button" class="btn-close btn-close" data-bs-dismiss="toast"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body" style="background-color: var(--bs-success-bg-subtle, #d1e7dd); color: var(--bs-success-text-emphasis, #0a3622);">
                 @TempData["Success"]
@@ -222,3 +242,5 @@
         }
     }
 </style>
+
+<!-- Toast auto-dismiss handled by global auto-dismiss-alerts.js -->
