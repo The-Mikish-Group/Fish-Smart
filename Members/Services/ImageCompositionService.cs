@@ -424,83 +424,61 @@ namespace Members.Services
         {
             try
             {
-                // Create a semi-transparent overlay in bottom-right corner
-                var watermarkWidth = Math.Max(200, image.Width / 4);
-                var watermarkHeight = Math.Max(60, image.Height / 10);
-                var x = image.Width - watermarkWidth - 20;
-                var y = image.Height - watermarkHeight - 20;
-
-                // Create simple watermark background using pixels
-                var blackTransparent = new Rgba32(0, 0, 0, 180); // Semi-transparent black
-                var whiteTransparent = new Rgba32(255, 255, 255, 220); // Semi-transparent white
-
-                // Draw background rectangle
-                for (int py = y; py < y + watermarkHeight && py < image.Height; py++)
+                // Load the Fish-Smart logo
+                var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Svg", "Logos", "SmallLogo.png");
+                
+                if (!System.IO.File.Exists(logoPath))
                 {
-                    for (int px = x; px < x + watermarkWidth && px < image.Width; px++)
-                    {
-                        if (px >= 0 && py >= 0)
-                        {
-                            image[px, py] = blackTransparent;
-                        }
-                    }
+                    // Fallback to alternative path
+                    logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "LinkImages", "SmallLogo.png");
                 }
 
-                // Draw border
-                for (int i = 0; i < 2; i++)
+                if (!System.IO.File.Exists(logoPath))
                 {
-                    // Top and bottom borders
-                    for (int px = x + i; px < x + watermarkWidth - i && px < image.Width; px++)
-                    {
-                        if (px >= 0 && y + i >= 0 && y + i < image.Height)
-                            image[px, y + i] = whiteTransparent;
-                        if (px >= 0 && y + watermarkHeight - 1 - i >= 0 && y + watermarkHeight - 1 - i < image.Height)
-                            image[px, y + watermarkHeight - 1 - i] = whiteTransparent;
-                    }
-                    // Left and right borders
-                    for (int py = y + i; py < y + watermarkHeight - i && py < image.Height; py++)
-                    {
-                        if (py >= 0 && x + i >= 0 && x + i < image.Width)
-                            image[x + i, py] = whiteTransparent;
-                        if (py >= 0 && x + watermarkWidth - 1 - i >= 0 && x + watermarkWidth - 1 - i < image.Width)
-                            image[x + watermarkWidth - 1 - i, py] = whiteTransparent;
-                    }
+                    _logger.LogWarning("Fish-Smart logo not found for watermark at {LogoPath}", logoPath);
+                    return;
                 }
 
-                // Add text (simplified implementation without ImageSharp.Drawing)
-                AddSimpleTextWatermark(image, "Fish-Smart", x + 10, y + 15);
-                AddSimpleTextWatermark(image, "Get Premium for", x + 10, y + 30);
-                AddSimpleTextWatermark(image, "watermark-free images", x + 10, y + 45);
+                using var logoImage = Image.Load<Rgba32>(logoPath);
+                
+                // Calculate watermark size - almost twice as large
+                var maxLogoWidth = Math.Min(180, image.Width / 6); // Max 180px or 1/6 of image width
+                var maxLogoHeight = Math.Min(150, image.Height / 8); // Max 150px or 1/8 of image height
+                
+                // Maintain logo aspect ratio
+                var logoAspectRatio = (float)logoImage.Width / logoImage.Height;
+                int logoWidth, logoHeight;
+                
+                if (maxLogoWidth / logoAspectRatio <= maxLogoHeight)
+                {
+                    logoWidth = maxLogoWidth;
+                    logoHeight = (int)(maxLogoWidth / logoAspectRatio);
+                }
+                else
+                {
+                    logoHeight = maxLogoHeight;
+                    logoWidth = (int)(maxLogoHeight * logoAspectRatio);
+                }
+                
+                // Resize logo to watermark size
+                logoImage.Mutate(x => x.Resize(logoWidth, logoHeight));
+                
+                // Make the logo semi-transparent for watermark effect
+                logoImage.Mutate(x => x.Opacity(0.7f)); // 70% opacity
+                
+                // Position in upper-right corner with margin
+                var x = image.Width - logoWidth - 15;
+                var y = 15; // Top margin instead of bottom
+                
+                // Composite the logo onto the image
+                image.Mutate(ctx => ctx.DrawImage(logoImage, new Point(x, y), 1.0f));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding Fish-Smart watermark");
+                _logger.LogError(ex, "Error adding Fish-Smart logo watermark: {Message}", ex.Message);
             }
         }
 
-        private void AddSimpleTextWatermark(Image<Rgba32> image, string text, int startX, int startY)
-        {
-            // Very basic pixel-based text rendering (just for demo - in production use ImageSharp.Drawing)
-            var white = new Rgba32(255, 255, 255, 255);
-            var fontSize = 12;
-            
-            for (int i = 0; i < Math.Min(text.Length, 25); i++)
-            {
-                var charX = startX + (i * fontSize);
-                if (charX + fontSize < image.Width && startY + fontSize < image.Height)
-                {
-                    // Draw a simple vertical line for each character (placeholder)
-                    for (int py = startY; py < startY + fontSize && py < image.Height; py++)
-                    {
-                        if (charX >= 0 && charX < image.Width)
-                        {
-                            image[charX, py] = white;
-                            if (charX + 1 < image.Width) image[charX + 1, py] = white;
-                        }
-                    }
-                }
-            }
-        }
 
         private async Task<bool> DetectSubjectInImageAsync(string imagePath)
         {

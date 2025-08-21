@@ -243,6 +243,28 @@ img {
     transition: border 0.3s ease-in-out;
 }
 
+/* ImageViewer Mobile Responsiveness - Only target ImageViewer pages */
+@media (max-width: 768px) {
+    .image-viewer-container .position-relative {
+        height: calc(100vh - 15rem) !important;
+    }
+    
+    .image-viewer-container .img-fluid {
+        max-height: calc(100vh - 250px) !important;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+    .image-viewer-container .position-relative {
+        height: calc(100vh - 18rem) !important;
+    }
+    
+    .image-viewer-container .img-fluid {
+        max-height: calc(100vh - 300px) !important;
+    }
+}
+
 /* #endregion General Site CSS Stuff */
 
 

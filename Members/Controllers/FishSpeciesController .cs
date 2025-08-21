@@ -166,12 +166,28 @@ namespace Members.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin, Manager")]
-        public async Task<IActionResult> Create([Bind("CommonName,ScientificName,WaterType,Region,MinSize,MaxSize,SeasonStart,SeasonEnd,StockImageUrl,RegulationNotes,IsActive")] FishSpecies fishSpecies)
+        public async Task<IActionResult> Create([Bind("CommonName,ScientificName,WaterType,Region,MinSize,MaxSize,SeasonStart,SeasonEnd,StockImageUrl,RegulationNotes,IsActive")] FishSpecies fishSpecies, IFormFile? ImageFile)
         {
             if (ModelState.IsValid)
             {
+                // Handle image upload if provided
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var result = await SaveFishSpeciesImageAsync(ImageFile, fishSpecies.CommonName);
+                    if (result.Success)
+                    {
+                        fishSpecies.StockImageUrl = result.ImageUrl;
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("ImageFile", result.ErrorMessage);
+                        return View(fishSpecies);
+                    }
+                }
+
                 _context.Add(fishSpecies);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = $"Fish species '{fishSpecies.CommonName}' has been added successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(fishSpecies);
@@ -196,7 +212,7 @@ namespace Members.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin, Manager")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CommonName,ScientificName,WaterType,Region,MinSize,MaxSize,SeasonStart,SeasonEnd,StockImageUrl,RegulationNotes,IsActive")] FishSpecies fishSpecies)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CommonName,ScientificName,WaterType,Region,MinSize,MaxSize,SeasonStart,SeasonEnd,StockImageUrl,RegulationNotes,IsActive")] FishSpecies fishSpecies, IFormFile? ImageFile, bool RemoveImage = false)
         {
             if (id != fishSpecies.Id)
             {
@@ -207,8 +223,52 @@ namespace Members.Controllers
             {
                 try
                 {
-                    _context.Update(fishSpecies);
+                    var existingSpecies = await _context.FishSpecies.FindAsync(id);
+                    if (existingSpecies == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image removal
+                    if (RemoveImage)
+                    {
+                        if (!string.IsNullOrEmpty(existingSpecies.StockImageUrl))
+                        {
+                            await DeleteFishSpeciesImageAsync(existingSpecies.StockImageUrl);
+                        }
+                        fishSpecies.StockImageUrl = null;
+                    }
+                    // Handle new image upload
+                    else if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        // Delete old image if exists
+                        if (!string.IsNullOrEmpty(existingSpecies.StockImageUrl))
+                        {
+                            await DeleteFishSpeciesImageAsync(existingSpecies.StockImageUrl);
+                        }
+
+                        var result = await SaveFishSpeciesImageAsync(ImageFile, fishSpecies.CommonName);
+                        if (result.Success)
+                        {
+                            fishSpecies.StockImageUrl = result.ImageUrl;
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("ImageFile", result.ErrorMessage);
+                            return View(fishSpecies);
+                        }
+                    }
+                    else
+                    {
+                        // Keep existing image if no new upload and not removing
+                        fishSpecies.StockImageUrl = existingSpecies.StockImageUrl;
+                    }
+
+                    // Update the entity
+                    _context.Entry(existingSpecies).CurrentValues.SetValues(fishSpecies);
                     await _context.SaveChangesAsync();
+                    
+                    TempData["Success"] = $"Fish species '{fishSpecies.CommonName}' has been updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -264,6 +324,79 @@ namespace Members.Controllers
         private bool FishSpeciesExists(int id)
         {
             return _context.FishSpecies.Any(e => e.Id == id);
+        }
+
+        private async Task<(bool Success, string ImageUrl, string ErrorMessage)> SaveFishSpeciesImageAsync(IFormFile imageFile, string fishName)
+        {
+            try
+            {
+                if (imageFile == null || imageFile.Length == 0)
+                    return (false, string.Empty, "No image file provided");
+
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                
+                if (!allowedExtensions.Contains(fileExtension))
+                    return (false, string.Empty, "Invalid file type. Only JPG, PNG, and GIF files are allowed.");
+
+                // Validate file size (5MB max)
+                if (imageFile.Length > 5 * 1024 * 1024)
+                    return (false, string.Empty, "File size too large. Maximum size is 5MB.");
+
+                // Create images/fishspecies directory if it doesn't exist
+                var imagesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "fishspecies");
+                Directory.CreateDirectory(imagesPath);
+
+                // Generate unique filename
+                var sanitizedFishName = string.Join("", fishName.Split(Path.GetInvalidFileNameChars()));
+                var fileName = $"{sanitizedFishName}_{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(imagesPath, fileName);
+
+                // Save the file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                // Return the URL path
+                var imageUrl = $"/images/fishspecies/{fileName}";
+                return (true, imageUrl, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                return (false, string.Empty, $"Error saving image: {ex.Message}");
+            }
+        }
+
+        private Task<bool> DeleteFishSpeciesImageAsync(string imageUrl)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imageUrl))
+                    return Task.FromResult(true);
+
+                // Extract filename from URL
+                var fileName = Path.GetFileName(imageUrl);
+                if (string.IsNullOrEmpty(fileName))
+                    return Task.FromResult(true);
+
+                // Build full file path
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "fishspecies", fileName);
+
+                // Delete file if it exists
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                return Task.FromResult(true);
+            }
+            catch (Exception)
+            {
+                // Log the error but don't fail the operation
+                return Task.FromResult(false);
+            }
         }
     }
 }

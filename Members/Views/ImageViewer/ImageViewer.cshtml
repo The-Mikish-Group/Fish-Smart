@@ -10,95 +10,95 @@
     <meta http-equiv="Expires" content="0" />
 }
 
-<div class="container-fluid p-0" style="margin-top: 1rem; height: calc(100vh - 6rem);">
-    <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-light position-static w-100" style="z-index: 1020;">
-        <div class="container-fluid">
-            <!-- Left side: Back button and title -->
-            <div class="d-flex align-items-center">
-                <a href="@Model.ReturnUrl" class="btn btn-back me-3">
-                    <i class="bi bi-arrow-left"></i>
-                    Back
-                </a>
-                <div>
-                    <h5 class="mb-0 text-light">@Model.Title</h5>
-                    @if (!string.IsNullOrEmpty(Model.Description))
-                    {
-                        <small>@Model.Description</small>
-                    }
-                </div>
-            </div>
-
-            <!-- Right side: Action buttons - Compact Layout -->
-            <div class="d-flex flex-wrap align-items-center gap-1" style="max-width: 400px;">
-                @if (Model.CanEdit)
-                {
-                    <!-- Primary Actions -->
-                    <button type="button" class="btn btn-primary btn-sm" onclick="showBackgroundSelector()" id="changeBackgroundBtn">
-                        <i class="bi bi-palette"></i>
-                        <span class="d-none d-md-inline">Background</span>
-                    </button>
-                    <button type="button" class="btn btn-success btn-sm" onclick="downloadImage()">
-                        <i class="bi bi-download"></i>
-                        <span class="d-none d-md-inline">Download</span>
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                        <span class="d-none d-lg-inline">Undo</span>
-                    </button>
-                    
-                    <!-- Secondary Actions - Dropdown -->
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots"></i>
-                            <span class="d-none d-lg-inline">More</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="showDebugInfo()">
-                                <i class="bi bi-bug"></i> Debug Paths
-                            </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="inspectDatabase()">
-                                <i class="bi bi-database"></i> DB Check
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item disabled" href="#">
-                                <i class="bi bi-magic"></i> AI Enhance <small>(Soon)</small>
-                            </a></li>
-                            <li><a class="dropdown-item disabled" href="#">
-                                <i class="bi bi-sliders"></i> Filters <small>(Soon)</small>
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                <i class="bi bi-trash"></i> Delete Image
-                            </a></li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Info Panel Toggle -->
-                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
-                        <i class="bi bi-info-circle"></i>
-                        <span class="d-none d-lg-inline">Info</span>
-                    </button>
-                }
-                else
-                {
-                    <!-- Info Panel Toggle for non-editable -->
-                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
-                        <i class="bi bi-info-circle"></i>
-                        <span class="d-none d-sm-inline">Info</span>
-                    </button>
-                }
-            </div>
+<div class="container-fluid p-0 image-viewer-container" style="margin-top: 1rem; height: calc(100vh - 6rem);">
+    <!-- Header Section - Standard Fish-Smart Layout -->
+    <div class="container-fluid px-3 py-2" style="background: rgba(0,0,0,0.8);">
+        <!-- Title Row -->
+        <div class="text-center mb-2">
+            <h1 class="text-white mb-0">
+                <i class="bi bi-image"></i>
+                @Model.Title
+            </h1>
         </div>
-    </nav>
+        
+        <!-- Description Row -->
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="text-center mb-3">
+                <p class="text-white-50 mb-0">@Model.Description</p>
+            </div>
+        }
+        
+        <!-- Back Button Row -->
+        <div class="text-center mb-3">
+            <a href="@Model.ReturnUrl" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Album
+            </a>
+        </div>
+        
+        <!-- Action Buttons Row -->
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            @if (Model.CanEdit)
+            {
+                <!-- Primary Actions -->
+                <button type="button" class="btn btn-primary btn-sm" onclick="showBackgroundSelector()" id="changeBackgroundBtn">
+                    <i class="bi bi-palette"></i>
+                    <span class="d-none d-md-inline">Background</span>
+                </button>
+                <button type="button" class="btn btn-success btn-sm" onclick="downloadImage()">
+                    <i class="bi bi-download"></i>
+                    <span class="d-none d-md-inline">Download</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="undoBackgroundChange()" id="undoBtn" style="display: none;">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <span class="d-none d-lg-inline">Undo</span>
+                </button>
+                
+                <!-- Secondary Actions - Dropdown -->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                        <span class="d-none d-lg-inline">More</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item disabled" href="#">
+                            <i class="bi bi-magic"></i> AI Enhance <small>(Soon)</small>
+                        </a></li>
+                        <li><a class="dropdown-item disabled" href="#">
+                            <i class="bi bi-sliders"></i> Filters <small>(Soon)</small>
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash"></i> Delete Image
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <!-- Info Panel Toggle -->
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
+                    <i class="bi bi-info-circle"></i>
+                    <span class="d-none d-lg-inline">Info</span>
+                </button>
+            }
+            else
+            {
+                <!-- Info Panel Toggle for non-editable -->
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#infoPanel">
+                    <i class="bi bi-info-circle"></i>
+                    <span class="d-none d-sm-inline">Info</span>
+                </button>
+            }
+        </div>
+    </div>
 
     <!-- Main Image Display Area -->
-    <div class="position-relative" style="height: calc(100vh - 8rem); background: transparent;">
+    <div class="position-relative" style="height: calc(100vh - 12rem); background: transparent;">
         <div class="d-flex justify-content-center align-items-center h-100">
             <img src="@Model.ImageUrl" 
                  alt="@Model.Title" 
                  class="img-fluid" 
-                 style="max-height: calc(100vh - 140px); max-width: 100%; object-fit: contain; cursor: zoom-in;"
+                 style="max-height: calc(100vh - 200px); max-width: 100%; object-fit: contain; cursor: zoom-in;"
                  onclick="toggleFullscreen(this)" />
         </div>
 
@@ -273,6 +273,7 @@
         background: #000 !important;
         object-fit: contain !important;
     }
+    
 </style>
 
 <script>
