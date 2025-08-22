@@ -20,7 +20,7 @@
         <!-- Status Success Message (Auto-Clear) -->
         @if (TempData["SuccessMessage"] != null)
         {            
-            <div class="alert alert-success fade show auto-hide-alert" role="alert">
+            <div class="alert alert-success fade show auto-hide-alertx" role="alert">
                 @TempData["SuccessMessage"]
             </div>
         }
@@ -101,6 +101,27 @@
             </div>
         </div>
 
+        <!-- AI Batch Rename Section -->
+        @if (Model != null && Model.Any())
+        {
+            <div class="card mt-4 mb-3 rounded p-1 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0"><i class="bi bi-robot"></i> AI-Powered Batch Rename</h5>
+                            <small class="text-muted">Automatically generate descriptive filenames for all images</small>
+                        </div>
+                        <div>
+                            <a href="@Url.Action("BatchRename", new { galleryName = currentGalleryName })" 
+                               class="btn btn-primary btn-sm rounded-2 shadow">
+                                <i class="bi bi-magic"></i> Smart Rename
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Shadow Card (Existing Images) -->
         <div class="card mt-4 mb-3 rounded p-1 shadow">
 
@@ -144,7 +165,8 @@
                                         <button type="button" 
                                             class="btn btn-sm btn-rename me-5 rounded px-2 py-2" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#renameImageModal_@sanitizedImageFileNameForId">
+                                            data-bs-target="#renameImageModal_@sanitizedImageFileNameForId"
+                                            title="Rename Image">
                                             <i class="bi bi-pencil-square px-0"></i>
                                         </button>                                                
                                             
@@ -181,6 +203,26 @@
                                             <!-- Gallery Name and Old file Name -->
                                             <input type="hidden" name="galleryName" value="@image.GalleryName" />
                                             <input type="hidden" name="oldFileName" value="@image.FileName" />
+
+                                            <!-- Modal Header -->
+                                            <h5 class="modal-title mb-3">
+                                                <i class="bi bi-pencil-square"></i> Rename Image
+                                            </h5>
+
+                                            <!-- AI Suggestion Section -->
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="form-label fw-bold mb-0">AI Suggestion:</label>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-primary" 
+                                                            onclick="getAiSuggestion('@image.GalleryName', '@image.FileName', 'newFileName_@sanitizedImageFileNameForId', 'aiSuggestionText_@sanitizedImageFileNameForId')">
+                                                        <i class="bi bi-robot"></i> Generate Smart Name
+                                                    </button>
+                                                </div>
+                                                <div id="aiSuggestionText_@sanitizedImageFileNameForId" class="text-muted small">
+                                                    Click "Generate Smart Name" to get an AI-powered filename suggestion
+                                                </div>
+                                            </div>
 
                                             <!-- New File Name -->
                                             <div class="mb-2">
@@ -447,5 +489,138 @@
                 }, estimatedSeconds * 1000);
             });
         });
+
+        // AI Suggestion function for use within rename modal
+        function getAiSuggestion(galleryName, fileName, inputFieldId, suggestionTextId) {
+            console.log(`AI Suggestion called for: ${galleryName}/${fileName}`);
+            
+            // Show loading state
+            const button = event.target;
+            const originalContent = button.innerHTML;
+            const suggestionDiv = document.getElementById(suggestionTextId);
+            const inputField = document.getElementById(inputFieldId);
+            
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Analyzing...';
+            button.disabled = true;
+            suggestionDiv.innerHTML = '<span class="text-info">🤖 AI is analyzing the image...</span>';
+            
+            // Call the debug endpoint to get AI suggestion
+            const debugUrl = `/Image/DebugAnalysis?galleryName=${encodeURIComponent(galleryName)}&fileName=${encodeURIComponent(fileName)}`;
+            console.log(`Debug URL: ${debugUrl}`);
+            
+            fetch(debugUrl)
+                .then(response => {
+                    console.log(`Response status: ${response.status}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    console.log(`Raw response: ${text}`);
+                    try {
+                        const data = JSON.parse(text);
+                        
+                        // Restore button
+                        button.innerHTML = originalContent;
+                        button.disabled = false;
+                        
+                        if (data.success) {
+                            const result = data.result;
+                            
+                            // Update the suggestion display
+                            suggestionDiv.innerHTML = `
+                                <div class="alert alert-success p-2 mb-2">
+                                    <strong>✨ ${result.suggested}</strong><br>
+                                    <small class="text-muted">
+                                        ${result.description} • Confidence: ${Math.round(result.confidence * 100)}%
+                                    </small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="useSuggestion('${inputFieldId}', '${result.suggested}')">
+                                    <i class="bi bi-check-circle"></i> Use This Name
+                                </button>
+                            `;
+                        } else {
+                            suggestionDiv.innerHTML = `
+                                <div class="alert alert-danger p-2">
+                                    <small>❌ AI Analysis failed: ${data.error || 'Unknown error'}</small>
+                                </div>
+                            `;
+                            console.error('AI Analysis Error:', data);
+                        }
+                    } catch (parseError) {
+                        console.error('JSON Parse Error:', parseError);
+                        console.error('Response text was:', text);
+                        
+                        suggestionDiv.innerHTML = `
+                            <div class="alert alert-danger p-2">
+                                <small>❌ Failed to parse AI response. Check console for details.</small>
+                            </div>
+                        `;
+                        
+                        // Restore button
+                        button.innerHTML = originalContent;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    // Restore button
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                    
+                    suggestionDiv.innerHTML = `
+                        <div class="alert alert-danger p-2">
+                            <small>❌ AI request failed: ${error.message}</small>
+                        </div>
+                    `;
+                    
+                    console.error('AI Suggestion request failed:', error);
+                });
+        }
+        
+        // Helper function to use the AI suggestion
+        function useSuggestion(inputFieldId, suggestedName) {
+            const inputField = document.getElementById(inputFieldId);
+            if (inputField) {
+                inputField.value = suggestedName;
+                inputField.focus();
+                inputField.select();
+            }
+        }
+        
+        // Helper function to execute rename
+        function executeRename(galleryName, oldFileName, newFileName) {
+            // Create a temporary form to submit the rename
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Image/RenameImage';
+            
+            // Add anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+            
+            // Add form fields
+            const fields = [
+                { name: 'GalleryName', value: galleryName },
+                { name: 'OldFileName', value: oldFileName },
+                { name: 'NewFileName', value: newFileName }
+            ];
+            
+            fields.forEach(field => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = field.name;
+                input.value = field.value;
+                form.appendChild(input);
+            });
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 }

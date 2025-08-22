@@ -1,0 +1,413 @@
+@model Members.Models.BatchRenameViewModel
+@{
+    ViewData["Title"] = $"AI-Powered Batch Rename - {Model.GalleryName}";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>🤖 AI-Powered Batch Rename</h2>
+                    <p class="text-muted">Gallery: <strong>@Model.GalleryName</strong></p>
+                    @if (ViewBag.ImageCount != null)
+                    {
+                        <p class="text-info">Found @ViewBag.ImageCount image(s) to analyze</p>
+                    }
+                </div>
+                <div>
+                    <a href="@Url.Action("ManageGalleryImages", new { galleryName = Model.GalleryName })" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Gallery
+                    </a>
+                </div>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (ViewBag.GeneratedPreviews != true)
+            {
+                <!-- Initial form to start analysis -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-robot"></i> AI Analysis Options</h4>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="GenerateRenamePreviews" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="GalleryName" />
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <h5><i class="fas fa-info-circle"></i> Free AI Options Available</h5>
+                                        <ul class="mb-0">
+                                            <li><strong>Azure Computer Vision</strong> - 5,000 free analyses per month</li>
+                                            <li><strong>OpenAI Vision</strong> - Use free credits if available</li>
+                                            <li><strong>Enhanced Local Analysis</strong> - Free, uses image properties and filename patterns</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="UseAzureVision" id="azureVision">
+                                        <label class="form-check-label" for="azureVision">
+                                            <strong>Azure Computer Vision</strong><br>
+                                            <small class="text-muted">High accuracy, 5,000 free/month</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="UseOpenAI" id="openAI">
+                                        <label class="form-check-label" for="openAI">
+                                            <strong>OpenAI Vision</strong><br>
+                                            <small class="text-muted">Very high accuracy, uses free credits</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="UseLocalAnalysis" id="localAnalysis" checked>
+                                        <label class="form-check-label" for="localAnalysis">
+                                            <strong>Enhanced Local Analysis</strong><br>
+                                            <small class="text-muted">Free, pattern-based naming</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                                    <i class="fas fa-magic"></i> Generate AI Suggestions
+                                </button>
+                                <div class="ms-3 d-none" id="loadingContainer">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span id="loadingText">Analyzing images...</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted" id="progressInfo">This may take a moment for large galleries</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Debug links for testing -->
+                                <div class="mt-2">
+                                    <small>
+                                        <a href="#" onclick="testSingleFile()" class="text-muted">
+                                            <i class="fas fa-bug"></i> Test on single file
+                                        </a>
+                                        <span class="text-muted mx-2">|</span>
+                                        <a href="/Image/TestAnalysis?galleryName=@Model.GalleryName&fileName=test.jpg" target="_blank" class="text-muted">
+                                            <i class="fas fa-external-link-alt"></i> Direct test link
+                                        </a>
+                                    </small>
+                                    <div class="mt-1">
+                                        <small class="text-muted">
+                                            💡 Direct link: Edit URL to change 'test.jpg' to your actual filename
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Preview results and execute form -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-preview"></i> Review AI Suggestions</h4>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">Select All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectNone()">Select None</button>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="selectHighConfidence()">High Confidence Only</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.RenamePreview.Any())
+                        {
+                            <form asp-action="ExecuteBatchRename" method="post" id="executeForm">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" asp-for="GalleryName" />
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th width="5%">
+                                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                                </th>
+                                                <th width="25%">Current Name</th>
+                                                <th width="25%">AI Suggestion</th>
+                                                <th width="20%">Description</th>
+                                                <th width="10%">Confidence</th>
+                                                <th width="15%">Custom Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < Model.RenamePreview.Count; i++)
+                                            {
+                                                var preview = Model.RenamePreview[i];
+                                                var confidenceClass = preview.Confidence > 0.7f ? "text-success" : preview.Confidence > 0.4f ? "text-warning" : "text-danger";
+                                                var rowClass = preview.Confidence > 0.7f ? "table-success" : preview.Confidence > 0.4f ? "table-warning" : "";
+                                                
+                                                <tr class="@rowClass">
+                                                    <td>
+                                                        <input type="checkbox" 
+                                                               name="RenameOperations[@i].Execute" 
+                                                               value="true" 
+                                                               @(preview.IsSelected ? "checked" : "")
+                                                               onchange="updateSubmitButton()">
+                                                        <input type="hidden" name="RenameOperations[@i].Execute" value="false">
+                                                        <input type="hidden" name="RenameOperations[@i].OriginalFileName" value="@preview.OriginalFileName">
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted text-break">@preview.OriginalFileName</small>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" 
+                                                               name="RenameOperations[@i].NewFileName" 
+                                                               value="@preview.SuggestedFileName" 
+                                                               class="form-control form-control-sm suggested-name"
+                                                               onchange="updateSubmitButton()">
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">@preview.Description</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge @(preview.Confidence > 0.7f ? "bg-success" : preview.Confidence > 0.4f ? "bg-warning" : "bg-danger")">
+                                                            @(Math.Round(preview.Confidence * 100, 1))%
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="customizeFilename(@i)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mt-4 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span id="selectedCount">0</span> files selected for renaming
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-secondary" onclick="window.location.href='@Url.Action("BatchRename", new { galleryName = Model.GalleryName })'">
+                                            <i class="fas fa-redo"></i> Start Over
+                                        </button>
+                                        <button type="submit" class="btn btn-danger btn-lg ms-2" id="executeBtn" disabled>
+                                            <i class="fas fa-exchange-alt"></i> Execute Rename Operation
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> No rename suggestions were generated. Please try again.
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Custom Filename Modal -->
+<div class="modal fade" id="customFilenameModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Custom Filename</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Original Filename:</label>
+                    <div id="modalOriginalName" class="text-muted"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="customFilenameInput" class="form-label">New Filename:</label>
+                    <input type="text" class="form-control" id="customFilenameInput">
+                    <div class="form-text">Keep the same file extension (.jpg, .png, etc.)</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="applyCustomFilename()">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRowIndex = -1;
+
+function selectAll() {
+    document.querySelectorAll('input[name*="RenameOperations"][name*="Execute"][type="checkbox"]').forEach(cb => {
+        cb.checked = true;
+    });
+    updateSubmitButton();
+}
+
+function selectNone() {
+    document.querySelectorAll('input[name*="RenameOperations"][name*="Execute"][type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+    updateSubmitButton();
+}
+
+function selectHighConfidence() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        const confidenceSpan = row.querySelector('.badge');
+        const confidenceText = confidenceSpan.textContent;
+        const confidence = parseFloat(confidenceText.replace('%', ''));
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        checkbox.checked = confidence >= 70;
+    });
+    updateSubmitButton();
+}
+
+function toggleAll(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('input[name*="RenameOperations"][name*="Execute"][type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = masterCheckbox.checked;
+    });
+    updateSubmitButton();
+}
+
+function updateSubmitButton() {
+    const checkedBoxes = document.querySelectorAll('input[name*="RenameOperations"][name*="Execute"][type="checkbox"]:checked');
+    const executeBtn = document.getElementById('executeBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selectedCount) {
+        selectedCount.textContent = checkedBoxes.length;
+    }
+    
+    if (executeBtn) {
+        executeBtn.disabled = checkedBoxes.length === 0;
+    }
+}
+
+function customizeFilename(rowIndex) {
+    currentRowIndex = rowIndex;
+    const row = document.querySelector(`input[name="RenameOperations[${rowIndex}].OriginalFileName"]`);
+    const newNameInput = document.querySelector(`input[name="RenameOperations[${rowIndex}].NewFileName"]`);
+    
+    document.getElementById('modalOriginalName').textContent = row.value;
+    document.getElementById('customFilenameInput').value = newNameInput.value;
+    
+    new bootstrap.Modal(document.getElementById('customFilenameModal')).show();
+}
+
+function applyCustomFilename() {
+    const customName = document.getElementById('customFilenameInput').value.trim();
+    if (customName && currentRowIndex >= 0) {
+        const newNameInput = document.querySelector(`input[name="RenameOperations[${currentRowIndex}].NewFileName"]`);
+        newNameInput.value = customName;
+        bootstrap.Modal.getInstance(document.getElementById('customFilenameModal')).hide();
+    }
+}
+
+// Show loading spinner when generating suggestions
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generateBtn');
+    const loadingContainer = document.getElementById('loadingContainer');
+    
+    if (generateBtn && loadingContainer) {
+        generateBtn.addEventListener('click', function() {
+            loadingContainer.classList.remove('d-none');
+            generateBtn.disabled = true;
+            
+            // Add timeout warning after 30 seconds
+            setTimeout(function() {
+                if (!loadingContainer.classList.contains('d-none')) {
+                    document.getElementById('loadingText').textContent = 'Still processing...';
+                    document.getElementById('progressInfo').textContent = 'If this takes too long, try refreshing the page';
+                }
+            }, 30000);
+        });
+    }
+    
+    // Initialize submit button state
+    updateSubmitButton();
+});
+
+// Debug function to test single file analysis
+function testSingleFile() {
+    // Get the first image from gallery (you'll need to provide an actual filename)
+    const galleryName = '@Model.GalleryName';
+    
+    // Prompt user for filename to test
+    const fileName = prompt('Enter filename to test (e.g., image.jpg):');
+    if (!fileName) return;
+    
+    // Use the simple text endpoint instead of JSON for easier debugging
+    const testUrl = `/Image/TestAnalysis?galleryName=${encodeURIComponent(galleryName)}&fileName=${encodeURIComponent(fileName)}`;
+    console.log(`Testing URL: ${testUrl}`);
+    
+    fetch(testUrl)
+        .then(response => {
+            console.log(`Response status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            console.log('Test result:', text);
+            alert('Test Result:\n' + text);
+        })
+        .catch(error => {
+            console.error('Test request failed:', error);
+            alert('Test request failed: ' + error.message + '\nCheck console for details.');
+        });
+}
+</script>
+
+<style>
+.table td {
+    vertical-align: middle;
+}
+
+.suggested-name {
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.text-break {
+    word-break: break-all;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+</style>

@@ -56,6 +56,58 @@ namespace Members.Models
         public required string NewFileName { get; set; } // e.g., newname.jpg
     }
 
+    // ViewModel for AI-powered batch rename operation
+    public class BatchRenameViewModel
+    {
+        [Required]
+        public required string GalleryName { get; set; }
+        
+        public List<RenamePreview> RenamePreview { get; set; } = new List<RenamePreview>();
+        
+        public bool UseAzureVision { get; set; } = false;
+        public bool UseOpenAI { get; set; } = false;
+        public bool UseLocalAnalysis { get; set; } = true;
+    }
+
+    // Preview item for batch rename showing old vs new filenames
+    public class RenamePreview
+    {
+        public required string OriginalFileName { get; set; }
+        public required string SuggestedFileName { get; set; }
+        public required string Description { get; set; }
+        public float Confidence { get; set; }
+        public bool IsSelected { get; set; } = true;
+        public string? CustomFileName { get; set; } // User can override the suggestion
+    }
+
+    // ViewModel for confirming and executing batch rename
+    public class ExecuteBatchRenameViewModel
+    {
+        [Required]
+        public required string GalleryName { get; set; }
+        
+        public List<RenameOperation> RenameOperations { get; set; } = new List<RenameOperation>();
+    }
+
+    // Individual rename operation for execution
+    public class RenameOperation
+    {
+        public required string OriginalFileName { get; set; }
+        public required string NewFileName { get; set; }
+        public bool Execute { get; set; } = true;
+    }
+
+    // Result model for batch rename operation
+    public class BatchRenameResult
+    {
+        public int TotalFiles { get; set; }
+        public int SuccessfulRenames { get; set; }
+        public int FailedRenames { get; set; }
+        public List<string> SuccessfulFiles { get; set; } = new List<string>();
+        public List<string> FailedFiles { get; set; } = new List<string>();
+        public List<string> ErrorMessages { get; set; } = new List<string>();
+    }
+
     // Custom Validation Attribute for file extensions
     public class AllowedExtensionsAttribute(string[] extensions) : ValidationAttribute
     {

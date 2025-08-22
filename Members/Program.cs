@@ -112,6 +112,12 @@ builder.Services.AddScoped<ITideService, TideService>();
 // Register Session Album Service
 builder.Services.AddScoped<ISessionAlbumService, SessionAlbumService>();
 
+// Register Image Analysis Service for AI-powered gallery renaming
+builder.Services.AddHttpClient<IImageAnalysisService, ImageAnalysisService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60); // Set 60-second timeout for AI analysis requests
+});
+
 // Apply filters globally to both MVC and Razor Pages
 builder.Services.Configure<MvcOptions>(options =>
 {

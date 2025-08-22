@@ -39,6 +39,21 @@ This is "Fish-Smart" - an ASP.NET Core .NET 9 MVC web application with Identity 
 - **Tides**: Coastal detection, tide state/height, tidal coefficients, fishing recommendations
 - **Smart Display**: Inland locations show appropriate messaging, coastal areas get full tidal data
 
+#### Next Session Tasks:
+- **Testing & Validation**: Test environmental data capture with new catches to verify complete integration
+- **Performance Optimization**: Monitor environmental service response times and optimize if needed
+- **Data Analytics**: Consider adding environmental trend analysis for fishing success patterns
+- **Mobile UI Refinement**: Test badge display responsiveness on various mobile screen sizes
+- **Error Handling Enhancement**: Add user-friendly error messages if environmental services fail
+- **Historical Data**: Consider backfilling environmental data for existing catches if coordinates available
+
+#### Important Notes:
+- **Algorithmic Approach**: All calculations done locally without external API dependencies (except weather)
+- **Database Schema**: Moon phase fields added via direct SQL script, no migrations used
+- **Coastal Intelligence**: System automatically detects inland vs coastal locations for appropriate tide messaging
+- **Jean Meeus Precision**: Moon phase calculations use professional astronomical algorithms
+- **Build Status**: Zero warnings, zero errors - production ready
+
 ## 🎯 Previous Major Feature: Premium Background Removal System (August 2024)
 
 ### Status: ✅ PRODUCTION READY 

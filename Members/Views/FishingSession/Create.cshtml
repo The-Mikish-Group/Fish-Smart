@@ -249,8 +249,8 @@
                         const altitude = position.coords.altitude;
                         const altitudeAccuracy = position.coords.altitudeAccuracy;
                         
-                        console.log(`DEBUG: Maximum precision coordinates: ${lat}, ${lng}`);
-                        console.log(`DEBUG: GPS accuracy: ${accuracy}m, altitude: ${altitude}m (±${altitudeAccuracy}m)`);
+                        console.log('DEBUG: Maximum precision coordinates: ' + lat + ', ' + lng);
+                        console.log('DEBUG: GPS accuracy: ' + accuracy + 'm, altitude: ' + altitude + 'm (±' + altitudeAccuracy + 'm)');
                         
                         // Update location fields
                         latInput.value = lat;
@@ -268,7 +268,7 @@
                         await fetchTideData(lat, lng);
                     },
                     function(error) {
-                        console.log(`DEBUG: Geolocation error: ${error.message} (code: ${error.code})`);
+                        console.log('DEBUG: Geolocation error: ' + error.message + ' (code: ' + error.code + ')');
                         
                         let errorMessage = 'Location access denied';
                         if (error.code === 1) {
@@ -303,9 +303,9 @@
             // Function to fetch weather data
             async function fetchWeatherData(lat, lng) {
                 try {
-                    console.log(`DEBUG: Calling weather API for ${lat}, ${lng}`);
-                    const response = await fetch(`/FishingSession/GetWeather?lat=${lat}&lng=${lng}`);
-                    console.log(`DEBUG: Weather API response status: ${response.status}`);
+                    console.log('DEBUG: Calling weather API for ' + lat + ', ' + lng);
+                    const response = await fetch('/FishingSession/GetWeather?lat=' + lat + '&lng=' + lng);
+                    console.log('DEBUG: Weather API response status: ' + response.status);
                     
                     if (response.ok) {
                         const weatherData = await response.json();
@@ -346,9 +346,9 @@
             // Function to fetch moon phase data
             async function fetchMoonPhaseData(lat, lng) {
                 try {
-                    console.log(`DEBUG: Calling moon phase API for ${lat}, ${lng}`);
-                    const response = await fetch(`/FishingSession/GetMoonPhase?lat=${lat}&lng=${lng}`);
-                    console.log(`DEBUG: Moon phase API response status: ${response.status}`);
+                    console.log('DEBUG: Calling moon phase API for ' + lat + ', ' + lng);
+                    const response = await fetch('/FishingSession/GetMoonPhase?lat=' + lat + '&lng=' + lng);
+                    console.log('DEBUG: Moon phase API response status: ' + response.status);
                     
                     if (response.ok) {
                         const moonData = await response.json();
@@ -389,10 +389,10 @@
             // Function to fetch tide data
             async function fetchTideData(lat, lng) {
                 try {
-                    console.log(`DEBUG: Starting tide fetch for coordinates:`, lat, lng);
+                    console.log('DEBUG: Starting tide fetch for coordinates:', lat, lng);
                     
-                    const response = await fetch(`/FishingSession/GetTideInfo?lat=${lat}&lng=${lng}`);
-                    console.log(`DEBUG: Tide fetch response received, status:`, response.status);
+                    const response = await fetch('/FishingSession/GetTideInfo?lat=' + lat + '&lng=' + lng);
+                    console.log('DEBUG: Tide fetch response received, status:', response.status);
                     
                     if (response.ok) {
                         const tideData = await response.json();
@@ -451,46 +451,47 @@
                 
                 // Weather badges
                 if (window.weatherInfo.conditions) {
-                    badgesHTML += `<span class="badge bg-light text-dark">${window.weatherInfo.conditions}</span>`;
+                    badgesHTML += '<span class="badge bg-light text-dark">' + window.weatherInfo.conditions + '</span>';
                 }
                 if (window.weatherInfo.temperature) {
-                    badgesHTML += `<span class="badge bg-info">${Math.round(window.weatherInfo.temperature)}°F</span>`;
+                    badgesHTML += '<span class="badge bg-info">' + Math.round(window.weatherInfo.temperature) + '°F</span>';
                 }
                 if (window.weatherInfo.windDirection || window.weatherInfo.windSpeed) {
-                    const wind = `Wind: ${window.weatherInfo.windDirection} ${window.weatherInfo.windSpeed ? Math.round(window.weatherInfo.windSpeed) + ' mph' : ''}`.trim();
-                    badgesHTML += `<span class="badge bg-secondary">${wind}</span>`;
+                    var wind = 'Wind: ' + window.weatherInfo.windDirection + ' ' + (window.weatherInfo.windSpeed ? Math.round(window.weatherInfo.windSpeed) + ' mph' : '');
+                    wind = wind.trim();
+                    badgesHTML += '<span class="badge bg-secondary">' + wind + '</span>';
                 }
                 if (window.weatherInfo.pressure) {
-                    badgesHTML += `<span class="badge bg-warning text-dark">${window.weatherInfo.pressure.toFixed(1)} inHg</span>`;
+                    badgesHTML += '<span class="badge bg-warning text-dark">' + window.weatherInfo.pressure.toFixed(1) + ' inHg</span>';
                 }
                 
                 // Moon phase badge
-                const moonText = `${window.moonInfo.phaseName} (${Math.round(window.moonInfo.illumination)}%)`;
-                badgesHTML += `<span class="badge bg-dark">${window.moonInfo.icon} ${moonText}</span>`;
+                var moonText = window.moonInfo.phaseName + ' (' + Math.round(window.moonInfo.illumination) + '%)';
+                badgesHTML += '<span class="badge bg-dark">' + window.moonInfo.icon + ' ' + moonText + '</span>';
                 
                 // Fishing quality badge
-                const qualityColor = window.moonInfo.fishingQuality === 'Excellent' ? 'success' : 
+                var qualityColor = window.moonInfo.fishingQuality === 'Excellent' ? 'success' : 
                                    window.moonInfo.fishingQuality === 'Good' ? 'primary' : 'warning';
-                badgesHTML += `<span class="badge bg-${qualityColor}">⭐ ${window.moonInfo.fishingQuality}</span>`;
+                badgesHTML += '<span class="badge bg-' + qualityColor + '">⭐ ' + window.moonInfo.fishingQuality + '</span>';
                 
                 // Tide badge
                 if (window.tideInfo.isCoastal) {
-                    const tideText = `${window.tideInfo.tideState} (${window.tideInfo.tideHeight.toFixed(1)}ft)`;
-                    badgesHTML += `<span class="badge bg-info">🌊 ${tideText}</span>`;
+                    var tideText = window.tideInfo.tideState + ' (' + window.tideInfo.tideHeight.toFixed(1) + 'ft)';
+                    badgesHTML += '<span class="badge bg-info">🌊 ' + tideText + '</span>';
                 } else {
-                    badgesHTML += `<span class="badge bg-secondary">🌊 Inland Location</span>`;
+                    badgesHTML += '<span class="badge bg-secondary">🌊 Inland Location</span>';
                 }
                 
                 // Update badges display
                 document.getElementById('environmentalBadges').innerHTML = badgesHTML;
                 
                 // Build combined fishing tips
-                let tipsHTML = '';
+                var tipsHTML = '';
                 if (window.moonInfo.fishingTip) {
-                    tipsHTML += `<div><strong>Moon:</strong> ${window.moonInfo.fishingTip}</div>`;
+                    tipsHTML += '<div><strong>Moon:</strong> ' + window.moonInfo.fishingTip + '</div>';
                 }
                 if (window.tideInfo.fishingRecommendation) {
-                    tipsHTML += `<div><strong>Tide:</strong> ${window.tideInfo.fishingRecommendation}</div>`;
+                    tipsHTML += '<div><strong>Tide:</strong> ' + window.tideInfo.fishingRecommendation + '</div>';
                 }
                 document.getElementById('combinedFishingTips').innerHTML = tipsHTML;
                 

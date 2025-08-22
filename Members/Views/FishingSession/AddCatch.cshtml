@@ -575,7 +575,7 @@
                         controller.abort();
                     }, 10000); // 10 second timeout
                     
-                    const response = await fetch(`/FishingSession/GetWeather?lat=${lat}&lng=${lng}`, {
+                    const response = await fetch('/FishingSession/GetWeather?lat=' + lat + '&lng=' + lng, {
                         signal: controller.signal
                     });
                     
@@ -628,7 +628,7 @@
                 try {
                     console.log('DEBUG: Starting moon phase fetch for coordinates:', lat, lng);
                     
-                    const response = await fetch(`/FishingSession/GetMoonPhase?lat=${lat}&lng=${lng}`);
+                    const response = await fetch('/FishingSession/GetMoonPhase?lat=' + lat + '&lng=' + lng);
                     console.log('DEBUG: Moon phase fetch response received, status:', response.status);
                     
                     if (response.ok) {
@@ -686,7 +686,7 @@
                 try {
                     console.log('DEBUG: Starting tide fetch for coordinates:', lat, lng);
                     
-                    const response = await fetch(`/FishingSession/GetTideInfo?lat=${lat}&lng=${lng}`);
+                    const response = await fetch('/FishingSession/GetTideInfo?lat=' + lat + '&lng=' + lng);
                     console.log('DEBUG: Tide fetch response received, status:', response.status);
                     
                     if (response.ok) {
@@ -754,11 +754,11 @@
                     
                     let sizeText = '';
                     if (minSize && maxSize) {
-                        sizeText = `Typical size range: ${minSize}" - ${maxSize}"`;
+                        sizeText = 'Typical size range: ' + minSize + '" - ' + maxSize + '"';
                     } else if (minSize) {
-                        sizeText = `Minimum legal size: ${minSize}"`;
+                        sizeText = 'Minimum legal size: ' + minSize + '"';
                     } else if (maxSize) {
-                        sizeText = `Maximum typical size: ${maxSize}"`;
+                        sizeText = 'Maximum typical size: ' + maxSize + '"';
                     }
                     
                     sizeRange.textContent = sizeText;

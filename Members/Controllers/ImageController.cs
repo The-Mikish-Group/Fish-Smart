@@ -1,4 +1,5 @@
 ﻿using Members.Models; // Assuming your models are in the Members.Models namespace
+using Members.Services;
 using Members.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,9 +11,10 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Members.Controllers
 {
-    public class ImageController(IWebHostEnvironment webHostEnvironment) : Controller
+    public class ImageController(IWebHostEnvironment webHostEnvironment, IImageAnalysisService imageAnalysisService) : Controller
     {
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+        private readonly IImageAnalysisService _imageAnalysisService = imageAnalysisService;
         // --- Image Size Settings ---
         private const int MaxGalleryImageWidth = 1200; // Max width for gallery images (for viewing on phones/monitors)
         private const int ThumbnailWidth = 400; // Thumbnail width
@@ -690,6 +692,466 @@ namespace Members.Controllers
             }
 
             return RedirectToAction(nameof(ManageGalleryImages), new { galleryName });
+        }
+
+        // GET: /Image/BatchRename/{galleryName} (Admins & Managers)
+        // Shows AI-powered batch rename interface
+        [Authorize(Roles = "Admin, Manager")]
+        public IActionResult BatchRename(string galleryName)
+        {
+            if (string.IsNullOrEmpty(galleryName))
+            {
+                return NotFound();
+            }
+
+            var galleryPath = GetGalleryPath(galleryName);
+            if (!Directory.Exists(galleryPath))
+            {
+                TempData["ErrorMessage"] = "Gallery not found.";
+                return RedirectToAction(nameof(ManageGalleries));
+            }
+
+            var imageFiles = Directory.GetFiles(galleryPath)
+                .Where(f => !f.Contains("_thumb", StringComparison.OrdinalIgnoreCase) &&
+                            (f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (!imageFiles.Any())
+            {
+                TempData["ErrorMessage"] = "No images found in gallery to rename.";
+                return RedirectToAction(nameof(ManageGalleryImages), new { galleryName });
+            }
+
+            var viewModel = new BatchRenameViewModel
+            {
+                GalleryName = galleryName
+            };
+
+            ViewBag.GalleryName = galleryName;
+            ViewBag.ImageCount = imageFiles.Count;
+            return View(viewModel);
+        }
+
+        // POST: /Image/GenerateRenamePreviews (Admins & Managers)
+        // Generates AI-powered filename suggestions
+        [Authorize(Roles = "Admin, Manager")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateRenamePreviews(BatchRenameViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Invalid request.";
+                return RedirectToAction(nameof(BatchRename), new { galleryName = model.GalleryName });
+            }
+
+            var galleryPath = GetGalleryPath(model.GalleryName);
+            if (!Directory.Exists(galleryPath))
+            {
+                TempData["ErrorMessage"] = "Gallery not found.";
+                return RedirectToAction(nameof(ManageGalleries));
+            }
+
+            var imageFiles = Directory.GetFiles(galleryPath)
+                .Where(f => !f.Contains("_thumb", StringComparison.OrdinalIgnoreCase) &&
+                            (f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            var previews = new List<RenamePreview>();
+
+            try
+            {
+                // Process images in batches to avoid overwhelming the API
+                var batchSize = 5;
+                for (int i = 0; i < imageFiles.Count; i += batchSize)
+                {
+                    var batch = imageFiles.Skip(i).Take(batchSize).ToList();
+                    
+                    var batchTasks = batch.Select(async imagePath =>
+                    {
+                        try
+                        {
+                            var result = await _imageAnalysisService.AnalyzeImageAsync(imagePath);
+                            var originalFileName = Path.GetFileName(imagePath);
+                            
+                            return new RenamePreview
+                            {
+                                OriginalFileName = originalFileName,
+                                SuggestedFileName = result.SuggestedFilename,
+                                Description = result.Description,
+                                Confidence = result.Confidence,
+                                IsSelected = result.Confidence > 0.3f // Auto-select high confidence results
+                            };
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error analyzing {imagePath}: {ex.Message}");
+                            var originalFileName = Path.GetFileName(imagePath);
+                            return new RenamePreview
+                            {
+                                OriginalFileName = originalFileName,
+                                SuggestedFileName = originalFileName,
+                                Description = "Analysis failed",
+                                Confidence = 0.0f,
+                                IsSelected = false
+                            };
+                        }
+                    });
+
+                    var batchResults = await Task.WhenAll(batchTasks);
+                    previews.AddRange(batchResults);
+
+                    // Small delay between batches to be respectful to APIs
+                    if (i + batchSize < imageFiles.Count)
+                    {
+                        await Task.Delay(1000);
+                    }
+                }
+
+                model.RenamePreview = previews;
+                
+                ViewBag.GalleryName = model.GalleryName;
+                ViewBag.GeneratedPreviews = true;
+                
+                TempData["SuccessMessage"] = $"Generated {previews.Count} filename suggestions. Review and select which files to rename.";
+                
+                return View("BatchRename", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating rename previews: {ex.Message}");
+                TempData["ErrorMessage"] = "Error generating filename suggestions. Please try again.";
+                return RedirectToAction(nameof(BatchRename), new { galleryName = model.GalleryName });
+            }
+        }
+
+        // POST: /Image/ExecuteBatchRename (Admins & Managers)
+        // Executes the batch rename operation
+        [Authorize(Roles = "Admin, Manager")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ExecuteBatchRename(ExecuteBatchRenameViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Invalid request.";
+                return RedirectToAction(nameof(BatchRename), new { galleryName = model.GalleryName });
+            }
+
+            var galleryPath = GetGalleryPath(model.GalleryName);
+            if (!Directory.Exists(galleryPath))
+            {
+                TempData["ErrorMessage"] = "Gallery not found.";
+                return RedirectToAction(nameof(ManageGalleries));
+            }
+
+            var result = new BatchRenameResult
+            {
+                TotalFiles = model.RenameOperations.Count(op => op.Execute)
+            };
+
+            var backupOperations = new List<(string oldPath, string newPath)>();
+
+            try
+            {
+                foreach (var operation in model.RenameOperations.Where(op => op.Execute))
+                {
+                    try
+                    {
+                        var oldFilePath = GetImagePath(model.GalleryName, operation.OriginalFileName);
+                        var newFilePath = GetImagePath(model.GalleryName, operation.NewFileName);
+
+                        // Validate that old file exists
+                        if (!System.IO.File.Exists(oldFilePath))
+                        {
+                            result.FailedFiles.Add(operation.OriginalFileName);
+                            result.ErrorMessages.Add($"{operation.OriginalFileName}: File not found");
+                            result.FailedRenames++;
+                            continue;
+                        }
+
+                        // Check for naming conflicts
+                        if (System.IO.File.Exists(newFilePath))
+                        {
+                            result.FailedFiles.Add(operation.OriginalFileName);
+                            result.ErrorMessages.Add($"{operation.OriginalFileName}: Target filename already exists");
+                            result.FailedRenames++;
+                            continue;
+                        }
+
+                        // Perform the rename
+                        System.IO.File.Move(oldFilePath, newFilePath);
+                        backupOperations.Add((newFilePath, oldFilePath)); // For rollback if needed
+
+                        // Rename corresponding thumbnail if it exists
+                        var oldThumbnailPath = GetThumbnailPath(model.GalleryName, operation.OriginalFileName);
+                        var newThumbnailPath = GetThumbnailPath(model.GalleryName, operation.NewFileName);
+                        
+                        if (System.IO.File.Exists(oldThumbnailPath))
+                        {
+                            System.IO.File.Move(oldThumbnailPath, newThumbnailPath);
+                        }
+
+                        result.SuccessfulFiles.Add($"{operation.OriginalFileName} → {operation.NewFileName}");
+                        result.SuccessfulRenames++;
+                    }
+                    catch (Exception ex)
+                    {
+                        result.FailedFiles.Add(operation.OriginalFileName);
+                        result.ErrorMessages.Add($"{operation.OriginalFileName}: {ex.Message}");
+                        result.FailedRenames++;
+                        Console.WriteLine($"Error renaming {operation.OriginalFileName} to {operation.NewFileName}: {ex.Message}");
+                    }
+                }
+
+                // Set success/error messages
+                if (result.SuccessfulRenames > 0)
+                {
+                    TempData["SuccessMessage"] = $"Successfully renamed {result.SuccessfulRenames} out of {result.TotalFiles} files.";
+                }
+
+                if (result.FailedRenames > 0)
+                {
+                    var errorSummary = string.Join("; ", result.ErrorMessages.Take(3));
+                    if (result.ErrorMessages.Count > 3)
+                    {
+                        errorSummary += $" and {result.ErrorMessages.Count - 3} more errors";
+                    }
+                    TempData["ErrorMessage"] = $"Failed to rename {result.FailedRenames} files: {errorSummary}";
+                }
+
+                return RedirectToAction(nameof(ManageGalleryImages), new { galleryName = model.GalleryName });
+            }
+            catch (Exception ex)
+            {
+                // If there's a critical error, attempt to rollback successful operations
+                Console.WriteLine($"Critical error during batch rename: {ex.Message}");
+                
+                foreach (var (newPath, oldPath) in backupOperations)
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(newPath))
+                        {
+                            System.IO.File.Move(newPath, oldPath);
+                        }
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"Failed to rollback {newPath} to {oldPath}: {rollbackEx.Message}");
+                    }
+                }
+
+                TempData["ErrorMessage"] = "Critical error during batch rename operation. Changes have been rolled back.";
+                return RedirectToAction(nameof(BatchRename), new { galleryName = model.GalleryName });
+            }
+        }
+
+        // GET: /Image/PreviewRename/{galleryName}/{fileName} (Admins & Managers)
+        // Shows AI suggestion for a single file
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> PreviewRename(string galleryName, string fileName)
+        {
+            if (string.IsNullOrEmpty(galleryName) || string.IsNullOrEmpty(fileName))
+            {
+                return NotFound();
+            }
+
+            var imagePath = GetImagePath(galleryName, fileName);
+            if (!System.IO.File.Exists(imagePath))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var result = await _imageAnalysisService.AnalyzeImageAsync(imagePath);
+                
+                var preview = new RenamePreview
+                {
+                    OriginalFileName = fileName,
+                    SuggestedFileName = result.SuggestedFilename,
+                    Description = result.Description,
+                    Confidence = result.Confidence,
+                    IsSelected = true
+                };
+
+                ViewBag.GalleryName = galleryName;
+                ViewBag.ImageUrl = $"/Galleries/{Uri.EscapeDataString(galleryName)}/{Uri.EscapeDataString(fileName)}";
+                
+                return Json(preview);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error analyzing {imagePath}: {ex.Message}");
+                return Json(new RenamePreview
+                {
+                    OriginalFileName = fileName,
+                    SuggestedFileName = fileName,
+                    Description = "Analysis failed",
+                    Confidence = 0.0f,
+                    IsSelected = false
+                });
+            }
+        }
+
+        // GET: /Image/DebugAnalysis?galleryName=X&fileName=Y (Admins & Managers)
+        // Debug endpoint to test analysis on a single file
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> DebugAnalysis(string galleryName, string fileName)
+        {
+            try
+            {
+                Console.WriteLine($"DebugAnalysis called - Gallery: {galleryName}, File: {fileName}");
+                
+                if (string.IsNullOrEmpty(galleryName) || string.IsNullOrEmpty(fileName))
+                {
+                    return Json(new { 
+                        error = "Gallery name and file name required",
+                        galleryName = galleryName ?? "null",
+                        fileName = fileName ?? "null"
+                    });
+                }
+
+                var imagePath = GetImagePath(galleryName, fileName);
+                Console.WriteLine($"Image path resolved to: {imagePath}");
+                
+                var debugInfo = new
+                {
+                    originalFileName = fileName,
+                    fullPath = imagePath,
+                    fileExists = System.IO.File.Exists(imagePath),
+                    galleryPath = GetGalleryPath(galleryName),
+                    galleryExists = Directory.Exists(GetGalleryPath(galleryName))
+                };
+
+                Console.WriteLine($"File exists: {debugInfo.fileExists}");
+
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    return Json(new { 
+                        debug = debugInfo,
+                        success = false,
+                        error = $"File not found at path: {imagePath}"
+                    });
+                }
+
+                Console.WriteLine("Starting image analysis...");
+                var result = await _imageAnalysisService.AnalyzeImageAsync(imagePath);
+                Console.WriteLine($"Analysis complete - Suggested: {result.SuggestedFilename}");
+                
+                return Json(new { 
+                    debug = debugInfo,
+                    success = true,
+                    result = new {
+                        original = fileName,
+                        suggested = result.SuggestedFilename ?? "no_suggestion",
+                        description = result.Description ?? "no_description",
+                        confidence = result.Confidence,
+                        tags = result.Tags ?? new List<string>()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DebugAnalysis error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                return Json(new { 
+                    success = false,
+                    error = ex.Message,
+                    details = ex.ToString().Substring(0, Math.Min(500, ex.ToString().Length))
+                });
+            }
+        }
+
+        // GET: /Image/TestAnalysis?galleryName=X&fileName=Y (Admins & Managers)
+        // Simple text-based debug endpoint
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> TestAnalysis(string galleryName, string fileName)
+        {
+            try
+            {
+                var imagePath = GetImagePath(galleryName, fileName);
+                var result = $"Gallery: {galleryName}\n";
+                result += $"File: {fileName}\n";
+                result += $"Path: {imagePath}\n";
+                result += $"Exists: {System.IO.File.Exists(imagePath)}\n";
+                
+                if (System.IO.File.Exists(imagePath))
+                {
+                    var analysis = await _imageAnalysisService.AnalyzeImageAsync(imagePath);
+                    result += $"Analysis Success: {analysis != null}\n";
+                    result += $"Suggested: {analysis?.SuggestedFilename}\n";
+                    result += $"Description: {analysis?.Description}\n";
+                    result += $"Confidence: {analysis?.Confidence}\n";
+                }
+                
+                return Content(result, "text/plain");
+            }
+            catch (Exception ex)
+            {
+                return Content($"Error: {ex.Message}\n\nStack:\n{ex.StackTrace}", "text/plain");
+            }
+        }
+
+        // GET: /Image/QuickTest (Admins & Managers)
+        // Quick test with hardcoded file
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> QuickTest()
+        {
+            try
+            {
+                // Test with a known file
+                var testFile = "Amazing clouds.jpg";
+                var testGallery = "Beaches";
+                var imagePath = GetImagePath(testGallery, testFile);
+                
+                var result = $"=== QUICK TEST ===\n";
+                result += $"Gallery: {testGallery}\n";
+                result += $"File: {testFile}\n";
+                result += $"Full Path: {imagePath}\n";
+                result += $"File Exists: {System.IO.File.Exists(imagePath)}\n";
+                result += $"Service Registered: {_imageAnalysisService != null}\n\n";
+                
+                if (System.IO.File.Exists(imagePath))
+                {
+                    result += "=== ANALYSIS STARTING ===\n";
+                    var analysis = await _imageAnalysisService.AnalyzeImageAsync(imagePath);
+                    
+                    result += "=== ANALYSIS COMPLETE ===\n";
+                    result += $"Success: {analysis != null}\n";
+                    if (analysis != null)
+                    {
+                        result += $"Original Path: {analysis.OriginalPath}\n";
+                        result += $"Suggested: {analysis.SuggestedFilename}\n";
+                        result += $"Description: {analysis.Description}\n";
+                        result += $"Confidence: {analysis.Confidence}\n";
+                        result += $"Tags: {string.Join(", ", analysis.Tags)}\n";
+                    }
+                }
+                else
+                {
+                    result += "=== FILE NOT FOUND ===\n";
+                    result += "Cannot proceed with analysis\n";
+                }
+                
+                return Content(result, "text/plain");
+            }
+            catch (Exception ex)
+            {
+                return Content($"=== ERROR ===\nMessage: {ex.Message}\n\nFull Exception:\n{ex}", "text/plain");
+            }
         }
     }
 }
