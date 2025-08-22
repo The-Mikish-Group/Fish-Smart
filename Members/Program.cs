@@ -103,6 +103,12 @@ builder.Services.AddHttpClient<IWeatherService, OpenWeatherMapService>(client =>
 });
 builder.Services.AddScoped<ICatchWeatherService, CatchWeatherService>();
 
+// Register Moon Phase Service for astronomical calculations
+builder.Services.AddScoped<IMoonPhaseService, MoonPhaseService>();
+
+// Register Tide Service for harmonic tide calculations
+builder.Services.AddScoped<ITideService, TideService>();
+
 // Register Session Album Service
 builder.Services.AddScoped<ISessionAlbumService, SessionAlbumService>();
 

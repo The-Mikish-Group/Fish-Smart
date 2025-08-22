@@ -1,0 +1,277 @@
+@model IEnumerable<Members.Controllers.GalleryOptimizationInfo>
+@{
+    ViewData["Title"] = "Gallery Image Optimization Utility";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="text-primary mb-1">
+                        <i class="bi bi-images"></i> Gallery Optimization Utility
+                    </h1>
+                    <p class="text-muted mb-0">Resize existing gallery images for optimal performance</p>
+                </div>
+                <a href="/Info" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Home
+                </a>
+            </div>
+
+            <!-- Status Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["WarningMessage"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> @TempData["WarningMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-x-circle-fill"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (ViewBag.NoGalleries == true)
+            {
+                <!-- No Galleries Found -->
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
+                        <h3 class="text-muted mt-3">No Galleries Found</h3>
+                        <p class="text-muted">There are no image galleries to optimize.</p>
+                        <a href="/Image/ManageGalleries" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create Gallery
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Optimization Overview -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear-fill"></i> Optimization Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-arrows-fullscreen text-primary me-2"></i>
+                                    <strong>Maximum Width:</strong> <span class="ms-2">1,200 pixels</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-image text-primary me-2"></i>
+                                    <strong>Quality:</strong> <span class="ms-2">85% JPEG compression</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-phone text-primary me-2"></i>
+                                    <strong>Optimized for:</strong> <span class="ms-2">Phone & monitor viewing</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-shield-check text-primary me-2"></i>
+                                    <strong>Backup:</strong> <span class="ms-2">Original files preserved as .backup</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Operations -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightning-fill"></i> Batch Operations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Optimize All Galleries</h6>
+                                <p class="text-muted mb-0">Process all images in all galleries at once</p>
+                            </div>
+                            <form asp-action="OptimizeAllGalleries" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success" onclick="return confirmOptimizeAll()">
+                                    <i class="bi bi-play-fill"></i> Optimize All
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gallery List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-collection"></i> Individual Galleries
+                            <span class="badge bg-primary ms-2">@Model.Count() galleries</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (Model.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Gallery Name</th>
+                                            <th class="text-center">Images</th>
+                                            <th class="text-center">Size (MB)</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var gallery in Model)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="bi bi-folder-fill text-primary me-2"></i>
+                                                        <strong>@gallery.Name</strong>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    @gallery.ImageCount
+                                                </td>
+                                                <td class="text-center">
+                                                    @gallery.TotalSizeMB.ToString("F1")
+                                                </td>
+                                                <td class="text-center">
+                                                    @if (gallery.HasLargeImages)
+                                                    {
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="bi bi-exclamation-triangle"></i> Needs Optimization
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle"></i> Optimized
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group" role="group">
+                                                        <a href="/Image/ManageGalleryImages/@Uri.EscapeDataString(gallery.Name)" 
+                                                           class="btn btn-sm btn-outline-primary" title="Manage Images">
+                                                            <i class="bi bi-gear"></i>
+                                                        </a>
+                                                        @if (gallery.HasLargeImages)
+                                                        {
+                                                            <form asp-action="OptimizeGallery" method="post" style="display: inline;">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="galleryName" value="@gallery.Name" />
+                                                                <button type="submit" class="btn btn-sm btn-success" 
+                                                                        title="Optimize Gallery"
+                                                                        onclick="return confirmOptimizeGallery('@gallery.Name', @gallery.ImageCount)">
+                                                                    <i class="bi bi-play-fill"></i>
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-secondary" disabled title="Already Optimized">
+                                                                <i class="bi bi-check"></i>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No galleries found.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Processing Modal -->
+                <div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body text-center py-4">
+                                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5>Processing Images...</h5>
+                                <p class="text-muted mb-0">This may take several minutes depending on the number and size of images.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmOptimizeAll() {
+            const totalGalleries = @Model.Count();
+            const totalImages = @Model.Sum(g => g.ImageCount);
+            
+            return confirm(`Are you sure you want to optimize all ${totalGalleries} galleries containing ${totalImages} images?\n\nThis process may take several minutes and cannot be undone.\n\nOriginal files will be backed up with .backup extension.`);
+        }
+
+        function confirmOptimizeGallery(galleryName, imageCount) {
+            return confirm(`Are you sure you want to optimize gallery "${galleryName}" containing ${imageCount} images?\n\nThis process may take several minutes and cannot be undone.\n\nOriginal files will be backed up with .backup extension.`);
+        }
+
+        // Show processing modal on form submission
+        document.querySelectorAll('form[asp-action="OptimizeAllGalleries"], form[asp-action="OptimizeGallery"]').forEach(form => {
+            form.addEventListener('submit', function() {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('processingModal'));
+                    modal.show();
+                }, 100);
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+        }
+        
+        .btn-group .btn {
+            border-radius: 0.375rem !important;
+            margin-right: 0.25rem;
+        }
+        
+        .btn-group .btn:last-child {
+            margin-right: 0;
+        }
+    </style>
+}

@@ -13,9 +13,10 @@ namespace Members.Controllers
     public class ImageController(IWebHostEnvironment webHostEnvironment) : Controller
     {
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
-        // --- Thumbnail Size Adjustment ---
-        private const int ThumbnailWidth = 800; // Pixels - Adjusted size
-        private const int ThumbnailHeight = 800; // Pixels - Adjusted size
+        // --- Image Size Settings ---
+        private const int MaxGalleryImageWidth = 1200; // Max width for gallery images (for viewing on phones/monitors)
+        private const int ThumbnailWidth = 400; // Thumbnail width
+        private const int ThumbnailHeight = 300; // Thumbnail height
 
         // Helper method to get the full path to a gallery directory
         private string GetGalleryPath(string galleryName)
@@ -43,6 +44,33 @@ namespace Members.Controllers
             return Path.Combine(GetGalleryPath(galleryName), thumbnailFileName);
         }
 
+        // Helper method to resize and save gallery image (optimize for phone/monitor viewing)
+        private static async Task<bool> ResizeAndSaveGalleryImage(IFormFile imageFile, string outputPath)
+        {
+            try
+            {
+                using var imageStream = imageFile.OpenReadStream();
+                using var image = await Image.LoadAsync(imageStream);
+                
+                // Resize main image to reasonable size for viewing (max 1200px width)
+                if (image.Width > MaxGalleryImageWidth)
+                {
+                    var aspectRatio = (float)image.Height / image.Width;
+                    var newHeight = (int)(MaxGalleryImageWidth * aspectRatio);
+                    image.Mutate(x => x.Resize(MaxGalleryImageWidth, newHeight));
+                }
+                
+                // Save with good quality but reasonable file size
+                await image.SaveAsJpegAsync(outputPath, new JpegEncoder { Quality = 85 });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error resizing gallery image: {ex.Message}");
+                return false;
+            }
+        }
+
         // Helper method to generate a thumbnail for an image
         private static async Task GenerateThumbnail(string imagePath, string thumbnailPath)
         {
@@ -63,20 +91,12 @@ namespace Members.Controllers
                 }
 
                 using var image = await Image.LoadAsync(imagePath);
-                // Calculate dimensions to maintain aspect ratio
-                int newWidth = ThumbnailWidth;
-                int newHeight = (int)Math.Round((double)image.Height * ThumbnailWidth / image.Width);
-
-                if (newHeight > ThumbnailHeight)
-                {
-                    newHeight = ThumbnailHeight;
-                    newWidth = (int)Math.Round((double)image.Width * ThumbnailHeight / image.Height);
-                }
-
+                
+                // Resize to thumbnail dimensions with crop to maintain consistent size
                 image.Mutate(x => x.Resize(new ResizeOptions
                 {
-                    Size = new Size(newWidth, newHeight),
-                    Mode = ResizeMode.Max
+                    Size = new Size(ThumbnailWidth, ThumbnailHeight),
+                    Mode = ResizeMode.Crop
                 }));
 
                 // Determine the encoder based on the original file's extension
@@ -500,13 +520,16 @@ namespace Members.Controllers
 
                 try
                 {
-                    // Save original image
-                    using (var stream = new FileStream(filePath, FileMode.Create)) // FileMode.Create will overwrite if file exists (if the above check is removed)
+                    // Resize and save the gallery image (optimized for viewing)
+                    var resizeSuccess = await ResizeAndSaveGalleryImage(imageFile, filePath);
+                    
+                    if (!resizeSuccess)
                     {
-                        await imageFile.CopyToAsync(stream);
+                        failedUploads.Add($"{imageFile.FileName} (failed to resize image)");
+                        continue;
                     }
 
-                    // Generate thumbnail immediately after successful original upload
+                    // Generate thumbnail immediately after successful image save
                     var thumbnailPath = GetThumbnailPath(galleryName, fileName);
                     await GenerateThumbnail(filePath, thumbnailPath);
 

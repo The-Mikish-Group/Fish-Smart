@@ -153,6 +153,61 @@
                         </div>
                     </div>
 
+                    <!-- Environmental Conditions -->
+                    @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || !string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue || Model.BarometricPressure.HasValue || !string.IsNullOrEmpty(Model.MoonPhaseName) || Model.MoonIllumination.HasValue)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Environmental Conditions:</strong>
+                                <div class="d-flex flex-wrap gap-1 align-items-center mt-2 p-3 bg-light rounded">
+                                    <!-- Weather Badges -->
+                                    @if (!string.IsNullOrEmpty(Model.WeatherConditions))
+                                    {
+                                        <span class="badge bg-light text-dark">@Model.WeatherConditions</span>
+                                    }
+                                    @if (Model.Temperature.HasValue)
+                                    {
+                                        <span class="badge bg-info">@Model.Temperature.Value.ToString("F0")°F</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">Wind: @Model.WindDirection @(Model.WindSpeed.HasValue ? $"{Model.WindSpeed.Value:F0} mph" : "")</span>
+                                    }
+                                    @if (Model.BarometricPressure.HasValue)
+                                    {
+                                        <span class="badge bg-warning text-dark">@Model.BarometricPressure.Value.ToString("F1") inHg</span>
+                                    }
+                                    @if (Model.Humidity.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">@Model.Humidity.Value% humidity</span>
+                                    }
+                                    
+                                    <!-- Moon Phase Badges -->
+                                    @if (!string.IsNullOrEmpty(Model.MoonPhaseName))
+                                    {
+                                        <span class="badge bg-dark">@Model.MoonIcon @Model.MoonPhaseName @(Model.MoonIllumination.HasValue ? $"({Model.MoonIllumination.Value:F0}%)" : "")</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.FishingQuality))
+                                    {
+                                        var qualityColor = Model.FishingQuality == "Excellent" ? "success" : 
+                                                         Model.FishingQuality == "Good" ? "primary" : "warning";
+                                        <span class="badge bg-@qualityColor">⭐ @Model.FishingQuality</span>
+                                    }
+                                </div>
+                                
+                                <!-- Fishing Tips -->
+                                @if (!string.IsNullOrEmpty(Model.MoonFishingTip))
+                                {
+                                    <div class="mt-2">
+                                        <div class="alert alert-info mb-0 py-2">
+                                            <i class="bi bi-lightbulb"></i> <strong>Fishing Tip:</strong> @Model.MoonFishingTip
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
                     <!-- Location Info -->
                     @if (Model.Session != null)
                     {

@@ -6,9 +6,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is "Fish-Smart" - an ASP.NET Core .NET 9 MVC web application with Identity for the Oaks-Village.com HOA (Homeowners Association). The application features a comprehensive Accounts Receivable system with reporting capabilities, user management, document management, and image galleries.
 
-## 🚀 RECENT MAJOR FEATURE: Premium Background Removal System (August 2024)
+## 🚀 RECENT MAJOR FEATURE: Comprehensive Environmental Data System (January 2025)
 
 ### Current Status: ✅ PRODUCTION READY 
+**Complete algorithmic weather, moon phase, and tide calculation system fully implemented and working.**
+
+#### What's Working:
+- **Algorithmic Weather Integration**: Real-time weather data with OpenWeatherMap API
+- **Jean Meeus Moon Phase Calculations**: Precise astronomical moon phase calculations without external dependencies
+- **Harmonic Tide Calculations**: Sophisticated tidal algorithms using lunar and solar gravitational effects
+- **Unified Badge Display**: Consistent environmental data presentation across all views
+- **Automatic Data Capture**: Environmental conditions automatically stored with each catch
+
+#### Session Progress (January 22, 2025):
+1. ✅ **Moon Phase Service**: Complete Jean Meeus astronomical algorithm implementation
+2. ✅ **Tide Service**: Harmonic analysis algorithms with coastal detection
+3. ✅ **Database Integration**: Added moon phase fields to Catch table via SQL script
+4. ✅ **UI Standardization**: Unified badge-style environmental display across all views
+5. ✅ **Catch Integration**: Environmental data automatically captured during catch logging
+6. ✅ **Service Registration**: All services properly registered in dependency injection
+
+#### Key Implementation Details:
+- **Moon Phase Service**: `Services/MoonPhaseService.cs` - Jean Meeus astronomical algorithms
+- **Tide Service**: `Services/TideService.cs` - Harmonic analysis with coastal detection
+- **Weather Integration**: `Services/CatchWeatherService.cs` - Combined environmental data population
+- **Database Fields**: Catch table includes comprehensive moon phase and environmental data
+- **UI Components**: Badge-style display in session creation, details, and catch views
+
+#### Environmental Data Features:
+- **Weather**: Conditions, temperature, wind direction/speed, barometric pressure, humidity
+- **Moon Phase**: Phase name, illumination percentage, age, fishing quality, tips
+- **Tides**: Coastal detection, tide state/height, tidal coefficients, fishing recommendations
+- **Smart Display**: Inland locations show appropriate messaging, coastal areas get full tidal data
+
+## 🎯 Previous Major Feature: Premium Background Removal System (August 2024)
+
+### Status: ✅ PRODUCTION READY 
 **Premium background removal with multiple API services is fully implemented and working.**
 
 #### What's Working:
@@ -200,7 +233,41 @@ This is the core feature with sophisticated automation:
 4. **Testing**: Currently manual - automated tests should be added
 5. **Deployment**: Uses publish profiles for various hosting environments
 
-## Recent Updates and Fixes (2025-01-18)
+## Recent Updates and Fixes (2025-01-21)
+
+### 🎯 Watermark System Enhancement (January 21, 2025)
+- **Issue Resolved**: Watermark text rendering was producing ugly vertical lines in black boxes
+- **Solution**: Created custom watermark logo with integrated "Fish-Smart.com" text as image asset
+- **Implementation**: 
+  - Added `WatermarkSmallLogo.png` with professional text integration
+  - Updated `ImageCompositionService.cs` to prioritize new watermark logo
+  - Maintains fallback to original logo if watermark version unavailable
+- **Result**: Clean, professional watermark with readable text for image downloads
+
+### 🖼️ ImageViewer Layout Fixes (January 21, 2025)
+- **Issue**: ImageViewer container was overlapping the bottom footer navbar
+- **Root Cause**: Container height calculations didn't account for footer navbar space
+- **Solution**: 
+  - Adjusted main container height from `calc(100vh - 6rem)` to `calc(100vh - 9rem)`
+  - Updated image area height from `calc(100vh - 20rem)` to `calc(100vh - 23rem)`
+  - Changed body overflow from `hidden` to `overflow-x: hidden` for navbar visibility
+- **Impact**: Proper spacing with footer navbar, improved mobile experience
+
+### 🌟 Mikish Group Information Page Redesign (January 21, 2025)
+- **Scope**: Complete redesign of `/Information` promotional page for The Mikish Group
+- **Features Added**:
+  - Integrated Blue Sun SVG logo with professional styling
+  - Responsive button layout with proper `g-3` spacing for mobile
+  - Modern gradient backgrounds and smooth animations
+  - Professional PayPal integration button
+  - Services showcase with hover effects
+- **Technical Implementation**:
+  - Moved all CSS to `site.css` with `mikish-` namespace to avoid Razor parsing issues
+  - Used modern CSS (`clamp()`, viewport units) for fluid responsiveness
+  - Eliminated problematic `@media` and `@keyframes` from page-level styling
+- **Result**: Professional, mobile-responsive promotional page with integrated branding
+
+### Previous Updates (2025-01-18)
 
 ### Database Field Padding Issue Resolution
 - **Issue**: Database string fields (PhotoUrl, CoverImageUrl, ImageUrl) were using CHAR type causing massive trailing whitespace padding (~300 characters)
@@ -236,8 +303,16 @@ This is the core feature with sophisticated automation:
 - **Error Handling**: Consider global error handling middleware for better user experience
 - **Performance**: Background replacement can be slow - consider progress indicators
 - **Caching**: Image cache-busting needs optimization for faster updates
+- **File Naming Conflict**: `System.IO.File` vs `ControllerBase.File()` creates maintenance issues across controllers
+  - *Current solution*: Explicit `System.IO.File` qualification
+  - *Future refactor*: Consider service abstraction pattern or using directives for cleaner code
+- **CSS Organization**: Need to restructure and organize CSS files for better maintainability
+  - *Current state*: Growing site.css with mixed concerns, some page-specific styles
+  - *Future task*: Implement proper CSS architecture (component-based, modular structure)
+  - *Considerations*: SCSS/SASS implementation, CSS modules, or organized vanilla CSS structure
 
 ## Known Issues
-- Background replacement requires page refresh to see changes
+- ✅ **Resolved**: Watermark text rendering issues - now uses integrated logo
+- ✅ **Resolved**: ImageViewer navbar overlay - container heights properly adjusted
 - Container deployments take 5+ minutes, slowing debugging cycles
 - Debug tools should be hidden in production builds

@@ -73,6 +73,25 @@ namespace Members.Models
 
         public DateTime? WeatherCapturedAt { get; set; } // When weather was captured
 
+        // Moon Phase Data (calculated at time of catch)
+        [StringLength(50)]
+        public string? MoonPhaseName { get; set; } // "New Moon", "Full Moon", "Waxing Crescent", etc.
+
+        public double? MoonIllumination { get; set; } // Illumination percentage (0-100)
+
+        public double? MoonAge { get; set; } // Days since new moon (0-29.5)
+
+        [StringLength(10)]
+        public string? MoonIcon { get; set; } // Unicode moon phase symbol
+
+        [StringLength(20)]
+        public string? FishingQuality { get; set; } // "Excellent", "Good", "Fair", "Poor"
+
+        [StringLength(500)]
+        public string? MoonFishingTip { get; set; } // Fishing tip based on moon phase
+
+        public DateTime? MoonDataCapturedAt { get; set; } // When moon data was calculated
+
         // Navigation properties
         [ForeignKey("SessionId")]
         public virtual FishingSession? Session { get; set; }

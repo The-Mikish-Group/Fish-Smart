@@ -10,7 +10,7 @@
     <meta http-equiv="Expires" content="0" />
 }
 
-<div class="container-fluid p-0 image-viewer-container" style="margin-top: 1rem; height: calc(100vh - 6rem);">
+<div class="container-fluid p-0 image-viewer-container" style="margin-top: 1rem; height: calc(100vh - 9rem);">
     <!-- Header Section - Standard Fish-Smart Layout -->
     <div class="container-fluid px-3 py-2" style="background: rgba(0,0,0,0.8);">
         <!-- Title Row -->
@@ -93,12 +93,12 @@
     </div>
 
     <!-- Main Image Display Area -->
-    <div class="position-relative" style="height: calc(100vh - 12rem); background: transparent;">
+    <div class="position-relative" style="height: calc(100vh - 23rem); background: transparent; max-height: calc(100vh - 400px);">
         <div class="d-flex justify-content-center align-items-center h-100">
             <img src="@Model.ImageUrl" 
                  alt="@Model.Title" 
                  class="img-fluid" 
-                 style="max-height: calc(100vh - 200px); max-width: 100%; object-fit: contain; cursor: zoom-in;"
+                 style="max-height: calc(100vh - 450px); max-width: 100%; object-fit: contain; cursor: zoom-in;"
                  onclick="toggleFullscreen(this)" />
         </div>
 
@@ -253,7 +253,7 @@
 
 <style>
     body {
-        overflow: hidden;
+        overflow-x: hidden;
         background-color: black !important;
     }
     

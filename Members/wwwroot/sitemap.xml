@@ -1,39 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<!-- Homepage -->
 	<url>
 		<loc>https://Fish-Smart.com/</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>daily</changefreq>
 		<priority>1.0</priority>
 	</url>
+	
+	<!-- Public Information Pages -->
 	<url>
 		<loc>https://Fish-Smart.com/Info</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>weekly</changefreq>
 		<priority>0.9</priority>
-	</url>	
+	</url>
+	
+	<!-- Professional Services - Mikish Group -->
+	<url>
+		<loc>https://Fish-Smart.com/Information</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	
+	<!-- Contact & Legal Pages -->
 	<url>
 		<loc>https://Fish-Smart.com/Info/Contact</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>monthly</changefreq>
 		<priority>0.6</priority>
 	</url>
 	<url>
 		<loc>https://Fish-Smart.com/Info/Privacy</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>yearly</changefreq>
 		<priority>0.4</priority>
 	</url>
 	<url>
 		<loc>https://Fish-Smart.com/Info/TOS</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>yearly</changefreq>
 		<priority>0.4</priority>
 	</url>
+	
+	<!-- Public Gallery Pages -->
 	<url>
 		<loc>https://Fish-Smart.com/Image/GalleryList</loc>
-		<lastmod>2025-08-13</lastmod>
+		<lastmod>2025-01-21</lastmod>
 		<changefreq>weekly</changefreq>
 		<priority>0.7</priority>
+	</url>
+	
+	<!-- Fish-Smart Application Public Pages -->
+	<url>
+		<loc>https://Fish-Smart.com/Fish-SmartProfile</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.6</priority>
+	</url>
+	<url>
+		<loc>https://Fish-Smart.com/FishSpecies</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>0.7</priority>
+	</url>
+	<url>
+		<loc>https://Fish-Smart.com/CatchAlbum</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>daily</changefreq>
+		<priority>0.8</priority>
+	</url>
+	
+	<!-- AI Features Landing -->
+	<url>
+		<loc>https://Fish-Smart.com/AIModels</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.6</priority>
+	</url>
+	
+	<!-- Account Access (Login/Register) -->
+	<url>
+		<loc>https://Fish-Smart.com/Identity/Account/Login</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.5</priority>
+	</url>
+	<url>
+		<loc>https://Fish-Smart.com/Identity/Account/Register</loc>
+		<lastmod>2025-01-21</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>0.5</priority>
 	</url>
 </urlset>

@@ -34,28 +34,71 @@
         }
        
         <!-- Shadow Card (Upload a New Image) -->
-        <div class="card rounded p-1 shadow">
+        <div class="card rounded p-1 shadow gallery-upload">
             
             <!-- Heading: Upload a New Image -->
             <h2 class="text-black mb-2 mt-4 ps-2"><i class="bi bi-cloud-arrow-up"></i> Upload a New Image</h2>
 
             <!-- Upload a New Image Form -->
-            <form asp-controller="Image" asp-action="UploadImage" method="post" enctype="multipart/form-data">
+            <form asp-controller="Image" asp-action="UploadImage" method="post" enctype="multipart/form-data" id="uploadForm">
                 <input type="hidden" name="galleryName" value="@currentGalleryName" />
 
-                <div class="input-group">
-                    
-                    <!-- Multiple File Input -->
-                    <input type="file" name="ImageFiles" class="form-control" accept="image/*" required multiple>
-
-                        <!-- Upload Button -->
-                    <button type="submit" class="btn btn-success rounded-2 no-left-radius">
-                            <i class="bi bi-cloud-arrow-up"></i>
+                <!-- Drag and Drop Zone -->
+                <div id="dropZone" class="drag-drop-zone mb-3">
+                    <div class="drag-drop-content">
+                        <i class="bi bi-cloud-arrow-up drag-drop-icon"></i>
+                        <h5 class="drag-drop-title">Drag & Drop Images Here</h5>
+                        <p class="drag-drop-subtitle">or click to browse files</p>
+                        <button type="button" class="btn btn-outline-primary" id="browseButton">
+                            <i class="bi bi-folder2-open"></i> Browse Files
                         </button>
-
+                    </div>
+                    <div class="drag-drop-overlay" id="dragOverlay">
+                        <div class="drag-drop-overlay-content">
+                            <i class="bi bi-download text-white"></i>
+                            <h4 class="text-white">Drop images to upload</h4>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Traditional File Input (Hidden) -->
+                <input type="file" name="ImageFiles" class="d-none" accept="image/*" multiple id="fileInput">
+
+                <!-- Upload Controls -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        <span id="selectedFilesText" class="text-muted">No files selected</span>
+                    </div>
+                    <button type="submit" class="btn btn-success" id="uploadButton" disabled>
+                        <span id="uploadButtonIcon"><i class="bi bi-cloud-arrow-up"></i></span>
+                        <span id="uploadButtonText">Upload</span>
+                    </button>
+                </div>
+
                 @Html.AntiForgeryToken()
             </form>
+
+            <!-- Upload Progress Section -->
+            <div id="uploadProgress" class="mt-3" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status" aria-hidden="true"></div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">Processing Images...</div>
+                        <div class="text-muted small" id="progressText">Resizing and optimizing images for web viewing</div>
+                    </div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- File Info Display -->
+            <div id="fileInfo" class="mt-2" style="display: none;">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Selected files will be optimized for viewing on phones and monitors (max 1200px width)
+                </small>
+            </div>
         </div>
 
         <!-- Shadow Card (Existing Images) -->
@@ -208,7 +251,7 @@
         /* Remove the top border of the modal footer to get rid of the line above the buttons */
         .modal-footer {
             border-top: none;
-        }        
+        }
                
     </style>
 }
@@ -231,16 +274,177 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            // Select all alerts that we want to auto-hide
+            // Auto-hide alerts
             var alertsToAutoHide = document.querySelectorAll('.auto-hide-alert');
-
             alertsToAutoHide.forEach(function(alertElement) {
                 setTimeout(function() {
                     alertElement.classList.remove('show');
                     alertElement.addEventListener('transitionend', function() {
                         alertElement.remove();
                     }, { once: true });
-                }, 2500); // 2500 milliseconds = 2.5 seconds: Time before the alert starts to fade out.
+                }, 2500);
+            });
+
+            // Elements
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const uploadForm = document.getElementById('uploadForm');
+            const uploadButton = document.getElementById('uploadButton');
+            const uploadButtonIcon = document.getElementById('uploadButtonIcon');
+            const uploadButtonText = document.getElementById('uploadButtonText');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const progressText = document.getElementById('progressText');
+            const dropZone = document.getElementById('dropZone');
+            const dragOverlay = document.getElementById('dragOverlay');
+            const browseButton = document.getElementById('browseButton');
+            const selectedFilesText = document.getElementById('selectedFilesText');
+
+            // Drag and Drop Event Handlers
+            function setupDragAndDrop() {
+                // Prevent default drag behaviors on the entire page
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                // Highlight drop zone when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                dropZone.addEventListener('drop', handleDrop, false);
+                
+                // Click to browse
+                dropZone.addEventListener('click', () => fileInput.click());
+                browseButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                dropZone.classList.add('drag-over');
+                dragOverlay.classList.add('show');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('drag-over');
+                dragOverlay.classList.remove('show');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                // Convert FileList to Array and filter for images
+                const imageFiles = Array.from(files).filter(file => {
+                    return file.type.startsWith('image/');
+                });
+
+                if (imageFiles.length > 0) {
+                    // Create a new FileList with only image files
+                    const dataTransfer = new DataTransfer();
+                    imageFiles.forEach(file => dataTransfer.items.add(file));
+                    fileInput.files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    alert('Please drop only image files (JPG, PNG, GIF, etc.)');
+                }
+            }
+
+            // File selection handling (both drag-drop and browse)
+            function handleFileSelection() {
+                const files = fileInput.files;
+                updateFileDisplay(files);
+                updateUploadButton(files.length > 0);
+                updateFileInfo(files);
+            }
+
+            function updateFileDisplay(files) {
+                if (files.length > 0) {
+                    const fileCount = files.length;
+                    const totalSize = Array.from(files).reduce((total, file) => total + file.size, 0);
+                    const sizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                    
+                    selectedFilesText.textContent = `${fileCount} image(s) selected (${sizeMB} MB)`;
+                    selectedFilesText.classList.add('has-files');
+                } else {
+                    selectedFilesText.textContent = 'No files selected';
+                    selectedFilesText.classList.remove('has-files');
+                }
+            }
+
+            function updateUploadButton(hasFiles) {
+                uploadButton.disabled = !hasFiles;
+            }
+
+            function updateFileInfo(files) {
+                if (files.length > 0) {
+                    fileInfo.style.display = 'block';
+                    
+                    const fileCount = files.length;
+                    const totalSize = Array.from(files).reduce((total, file) => total + file.size, 0);
+                    const sizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                    
+                    fileInfo.innerHTML = `
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            ${fileCount} file(s) selected (${sizeMB} MB total) - 
+                            Images will be optimized for viewing (max 1200px width, 85% quality)
+                        </small>
+                    `;
+                } else {
+                    fileInfo.style.display = 'none';
+                }
+            }
+
+            // Initialize drag and drop
+            setupDragAndDrop();
+
+            // File input change handler
+            fileInput.addEventListener('change', handleFileSelection);
+
+            // Form submission handler
+            uploadForm.addEventListener('submit', function(e) {
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Show loading state
+                uploadProgress.style.display = 'block';
+                uploadButton.disabled = true;
+                uploadButtonIcon.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+                uploadButtonText.textContent = 'Processing...';
+
+                // Update progress text based on file count
+                const fileCount = files.length;
+                if (fileCount === 1) {
+                    progressText.textContent = 'Resizing and optimizing 1 image for web viewing...';
+                } else {
+                    progressText.textContent = `Resizing and optimizing ${fileCount} images for web viewing...`;
+                }
+
+                // Estimate processing time
+                const estimatedSeconds = Math.max(3, fileCount * 2);
+                setTimeout(function() {
+                    if (uploadProgress.style.display !== 'none') {
+                        progressText.textContent = `Still processing... Large images take longer to optimize.`;
+                    }
+                }, estimatedSeconds * 1000);
             });
         });
     </script>

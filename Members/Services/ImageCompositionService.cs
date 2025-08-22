@@ -424,18 +424,24 @@ namespace Members.Services
         {
             try
             {
-                // Load the Fish-Smart logo
-                var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Svg", "Logos", "SmallLogo.png");
+                // Load the Fish-Smart watermark logo (includes Fish-Smart.com text)
+                var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Svg", "Logos", "WatermarkSmallLogo.png");
                 
                 if (!System.IO.File.Exists(logoPath))
                 {
-                    // Fallback to alternative path
-                    logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "LinkImages", "SmallLogo.png");
+                    // Fallback to original logo if watermark version not found
+                    logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Svg", "Logos", "SmallLogo.png");
+                    
+                    if (!System.IO.File.Exists(logoPath))
+                    {
+                        // Second fallback to alternative path
+                        logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "LinkImages", "SmallLogo.png");
+                    }
                 }
 
                 if (!System.IO.File.Exists(logoPath))
                 {
-                    _logger.LogWarning("Fish-Smart logo not found for watermark at {LogoPath}", logoPath);
+                    _logger.LogWarning("Fish-Smart watermark logo not found at any expected path");
                     return;
                 }
 
@@ -468,7 +474,7 @@ namespace Members.Services
                 
                 // Position in upper-right corner with margin
                 var x = image.Width - logoWidth - 15;
-                var y = 15; // Top margin instead of bottom
+                var y = 15; // Top margin
                 
                 // Composite the logo onto the image
                 image.Mutate(ctx => ctx.DrawImage(logoImage, new Point(x, y), 1.0f));
@@ -478,7 +484,6 @@ namespace Members.Services
                 _logger.LogError(ex, "Error adding Fish-Smart logo watermark: {Message}", ex.Message);
             }
         }
-
 
         private async Task<bool> DetectSubjectInImageAsync(string imagePath)
         {

@@ -245,27 +245,350 @@ img {
 
 /* ImageViewer Mobile Responsiveness - Only target ImageViewer pages */
 @media (max-width: 768px) {
+    .image-viewer-container {
+        height: calc(100vh - 12rem) !important;
+    }
+    
     .image-viewer-container .position-relative {
-        height: calc(100vh - 15rem) !important;
+        height: calc(100vh - 25rem) !important;
     }
     
     .image-viewer-container .img-fluid {
-        max-height: calc(100vh - 250px) !important;
+        max-height: calc(100vh - 350px) !important;
+    }
+    
+    /* Ensure buttons don't overlap on mobile */
+    .image-viewer-container .container-fluid {
+        padding-bottom: 1rem;
     }
 }
 
 /* Small mobile devices */
 @media (max-width: 576px) {
+    .image-viewer-container {
+        height: calc(100vh - 15rem) !important;
+    }
+    
     .image-viewer-container .position-relative {
-        height: calc(100vh - 18rem) !important;
+        height: calc(100vh - 28rem) !important;
     }
     
     .image-viewer-container .img-fluid {
-        max-height: calc(100vh - 300px) !important;
+        max-height: calc(100vh - 400px) !important;
+    }
+    
+    /* Extra bottom padding for small mobile */
+    .image-viewer-container .container-fluid {
+        padding-bottom: 1.5rem;
     }
 }
 
 /* #endregion General Site CSS Stuff */
+
+/* #region Mikish Group Information Page */
+
+/* Hero Section */
+.mikish-hero-section {
+    background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #343a40 100%);
+    color: white;
+    padding: 80px 0 100px;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+}
+
+.mikish-logo-container {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.mikish-hero-logo {
+    max-width: 120px;
+    max-height: 120px;
+    width: auto;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.mikish-hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.mikish-hero-subtitle {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 300;
+    margin-bottom: 1.5rem;
+    opacity: 0.95;
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.mikish-hero-description {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+/* Action Buttons */
+.mikish-button-container {
+    animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+.mikish-btn-action {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mikish-btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.btn-primary.mikish-btn-action {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+}
+
+.btn-primary.mikish-btn-action:hover {
+    background: linear-gradient(45deg, #0056b3, #004085);
+}
+
+.mikish-btn-paypal {
+    background: linear-gradient(45deg, #0070ba, #003087);
+    color: white;
+    border: none;
+}
+
+.mikish-btn-paypal:hover {
+    background: linear-gradient(45deg, #003087, #001c64);
+    color: white;
+}
+
+/* Services Section */
+.mikish-services-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.mikish-section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 1rem;
+}
+
+.mikish-section-subtitle {
+    font-size: 1.2rem;
+    color: #6c757d;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.mikish-service-card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.mikish-service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.mikish-service-icon {
+    margin-bottom: 20px;
+}
+
+.mikish-service-icon i {
+    font-size: 3rem;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mikish-service-card h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 15px;
+}
+
+.mikish-service-card p {
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .mikish-hero-section {
+        padding: 60px 0 80px;
+        min-height: 60vh;
+    }
+    
+    .mikish-services-section {
+        padding: 60px 0;
+    }
+    
+    .mikish-btn-action {
+        font-size: 1rem;
+        padding: 10px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .mikish-hero-logo {
+        max-width: 80px;
+        max-height: 80px;
+    }
+    
+    .mikish-service-card {
+        padding: 30px 20px;
+    }
+}
+
+/* #endregion Mikish Group Information Page */
+
+/* #region Drag and Drop Gallery Upload Styles */
+
+/* Drag and Drop Zone Styles */
+.drag-drop-zone {
+    position: relative;
+    border: 3px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.drag-drop-zone:hover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+.drag-drop-zone.drag-over {
+    border-color: #28a745;
+    background-color: #d4edda;
+    transform: scale(1.02);
+}
+
+.drag-drop-content {
+    position: relative;
+    z-index: 1;
+}
+
+.drag-drop-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    transition: color 0.3s ease;
+}
+
+.drag-drop-zone:hover .drag-drop-icon {
+    color: #007bff;
+}
+
+.drag-drop-zone.drag-over .drag-drop-icon {
+    color: #28a745;
+}
+
+.drag-drop-title {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.drag-drop-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.drag-drop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(40, 167, 69, 0.9), rgba(32, 134, 57, 0.9));
+    border-radius: 9px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.drag-drop-overlay.show {
+    display: flex;
+}
+
+.drag-drop-overlay-content {
+    text-align: center;
+}
+
+.drag-drop-overlay-content i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Selected files display */
+.gallery-upload #selectedFilesText {
+    font-size: 0.9rem;
+}
+
+.gallery-upload #selectedFilesText.has-files {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+/* #endregion Drag and Drop Gallery Upload Styles */
 
 
 

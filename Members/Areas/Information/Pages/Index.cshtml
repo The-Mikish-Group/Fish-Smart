@@ -1,109 +1,87 @@
 ﻿@page
 @model Members.Areas.Information.Pages.IndexModel
 @{
-    ViewData["Title"] = "Welcome!";
+    ViewData["Title"] = "The Mikish Group - Site Designers";
+    ViewData["Description"] = "Professional web development and design services by The Mikish Group. Discover amazing features designed to meet your needs.";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, lightblue, #343a40);
-            color: white;
-            text-align: center;
-            padding: 100px 0;
-            margin-bottom: 40px;
-        }
-
-            .hero h1 {
-                font-size: 3.5rem;
-                margin-bottom: 20px;
-            }
-
-            .hero p {
-                font-size: 1.2rem;
-                max-width: 700px;
-                margin: 0 auto 30px;
-            }
-
-        .features {
-            padding: 40px 0;
-        }
-
-        .feature-item {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-            .feature-item i {
-                font-size: 3rem;
-                color: #007bff;
-                margin-bottom: 20px;
-            }
-
-            .feature-item h3 {
-                margin-bottom: 10px;
-            }
-
-        footer {
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-            padding: 20px 0;
-            margin-top: auto;
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-</head>
-<body class="body">
-
-    <div class="hero">
-        <div class="container">
-            <h1>The Mikish Group</h1>
-            <h3>Site Designers</h3>
-            <p>Discover amazing features and services designed to meet your needs.</p>
-            <a href="#" class="btn btn-sm btn-primary shadow">
-                <i class="bi bi-play-fill"></i> Get Started
-            </a>
-        </div>
-    </div>
-
-    <section class="features">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 feature-item">
-                    <i class="fas fa-lightbulb"></i>
-                    <h3>Innovative Solutions</h3>
-                    <p>We provide cutting-edge solutions to solve your problems.</p>
+<div class="mikish-hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-12 col-lg-10">
+                <!-- Blue Sun Logo -->
+                <div class="mikish-logo-container mb-4">
+                    <img src="/Images/Svg/Logos/BlueSun.svg" alt="The Mikish Group - Blue Sun Logo" class="mikish-hero-logo" />
                 </div>
-                <div class="col-md-4 feature-item">
-                    <i class="fas fa-rocket"></i>
-                    <h3>Fast and Efficient</h3>
-                    <p>Experience speed and efficiency with our top-notch services.</p>
-                </div>
-                <div class="col-md-4 feature-item">
-                    <i class="fas fa-users"></i>
-                    <h3>Dedicated Support</h3>
-                    <p>Our team is here to support you every step of the way.</p>
+                
+                <!-- Main Heading -->
+                <h1 class="mikish-hero-title mb-3">The Mikish Group</h1>
+                <h2 class="mikish-hero-subtitle mb-4">Site Designers</h2>
+                <p class="mikish-hero-description mb-5">
+                    Discover amazing features and services designed to meet your needs. 
+                    Professional web development with modern design and cutting-edge technology.
+                </p>
+                
+                <!-- Action Buttons -->
+                <div class="mikish-button-container">
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <a href="#services" class="btn btn-primary mikish-btn-action w-100">
+                                <i class="bi bi-play-fill me-2"></i>
+                                Get Started
+                            </a>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <a href="https://www.paypal.com/paypalme/mikishvaughn?locale.x=en_US&country.x=US" 
+                               target="_blank" 
+                               class="mikish-btn-paypal mikish-btn-action w-100">
+                                <i class="bi bi-paypal me-2"></i>
+                                PayPal Me
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 
-    <footer>
-        <p>&copy; @DateTime.Now.Year Mikish.Com. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+<section id="services" class="mikish-services-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h3 class="mikish-section-title">Our Services</h3>
+                <p class="mikish-section-subtitle">Professional solutions tailored to your business needs</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="mikish-service-card h-100">
+                    <div class="mikish-service-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h4>Innovative Solutions</h4>
+                    <p>We provide cutting-edge web solutions to solve your business challenges with modern technology and creative design.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="mikish-service-card h-100">
+                    <div class="mikish-service-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h4>Fast & Efficient</h4>
+                    <p>Experience speed and efficiency with our streamlined development process and optimized web applications.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="mikish-service-card h-100">
+                    <div class="mikish-service-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4>Dedicated Support</h4>
+                    <p>Our experienced team is here to support you every step of the way, from concept to deployment and beyond.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

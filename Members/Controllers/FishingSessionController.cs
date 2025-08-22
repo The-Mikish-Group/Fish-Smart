@@ -9,12 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Members.Controllers
 {
     [Authorize]
-    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWeatherService weatherService, ISessionAlbumService sessionAlbumService) : Controller
+    public class FishingSessionController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IWeatherService weatherService, ISessionAlbumService sessionAlbumService, IMoonPhaseService moonPhaseService, ITideService tideService, ICatchWeatherService catchWeatherService) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly UserManager<IdentityUser> _userManager = userManager;
         private readonly IWeatherService _weatherService = weatherService;
         private readonly ISessionAlbumService _sessionAlbumService = sessionAlbumService;
+        private readonly IMoonPhaseService _moonPhaseService = moonPhaseService;
+        private readonly ITideService _tideService = tideService;
+        private readonly ICatchWeatherService _catchWeatherService = catchWeatherService;
 
         // GET: FishingSession
         public async Task<IActionResult> Index()
@@ -126,6 +129,44 @@ namespace Members.Controllers
                     else
                     {
                         Console.WriteLine($"DEBUG: Weather capture failed - {weatherData?.ErrorMessage}");
+                    }
+
+                    // Capture moon phase data for the session
+                    try
+                    {
+                        var moonPhaseData = _moonPhaseService.GetCurrentMoonPhase((double)session.Latitude.Value, (double)session.Longitude.Value);
+                        if (moonPhaseData != null)
+                        {
+                            session.MoonPhase = $"{moonPhaseData.PhaseName} ({moonPhaseData.IlluminationPercentage:F0}%)";
+                            Console.WriteLine($"DEBUG: Moon phase data captured - {moonPhaseData.PhaseName} ({moonPhaseData.IlluminationPercentage:F1}%)");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"DEBUG: Moon phase capture exception - {ex.Message}");
+                    }
+
+                    // Capture tide data for the session
+                    try
+                    {
+                        var tideData = _tideService.GetCurrentTideInfo((double)session.Latitude.Value, (double)session.Longitude.Value);
+                        if (tideData != null)
+                        {
+                            if (tideData.IsCoastal)
+                            {
+                                session.TideConditions = $"{tideData.TideState} ({tideData.TideHeight:F1}ft)";
+                                Console.WriteLine($"DEBUG: Tide data captured - {tideData.TideState} ({tideData.TideHeight:F1}ft, {tideData.TideRange})");
+                            }
+                            else
+                            {
+                                session.TideConditions = "Inland";
+                                Console.WriteLine($"DEBUG: Inland location - no significant tidal effects");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"DEBUG: Tide capture exception - {ex.Message}");
                     }
                 }
                 catch (Exception ex)
@@ -272,6 +313,26 @@ namespace Members.Controllers
             if (ModelState.IsValid)
             {
                 _context.Catches.Add(catchEntry);
+                
+                // Populate environmental data (weather, moon phase, tide) for this catch
+                try
+                {
+                    bool environmentalDataAdded = await _catchWeatherService.PopulateWeatherDataAsync(catchEntry, session);
+                    if (environmentalDataAdded)
+                    {
+                        Console.WriteLine($"DEBUG: Environmental data successfully populated for catch {catchEntry.Id}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"DEBUG: Environmental data population failed for catch {catchEntry.Id}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DEBUG: Exception populating environmental data for catch: {ex.Message}");
+                    // Don't fail the catch creation if environmental data fails
+                }
+                
                 await _context.SaveChangesAsync();
 
                 // Automatically add catch to session album
@@ -446,6 +507,79 @@ namespace Members.Controllers
                 return Json(new
                 {
                     isSuccessful = false,
+                    errorMessage = ex.Message
+                });
+            }
+        }
+
+        // AJAX endpoint for moon phase data
+        [HttpGet]
+        public IActionResult GetMoonPhase(double lat, double lng)
+        {
+            try
+            {
+                Console.WriteLine($"AJAX: GetMoonPhase called with lat={lat}, lng={lng}");
+                
+                var moonPhaseData = _moonPhaseService.GetCurrentMoonPhase(lat, lng);
+                
+                Console.WriteLine($"AJAX: Moon phase service returned: {moonPhaseData.PhaseName} ({moonPhaseData.IlluminationPercentage:F1}%)");
+                
+                return Json(new
+                {
+                    phaseName = moonPhaseData.PhaseName,
+                    phaseDescription = moonPhaseData.PhaseDescription,
+                    illuminationPercentage = moonPhaseData.IlluminationPercentage,
+                    age = moonPhaseData.Age,
+                    isWaxing = moonPhaseData.IsWaxing,
+                    icon = moonPhaseData.Icon,
+                    fishingQuality = moonPhaseData.FishingQuality,
+                    fishingTip = moonPhaseData.FishingTip,
+                    moonRise = moonPhaseData.MoonRise?.ToString(@"hh\:mm"),
+                    moonSet = moonPhaseData.MoonSet?.ToString(@"hh\:mm")
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AJAX: GetMoonPhase exception - {ex.Message}");
+                return Json(new
+                {
+                    error = true,
+                    errorMessage = ex.Message
+                });
+            }
+        }
+
+        // AJAX endpoint for tide data
+        [HttpGet]
+        public IActionResult GetTideInfo(double lat, double lng)
+        {
+            try
+            {
+                Console.WriteLine($"AJAX: GetTideInfo called with lat={lat}, lng={lng}");
+                
+                var tideData = _tideService.GetCurrentTideInfo(lat, lng);
+                
+                Console.WriteLine($"AJAX: Tide service returned: {tideData.TideState} ({tideData.TideHeight:F1}ft)");
+                
+                return Json(new
+                {
+                    isCoastal = tideData.IsCoastal,
+                    tideState = tideData.TideState,
+                    tideHeight = tideData.TideHeight,
+                    tideRange = tideData.TideRange,
+                    tidalCoefficient = tideData.TidalCoefficient,
+                    fishingRecommendation = tideData.FishingRecommendation,
+                    nextHighTide = tideData.NextHighTide?.ToString("h:mm tt"),
+                    nextLowTide = tideData.NextLowTide?.ToString("h:mm tt"),
+                    timeToNextChange = $"{(int)tideData.TimeToNextChange.TotalHours}h {tideData.TimeToNextChange.Minutes}m"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AJAX: GetTideInfo exception - {ex.Message}");
+                return Json(new
+                {
+                    error = true,
                     errorMessage = ex.Message
                 });
             }

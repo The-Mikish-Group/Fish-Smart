@@ -81,21 +81,23 @@
                             </div>
                         </div>
 
-                        <!-- Weather Information (Auto-populated) -->
-                        <div class="row mb-3" id="weatherSection" style="display: none;">
-                            <div class="col-md-6">
-                                <label class="form-label">
-                                    <i class="bi bi-cloud"></i> Weather Conditions
-                                </label>
-                                <input type="text" class="form-control" id="weatherConditions" readonly
-                                       placeholder="Loading weather..." />
+                        <!-- Environmental Conditions (Auto-populated) -->
+                        <div class="mb-3" id="environmentalSection" style="display: none;">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-globe2"></i> Current Environmental Conditions
+                            </label>
+                            <div class="d-flex flex-wrap gap-1 align-items-center mt-2 p-3 bg-light rounded" id="environmentalBadges">
+                                <!-- Weather, moon, and tide badges will be populated here -->
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">
-                                    <i class="bi bi-thermometer"></i> Temperature
-                                </label>
-                                <input type="text" class="form-control" id="temperature" readonly
-                                       placeholder="Loading..." />
+                        </div>
+
+                        <!-- Combined Fishing Tips -->
+                        <div class="mb-3" id="fishingTipsSection" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb"></i> <strong>Fishing Recommendations:</strong>
+                                <div id="combinedFishingTips" class="mt-2">
+                                    <!-- Combined tips will be populated here -->
+                                </div>
                             </div>
                         </div>
 
@@ -256,12 +258,14 @@
                         latInput.removeAttribute('readonly');
                         lngInput.removeAttribute('readonly');
                         
-                        locationStatus.innerHTML = `<i class="bi bi-check-circle text-success"></i> High-accuracy location found (±${accuracy ? Math.round(accuracy) : '?'}m)! Getting weather data...`;
+                        locationStatus.innerHTML = `<i class="bi bi-check-circle text-success"></i> High-accuracy location found (±${accuracy ? Math.round(accuracy) : '?'}m)! Getting weather, moon phase, and tide data...`;
                         locationStatus.className = 'alert alert-success';
                         
                         console.log('DEBUG: About to call fetchWeatherData...');
-                        // Fetch weather data
+                        // Fetch weather, moon phase, and tide data
                         await fetchWeatherData(lat, lng);
+                        await fetchMoonPhaseData(lat, lng);
+                        await fetchTideData(lat, lng);
                     },
                     function(error) {
                         console.log(`DEBUG: Geolocation error: ${error.message} (code: ${error.code})`);
@@ -308,18 +312,18 @@
                         console.log('DEBUG: Weather API response data:', weatherData);
                         
                         if (weatherData.isSuccessful) {
-                            // Show weather section and populate fields
-                            weatherSection.style.display = 'block';
-                            document.getElementById('weatherConditions').value = weatherData.weatherConditions || 'N/A';
-                            document.getElementById('temperature').value = weatherData.temperature ? 
-                                `${Math.round(weatherData.temperature)}°F` : 'N/A';
+                            // Store weather data for badge display
+                            window.weatherInfo = {
+                                conditions: weatherData.weatherConditions || '',
+                                temperature: weatherData.temperature || null,
+                                windDirection: weatherData.windDirection || '',
+                                windSpeed: weatherData.windSpeed || null,
+                                pressure: weatherData.barometricPressure || null
+                            };
                             
-                            locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location and weather data ready!';
+                            locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Weather loaded! Getting moon phase and tide data...';
                             
-                            // Hide the status message after 3 seconds since data is loaded
-                            setTimeout(() => {
-                                locationStatus.style.display = 'none';
-                            }, 3000);
+                            updateEnvironmentalDisplay();
                         } else {
                             console.log('DEBUG: Weather API returned unsuccessful:', weatherData.errorMessage);
                             weatherSection.style.display = 'block';
@@ -337,6 +341,166 @@
                     console.error('DEBUG: Error fetching weather:', error);
                     locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location ready! (Weather fetch failed)';
                 }
+            }
+
+            // Function to fetch moon phase data
+            async function fetchMoonPhaseData(lat, lng) {
+                try {
+                    console.log(`DEBUG: Calling moon phase API for ${lat}, ${lng}`);
+                    const response = await fetch(`/FishingSession/GetMoonPhase?lat=${lat}&lng=${lng}`);
+                    console.log(`DEBUG: Moon phase API response status: ${response.status}`);
+                    
+                    if (response.ok) {
+                        const moonData = await response.json();
+                        console.log('DEBUG: Moon phase API response data:', moonData);
+                        
+                        if (moonData && moonData.phaseName) {
+                            // Store moon phase data for badge display
+                            window.moonInfo = {
+                                phaseName: moonData.phaseName || '',
+                                icon: moonData.icon || '🌙',
+                                illumination: moonData.illuminationPercentage || 0,
+                                fishingQuality: moonData.fishingQuality || 'Good',
+                                fishingTip: moonData.fishingTip || 'Good fishing conditions!'
+                            };
+                            
+                            console.log('DEBUG: Moon phase data stored successfully');
+                        } else {
+                            console.log('DEBUG: Moon phase API returned no data');
+                            window.moonInfo = {
+                                phaseName: 'Unavailable',
+                                icon: '🌙',
+                                illumination: 0,
+                                fishingQuality: 'N/A',
+                                fishingTip: 'Moon phase data unavailable'
+                            };
+                        }
+                        
+                        updateEnvironmentalDisplay();
+                    } else {
+                        const errorText = await response.text();
+                        console.log('DEBUG: Moon phase API call failed with status:', response.status, 'Error:', errorText);
+                    }
+                } catch (error) {
+                    console.error('DEBUG: Error fetching moon phase:', error);
+                }
+            }
+
+            // Function to fetch tide data
+            async function fetchTideData(lat, lng) {
+                try {
+                    console.log(`DEBUG: Starting tide fetch for coordinates:`, lat, lng);
+                    
+                    const response = await fetch(`/FishingSession/GetTideInfo?lat=${lat}&lng=${lng}`);
+                    console.log(`DEBUG: Tide fetch response received, status:`, response.status);
+                    
+                    if (response.ok) {
+                        const tideData = await response.json();
+                        console.log('DEBUG: Tide data parsed:', tideData);
+                        
+                        if (tideData && !tideData.error) {
+                            // Store tide data for badge display
+                            window.tideInfo = {
+                                isCoastal: tideData.isCoastal || false,
+                                tideState: tideData.tideState || 'Unknown',
+                                tideHeight: tideData.tideHeight || 0,
+                                tideRange: tideData.tideRange || '',
+                                fishingRecommendation: tideData.fishingRecommendation || 'Good fishing conditions!',
+                                timeToNextChange: tideData.timeToNextChange || ''
+                            };
+                            
+                            console.log('DEBUG: Tide data stored successfully');
+                        } else {
+                            console.log('DEBUG: Tide service returned error:', tideData.errorMessage);
+                            window.tideInfo = {
+                                isCoastal: false,
+                                tideState: 'Unavailable',
+                                tideHeight: 0,
+                                tideRange: '',
+                                fishingRecommendation: 'Tide data unavailable',
+                                timeToNextChange: ''
+                            };
+                        }
+                        
+                        updateEnvironmentalDisplay();
+                    } else {
+                        console.log('DEBUG: Tide fetch response not ok:', response.status, response.statusText);
+                    }
+                } catch (error) {
+                    console.error('DEBUG: Tide fetch error:', error);
+                }
+            }
+
+            // Function to update environmental display with badge-style layout
+            function updateEnvironmentalDisplay() {
+                // Check if we have all three data sources
+                const hasWeather = window.weatherInfo;
+                const hasMoon = window.moonInfo;
+                const hasTide = window.tideInfo;
+                
+                if (!hasWeather || !hasMoon || !hasTide) {
+                    return; // Wait for all data to be available
+                }
+                
+                // Show the environmental section
+                document.getElementById('environmentalSection').style.display = 'block';
+                document.getElementById('fishingTipsSection').style.display = 'block';
+                
+                // Build badges HTML
+                let badgesHTML = '';
+                
+                // Weather badges
+                if (window.weatherInfo.conditions) {
+                    badgesHTML += `<span class="badge bg-light text-dark">${window.weatherInfo.conditions}</span>`;
+                }
+                if (window.weatherInfo.temperature) {
+                    badgesHTML += `<span class="badge bg-info">${Math.round(window.weatherInfo.temperature)}°F</span>`;
+                }
+                if (window.weatherInfo.windDirection || window.weatherInfo.windSpeed) {
+                    const wind = `Wind: ${window.weatherInfo.windDirection} ${window.weatherInfo.windSpeed ? Math.round(window.weatherInfo.windSpeed) + ' mph' : ''}`.trim();
+                    badgesHTML += `<span class="badge bg-secondary">${wind}</span>`;
+                }
+                if (window.weatherInfo.pressure) {
+                    badgesHTML += `<span class="badge bg-warning text-dark">${window.weatherInfo.pressure.toFixed(1)} inHg</span>`;
+                }
+                
+                // Moon phase badge
+                const moonText = `${window.moonInfo.phaseName} (${Math.round(window.moonInfo.illumination)}%)`;
+                badgesHTML += `<span class="badge bg-dark">${window.moonInfo.icon} ${moonText}</span>`;
+                
+                // Fishing quality badge
+                const qualityColor = window.moonInfo.fishingQuality === 'Excellent' ? 'success' : 
+                                   window.moonInfo.fishingQuality === 'Good' ? 'primary' : 'warning';
+                badgesHTML += `<span class="badge bg-${qualityColor}">⭐ ${window.moonInfo.fishingQuality}</span>`;
+                
+                // Tide badge
+                if (window.tideInfo.isCoastal) {
+                    const tideText = `${window.tideInfo.tideState} (${window.tideInfo.tideHeight.toFixed(1)}ft)`;
+                    badgesHTML += `<span class="badge bg-info">🌊 ${tideText}</span>`;
+                } else {
+                    badgesHTML += `<span class="badge bg-secondary">🌊 Inland Location</span>`;
+                }
+                
+                // Update badges display
+                document.getElementById('environmentalBadges').innerHTML = badgesHTML;
+                
+                // Build combined fishing tips
+                let tipsHTML = '';
+                if (window.moonInfo.fishingTip) {
+                    tipsHTML += `<div><strong>Moon:</strong> ${window.moonInfo.fishingTip}</div>`;
+                }
+                if (window.tideInfo.fishingRecommendation) {
+                    tipsHTML += `<div><strong>Tide:</strong> ${window.tideInfo.fishingRecommendation}</div>`;
+                }
+                document.getElementById('combinedFishingTips').innerHTML = tipsHTML;
+                
+                // Update final status
+                locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location, weather, moon phase, and tide data ready!';
+                
+                // Hide the status message after 5 seconds
+                setTimeout(() => {
+                    locationStatus.style.display = 'none';
+                }, 5000);
             }
         });
 

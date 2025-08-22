@@ -7,7 +7,8 @@
       "Bash(move:*)",
       "Bash(ren:*)",
       "Bash(mv:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(dotnet ef migrations add:*)"
     ],
     "deny": [],
     "ask": []

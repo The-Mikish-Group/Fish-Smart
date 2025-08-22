@@ -25,11 +25,13 @@ namespace Members.Services
     public class CatchWeatherService : ICatchWeatherService
     {
         private readonly IWeatherService _weatherService;
+        private readonly IMoonPhaseService _moonPhaseService;
         private readonly ILogger<CatchWeatherService> _logger;
 
-        public CatchWeatherService(IWeatherService weatherService, ILogger<CatchWeatherService> logger)
+        public CatchWeatherService(IWeatherService weatherService, IMoonPhaseService moonPhaseService, ILogger<CatchWeatherService> logger)
         {
             _weatherService = weatherService;
+            _moonPhaseService = moonPhaseService;
             _logger = logger;
         }
 
@@ -71,8 +73,18 @@ namespace Members.Services
                 catchRecord.WeatherDescription = weatherData.Description;
                 catchRecord.WeatherCapturedAt = DateTime.UtcNow;
 
-                _logger.LogInformation("Successfully populated weather data for catch {CatchId}: {Conditions}, {Temperature}°F", 
-                    catchRecord.Id, weatherData.WeatherConditions, weatherData.Temperature);
+                // Calculate and populate moon phase data
+                var moonPhase = _moonPhaseService.GetMoonPhase(catchTime, (double)latitude, (double)longitude);
+                catchRecord.MoonPhaseName = moonPhase.PhaseName;
+                catchRecord.MoonIllumination = moonPhase.IlluminationPercentage;
+                catchRecord.MoonAge = moonPhase.Age;
+                catchRecord.MoonIcon = moonPhase.Icon;
+                catchRecord.FishingQuality = moonPhase.FishingQuality;
+                catchRecord.MoonFishingTip = moonPhase.FishingTip;
+                catchRecord.MoonDataCapturedAt = DateTime.UtcNow;
+
+                _logger.LogInformation("Successfully populated weather and moon data for catch {CatchId}: {Conditions}, {Temperature}°F, {MoonPhase}", 
+                    catchRecord.Id, weatherData.WeatherConditions, weatherData.Temperature, moonPhase.PhaseName);
 
                 return true;
             }

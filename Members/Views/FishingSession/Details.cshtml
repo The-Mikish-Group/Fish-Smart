@@ -151,11 +151,11 @@
                         </div>
                     </div>
 
-                    <!-- Weather -->
+                    <!-- Weather & Conditions -->
                     <div class="row mb-2">
                         <div class="col-12">
-                            <strong>Weather:</strong>
-                            @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || !string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue || Model.BarometricPressure.HasValue)
+                            <strong>Weather & Conditions:</strong>
+                            @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || !string.IsNullOrEmpty(Model.WindDirection) || Model.WindSpeed.HasValue || Model.BarometricPressure.HasValue || !string.IsNullOrEmpty(Model.MoonPhase) || !string.IsNullOrEmpty(Model.TideConditions))
                             {
                                 <div class="d-flex flex-wrap gap-1 align-items-center mt-1">
                                     @if (!string.IsNullOrEmpty(Model.WeatherConditions))
@@ -174,19 +174,19 @@
                                     {
                                         <span class="badge bg-warning text-dark">@Model.BarometricPressure.Value.ToString("F1") inHg</span>
                                     }
-                                    @if (!string.IsNullOrEmpty(Model.TideConditions))
-                                    {
-                                        <span class="badge bg-info">Tide: @Model.TideConditions</span>
-                                    }
                                     @if (!string.IsNullOrEmpty(Model.MoonPhase))
                                     {
-                                        <span class="badge bg-dark">Moon: @Model.MoonPhase</span>
+                                        <span class="badge bg-dark">🌙 @Model.MoonPhase</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.TideConditions))
+                                    {
+                                        <span class="badge bg-info">🌊 @Model.TideConditions</span>
                                     }
                                 </div>
                             }
                             else
                             {
-                                <span class="text-secondary"><i class="bi bi-cloud-slash"></i> No weather data available</span>
+                                <span class="text-secondary"><i class="bi bi-cloud-slash"></i> No environmental data available</span>
                             }
                         </div>
                     </div>
@@ -329,7 +329,28 @@
 
                                             <!-- Weather -->
                                             <td class="text-nowrap py-2">
-                                                @if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || Model.BarometricPressure.HasValue || !string.IsNullOrEmpty(Model.TideConditions))
+                                                @if (!string.IsNullOrEmpty(fishCatch.WeatherConditions) || fishCatch.Temperature.HasValue || fishCatch.BarometricPressure.HasValue || !string.IsNullOrEmpty(fishCatch.MoonPhaseName))
+                                                {
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        @if (!string.IsNullOrEmpty(fishCatch.WeatherConditions))
+                                                        {
+                                                            <small class="badge bg-light text-dark">@fishCatch.WeatherConditions</small>
+                                                        }
+                                                        @if (fishCatch.Temperature.HasValue)
+                                                        {
+                                                            <small class="badge bg-info">@fishCatch.Temperature.Value.ToString("F0")°F</small>
+                                                        }
+                                                        @if (fishCatch.BarometricPressure.HasValue)
+                                                        {
+                                                            <small class="badge bg-warning text-dark">@fishCatch.BarometricPressure.Value.ToString("F1") inHg</small>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(fishCatch.MoonPhaseName))
+                                                        {
+                                                            <small class="badge bg-dark">@fishCatch.MoonIcon @fishCatch.MoonPhaseName</small>
+                                                        }
+                                                    </div>
+                                                }
+                                                else if (!string.IsNullOrEmpty(Model.WeatherConditions) || Model.Temperature.HasValue || Model.BarometricPressure.HasValue || !string.IsNullOrEmpty(Model.MoonPhase))
                                                 {
                                                     <div class="d-flex flex-wrap gap-1">
                                                         @if (!string.IsNullOrEmpty(Model.WeatherConditions))
@@ -344,9 +365,9 @@
                                                         {
                                                             <small class="badge bg-warning text-dark">@Model.BarometricPressure.Value.ToString("F1") inHg</small>
                                                         }
-                                                        @if (!string.IsNullOrEmpty(Model.TideConditions))
+                                                        @if (!string.IsNullOrEmpty(Model.MoonPhase))
                                                         {
-                                                            <small class="badge bg-info">Tide: @Model.TideConditions</small>
+                                                            <small class="badge bg-dark">🌙 @Model.MoonPhase</small>
                                                         }
                                                     </div>
                                                 }
